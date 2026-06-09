@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ComplaintController;
+use App\Http\Controllers\Api\ComplaintAssignmentController;
+use App\Http\Controllers\Api\ChatController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -10,6 +13,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     
     // Complaints
-    Route::get('/categories', [\App\Http\Controllers\Api\ComplaintController::class, 'categories']);
-    Route::apiResource('complaints', \App\Http\Controllers\Api\ComplaintController::class)->only(['index', 'store', 'show']);
+    Route::get('/categories', [ComplaintController::class, 'categories']);
+    Route::apiResource('complaints', ComplaintController::class)->only(['index', 'store', 'show']);
+    
+    // Chat
+    Route::get('/complaints/{complaint}/messages', [ChatController::class, 'index']);
+    Route::post('/complaints/{complaint}/messages', [ChatController::class, 'store']);
+    
+    // Assignments
+    Route::post('/complaints/{complaint}/assign', [ComplaintAssignmentController::class, 'assign']);
+    Route::get('/complaints/{complaint}/assignments', [ComplaintAssignmentController::class, 'history']);
+    Route::get('/staff/assignments', [ComplaintAssignmentController::class, 'myAssignments']);
+    Route::get('/staff/list', [ComplaintAssignmentController::class, 'staffList']);
 });

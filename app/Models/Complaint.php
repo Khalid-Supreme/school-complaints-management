@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'reference_no',
@@ -55,5 +57,21 @@ class Complaint extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(ComplaintCategory::class, 'category_id');
+    }
+
+    /**
+     * Get all assignments for the complaint.
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(ComplaintAssignment::class);
+    }
+
+    /**
+     * Get the current active assignment.
+     */
+    public function currentAssignment(): HasOne
+    {
+        return $this->hasOne(ComplaintAssignment::class)->where('is_current', true);
     }
 }
