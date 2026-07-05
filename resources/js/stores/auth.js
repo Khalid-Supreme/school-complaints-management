@@ -1,5 +1,12 @@
 import { defineStore } from 'pinia';
 import authService from '../services/authService';
+import axios from '../bootstrap';
+
+// Attach token to all axios requests if present
+const token = localStorage.getItem('auth_token');
+if (token) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -13,6 +20,15 @@ export const useAuthStore = defineStore('auth', {
         isAuthenticated: (state) => !!state.user,
         role: (state) => state.user?.role?.slug ?? null,
         hasRole: (state) => (roleSlug) => state.user?.role?.slug === roleSlug,
+        hasAnyRole: (state) => (roleSlugs = []) => {
+            if (!state.user) return false;
+            return roleSlugs.includes(state.user?.role?.slug);
+        },
+        isAdmin: (state) => state.user?.role?.slug === 'admin',
+        isComplainant: (state) => ['student', 'staff'].includes(state.user?.role?.slug),
+        isOfficer: (state) => state.user?.role?.slug === 'complaint_officer',
+        isSecurity: (state) => state.user?.role?.slug === 'security',
+        canAccessComplaintBackend: (state) => ['admin', 'complaint_officer'].includes(state.user?.role?.slug),
     },
     
     actions: {
@@ -24,11 +40,14 @@ export const useAuthStore = defineStore('auth', {
                 this.user = response.data.user;
                 if (response.data.token) {
                     localStorage.setItem('auth_token', response.data.token);
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
                 }
                 this.initialized = true;
                 return true;
             } catch (err) {
-                this.error = err.response?.data?.message || 'Login failed';
+                this.error = err.response?.data?.errors?.username?.[0] 
+                    || err.response?.data?.message 
+                    || 'Login failed';
                 return false;
             } finally {
                 this.loading = false;
@@ -60,6 +79,7 @@ export const useAuthStore = defineStore('auth', {
             this.user = null;
             this.initialized = true;
             localStorage.removeItem('auth_token');
+            delete axios.defaults.headers.common['Authorization'];
         }
     }
 });
