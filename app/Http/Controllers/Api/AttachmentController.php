@@ -50,4 +50,19 @@ class AttachmentController extends Controller
             'data' => $attachments
         ]);
     }
+
+    /**
+     * Securely download a complaint attachment.
+     */
+    public function download(Complaint $complaint, \App\Models\ComplaintAttachment $attachment)
+    {
+        Gate::authorize('view', $complaint);
+
+        if ($attachment->complaint_id !== $complaint->id) {
+            abort(404);
+        }
+
+        $path = \Illuminate\Support\Facades\Storage::disk('local')->path($attachment->file_path);
+        return response()->download($path, $attachment->original_filename);
+    }
 }

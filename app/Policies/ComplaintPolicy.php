@@ -17,15 +17,11 @@ class ComplaintPolicy
 
     /**
      * Determine whether the user can view the model.
+     * Visible to: admin, complaint_officer, or the complainant themselves.
      */
     public function view(User $user, Complaint $complaint): bool
     {
-        if ($user->role->slug === 'admin' || $user->role->slug === 'security') {
-            return true;
-        }
-
-        if ($user->role->slug === 'staff') {
-            // Check if assigned (simplified for now, full assignment logic later)
+        if (in_array($user->role->slug, ['admin', 'complaint_officer'], true)) {
             return true;
         }
 
@@ -34,9 +30,10 @@ class ComplaintPolicy
 
     /**
      * Determine whether the user can create models.
+     * Complainants are users with 'student' or 'staff' role.
      */
     public function create(User $user): bool
     {
-        return $user->role->slug === 'complainant';
+        return in_array($user->role->slug, ['student', 'staff'], true);
     }
 }

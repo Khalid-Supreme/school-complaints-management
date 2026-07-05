@@ -14,7 +14,7 @@
 import AppSidebar from '../components/AppSidebar.vue';
 import AppHeader from '../components/AppHeader.vue';
 </script>
-kk
+
 <style scoped>
 .app-layout {
   display: flex;

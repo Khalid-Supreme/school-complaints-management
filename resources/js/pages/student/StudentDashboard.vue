@@ -2,18 +2,18 @@
     <div class="space-y-6">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-extrabold text-surface-900 dark:text-surface-0 tracking-tight">Staff Dashboard</h1>
-                <p class="text-surface-500 text-sm">Lodge and track your secure complaints through the portal.</p>
+                <h1 class="text-3xl font-extrabold text-surface-900 dark:text-surface-0 tracking-tight">Student Dashboard</h1>
+                <p class="text-surface-500 text-sm">Welcome back. Securely lodge and track your complaints.</p>
             </div>
-            <Button label="Submit Complaint" icon="pi pi-plus" class="bg-indigo-600 hover:bg-indigo-700 border-none rounded-lg text-white font-bold" @click="router.push('/staff/submit')" />
+            <Button label="Submit Complaint" icon="pi pi-plus" class="bg-blue-600 hover:bg-blue-700 border-none rounded-lg text-white font-bold" @click="goToSubmit" />
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card class="border border-surface-200 dark:border-surface-800 shadow-sm">
                 <template #title>
-                    <div class="flex justify-between items-center text-surface-500 font-bold text-xs uppercase tracking-wider">
+                    <div class="flex justify-between items-center text-surface-500 dark:text-surface-400 font-bold text-sm tracking-wider uppercase">
                         <span>Total Submitted</span>
-                        <i class="pi pi-file text-indigo-500 text-lg"></i>
+                        <i class="pi pi-file text-blue-500 text-lg"></i>
                     </div>
                 </template>
                 <template #content>
@@ -22,9 +22,9 @@
             </Card>
             <Card class="border border-surface-200 dark:border-surface-800 shadow-sm">
                 <template #title>
-                    <div class="flex justify-between items-center text-surface-500 font-bold text-xs uppercase tracking-wider">
-                        <span>In Progress</span>
-                        <i class="pi pi-sync text-amber-500 text-lg"></i>
+                    <div class="flex justify-between items-center text-surface-500 dark:text-surface-400 font-bold text-sm tracking-wider uppercase">
+                        <span>Under Investigation</span>
+                        <i class="pi pi-clock text-amber-500 text-lg animate-spin" style="animation-duration: 3s"></i>
                     </div>
                 </template>
                 <template #content>
@@ -33,8 +33,8 @@
             </Card>
             <Card class="border border-surface-200 dark:border-surface-800 shadow-sm">
                 <template #title>
-                    <div class="flex justify-between items-center text-surface-500 font-bold text-xs uppercase tracking-wider">
-                        <span>Resolved</span>
+                    <div class="flex justify-between items-center text-surface-500 dark:text-surface-400 font-bold text-sm tracking-wider uppercase">
+                        <span>Resolved Cases</span>
                         <i class="pi pi-check-circle text-green-500 text-lg"></i>
                     </div>
                 </template>
@@ -47,8 +47,8 @@
         <Card class="border border-surface-200 dark:border-surface-800 shadow-sm">
             <template #title>
                 <div class="flex justify-between items-center border-b border-surface-100 dark:border-surface-800 pb-3">
-                    <span class="text-xl font-bold">My Complaints</span>
-                    <span class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-1 rounded-full border border-indigo-200/30">AES-256 Decrypted</span>
+                    <span class="text-xl font-bold">Recent Secure Complaints</span>
+                    <span class="text-xs text-green-600 dark:text-green-400 font-semibold bg-green-50 dark:bg-green-950/30 px-2.5 py-1 rounded-full border border-green-200/30">AES-256 Decrypted View</span>
                 </div>
             </template>
             <template #content>
@@ -65,20 +65,20 @@
                             <StatusBadge :status="slotProps.data.status" />
                         </template>
                     </Column>
-                    <Column field="submitted_at" header="Date">
+                    <Column field="submitted_at" header="Date Submitted">
                         <template #body="slotProps">
                             {{ new Date(slotProps.data.submitted_at).toLocaleDateString() }}
                         </template>
                     </Column>
-                    <Column header="Action">
+                    <Column header="Actions">
                         <template #body="slotProps">
-                            <Button icon="pi pi-eye" label="View" text class="text-indigo-600 hover:bg-indigo-500/10 p-button-sm" @click="viewComplaint(slotProps.data.id)" />
+                            <Button icon="pi pi-eye" label="View Securely" class="p-button-text p-button-sm text-blue-600 hover:bg-blue-500/10" @click="viewComplaint(slotProps.data.id)" />
                         </template>
                     </Column>
                     <template #empty>
-                        <div class="text-center py-8 text-surface-500">
+                        <div class="text-center py-6 text-surface-500 dark:text-surface-400">
                             <i class="pi pi-folder-open text-3xl block mb-2 text-slate-300"></i>
-                            No complaints submitted yet.
+                            <span>You have not submitted any complaints yet.</span>
                         </div>
                     </template>
                 </DataTable>
@@ -102,14 +102,16 @@ const store = useComplaintsStore();
 
 const stats = computed(() => {
     const list = store.complaints || [];
-    return {
-        total: list.length,
-        pending: list.filter(c => ['submitted', 'under_review', 'assigned', 'in_progress'].includes(c.status)).length,
-        resolved: list.filter(c => ['resolved', 'closed'].includes(c.status)).length,
-    };
+    const total = list.length;
+    const pending = list.filter(c => ['submitted', 'under_review', 'assigned', 'in_progress'].includes(c.status)).length;
+    const resolved = list.filter(c => ['resolved', 'closed'].includes(c.status)).length;
+    return { total, pending, resolved };
 });
 
-const viewComplaint = (id) => router.push(`/staff/complaints/${id}`);
+const goToSubmit = () => router.push('/student/submit');
+const viewComplaint = (id) => router.push(`/student/complaints/${id}`);
 
-onMounted(() => store.fetchComplaints(1));
+onMounted(async () => {
+    await store.fetchComplaints(1);
+});
 </script>

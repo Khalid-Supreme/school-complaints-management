@@ -7,56 +7,55 @@ use App\Models\LoginAttempt;
 use App\Models\Complaint;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class SecurityDashboardController extends Controller
 {
     /**
-     * Provide a security overview for administrators.
+     * Provide a security overview for administrators and security analysts.
      */
     public function index(): JsonResponse
     {
-        // 1. IPS Status: Estimate blocked IPs from cache
-        // Since we use Cache::put for blocks, we'd normally need a dedicated table for long-term auditing.
-        // For now, we provide an estimate or current status.
-        $blockedIpsCount = 0; 
-        // In a production environment, we would query a `blocked_ips` table.
+        // 1. Blocked IPs from Cache list
+        $blockedIpsList = Cache::get('blocked_ips_list', []);
+        $blockedIpsCount = count($blockedIpsList);
         
-        // 2. Authentication Health
-        $failedLogins = LoginAttempt::where('success', false)
+        // 2. Authentication Health (Login Attempts)
+        $failedLogins = LoginAttempt::where('successful', false)
             ->where('created_at', '>=', now()->subDay())
             ->count();
             
         $totalLogins = LoginAttempt::where('created_at', '>=', now()->subDay())->count();
         $failureRate = $totalLogins > 0 ? round(($failedLogins / $totalLogins) * 100, 2) : 0;
 
-        // 3. Data Protection Status
-        $encryptedComplaints = Complaint::whereNotNull('title_encrypted')->count();
+        // 3. Security Detections from Cache
+        $sqliCount = Cache::get('security_event_count_sqli', 0);
+        $xssCount = Cache::get('security_event_count_xss', 0);
+        $recentEvents = Cache::get('security_events', []);
 
-        // 4. System Integrity
+        // 4. Data Protection Status
+        $encryptedComplaints = Complaint::whereNotNull('title_encrypted')->count();
         $totalComplaints = Complaint::count();
 
         return response()->json([
             'summary' => [
-                'total_complaints' => $totalLins = $totalComplaints,
+                'total_complaints' => $totalComplaints,
                 'encrypted_complaints' => $encryptedComplaints,
                 'data_protection_coverage' => $totalComplaints > 0 
-                    ? ($encryptedComplaints / $totalComplaints) * 100 . '%' 
-                    : '0%',
+                    ? round(($encryptedComplaints / $totalComplaints) * 100, 2) . '%' 
+                    : '100%',
             ],
             'auth_health' => [
                 'failed_logins_24h' => $failedLogins,
                 'total_logins_24h' => $totalLogins,
                 'failure_rate' => $failureRate . '%',
             ],
-            'ips_status' => [
-                'description' => 'IPS is active and monitoring request rates.',
-                'active_blocks' => 'Consult Redis/Cache for real-time blocks',
+            'intrusion_detections' => [
+                'sqli_count' => $sqliCount,
+                'xss_count' => $xssCount,
+                'blocked_ips_count' => $blockedIpsCount,
             ],
-            'alerts' => [
-                'critical' => $failureRate > 20 ? 'High login failure rate detected.' : 'None',
-                'warning' => $totalLogins == 0 ? 'No login activity in last 24h.' : 'None',
-            ]
+            'recent_events' => array_reverse(array_slice($recentEvents, -20)), // show last 20 events, newest first
+            'blocked_ips' => $blockedIpsList,
         ]);
     }
 
@@ -66,7 +65,8 @@ class SecurityDashboardController extends Controller
     public function loginAudit(): JsonResponse
     {
         return response()->json([
-            'data' => LoginAttempt::orderBy('created_at', 'desc')
+            'data' => LoginAttempt::with('user:id,name,email,institution_id')
+                ->orderBy('created_at', 'desc')
                 ->paginate(50)
         ]);
     }

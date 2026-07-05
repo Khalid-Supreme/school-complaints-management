@@ -26,9 +26,15 @@ class RoleSeeder extends Seeder
                 'is_system' => true,
             ],
             [
-                'name' => 'Complainant',
-                'slug' => 'complainant',
-                'description' => 'User who submits complaints.',
+                'name' => 'Student',
+                'slug' => 'student',
+                'description' => 'Student user who submits complaints.',
+                'is_system' => true,
+            ],
+            [
+                'name' => 'Complaint Officer',
+                'slug' => 'complaint_officer',
+                'description' => 'Complaint officer user who processes complaint resolutions.',
                 'is_system' => true,
             ],
             [

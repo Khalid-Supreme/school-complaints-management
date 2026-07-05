@@ -20,21 +20,15 @@ class ComplaintAssignmentController extends Controller
     }
 
     /**
-     * Assign a complaint to a staff member (Admin only).
+     * Assign a complaint to a complaint officer.
+     * Authorization is enforced by route middleware (role:admin).
      */
     public function assign(AssignComplaintRequest $request, Complaint $complaint): JsonResponse
     {
-        $user = $request->user();
-
-        // Only admins can assign
-        if ($user->role->slug !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $assignment = $this->assignmentService->assign(
             $complaint,
             $request->validated('assigned_to'),
-            $user->id,
+            $request->user()->id,
             $request->validated('note')
         );
 
@@ -50,17 +44,12 @@ class ComplaintAssignmentController extends Controller
     }
 
     /**
-     * Get assignments for the authenticated staff member.
+     * Get assignments for the authenticated complaint officer.
+     * Authorization is enforced by route middleware (role:complaint_officer).
      */
     public function myAssignments(Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        if (!in_array($user->role->slug, ['staff', 'admin'])) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        $assignments = $this->assignmentService->getStaffAssignments($user->id);
+        $assignments = $this->assignmentService->getStaffAssignments($request->user()->id);
 
         return response()->json($assignments);
     }
@@ -81,8 +70,8 @@ class ComplaintAssignmentController extends Controller
     public function staffList(): JsonResponse
     {
         $staff = User::whereHas('role', function ($query) {
-            $query->where('slug', 'staff');
-        })->where('is_active', true)->get(['id', 'name', 'email', 'department']);
+            $query->where('slug', 'complaint_officer');
+        })->where('is_active', true)->get(['id','institution_id', 'name', 'email', 'department']);
 
         return response()->json(['data' => $staff]);
     }

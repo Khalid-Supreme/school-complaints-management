@@ -98,7 +98,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import { useComplaintsStore } from '../../../stores/complaints';
+import { useComplaintsStore } from '../../stores/complaints';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -107,7 +107,7 @@ import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import Textarea from 'primevue/textarea';
 import Message from 'primevue/message';
-import StatusBadge from '../../../components/StatusBadge.vue';
+import StatusBadge from '../../components/StatusBadge.vue';
 
 const store = useComplaintsStore();
 const selectedComplaint = ref(null);
@@ -117,7 +117,7 @@ const assignForm = reactive({ assigned_to: null, note: '' });
 
 onMounted(() => {
     store.fetchComplaints(1);
-    store.fetchStaffList();
+    store.fetchOfficersList();
 });
 
 const onPage = (event) => {
@@ -136,7 +136,10 @@ const openAssignDialog = (complaint) => {
 };
 
 const handleAssign = async () => {
-    if (!assignForm.assigned_to) return;
+    if (!assignForm.assigned_to) {
+        // Show error message or handle the case where no staff member is selected
+        return;
+    }
     
     const success = await store.assignComplaint(
         complaintToAssign.value.id,

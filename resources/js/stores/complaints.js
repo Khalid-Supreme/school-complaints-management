@@ -12,6 +12,8 @@ export const useComplaintsStore = defineStore('complaints', {
         assignmentMeta: null,
         loading: false,
         error: null,
+        lastComplaintId: null,
+        lastReferenceNo: null,
     }),
     
     actions: {
@@ -41,8 +43,12 @@ export const useComplaintsStore = defineStore('complaints', {
         async submitComplaint(data) {
             this.loading = true;
             this.error = null;
+            this.lastComplaintId = null;
+            this.lastReferenceNo = null;
             try {
-                await complaintService.submitComplaint(data);
+                const response = await complaintService.submitComplaint(data);
+                this.lastComplaintId = response.data.complaint?.id;
+                this.lastReferenceNo = response.data.complaint?.reference_no;
                 return true;
             } catch (err) {
                 this.error = err.response?.data?.message || 'Failed to submit complaint';
@@ -66,7 +72,7 @@ export const useComplaintsStore = defineStore('complaints', {
             }
         },
 
-        async fetchStaffList() {
+        async fetchOfficersList() {
             try {
                 const response = await api.get('/api/staff/list');
                 this.staffList = response.data.data;

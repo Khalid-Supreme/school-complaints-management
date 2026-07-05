@@ -49,9 +49,9 @@ class ComplaintAssignmentService
             ]);
         }
 
-        if (!in_array($staffUser->role->slug, ['staff', 'admin'])) {
+        if (!in_array($staffUser->role->slug, ['complaint_officer'], true)) {
             throw ValidationException::withMessages([
-                'assigned_to' => 'Complaints can only be assigned to staff members.',
+                'assigned_to' => 'Complaints can only be assigned to complaint officers.',
             ]);
         }
 
@@ -86,6 +86,8 @@ class ComplaintAssignmentService
 
         $items = collect($paginator->items())->map(function (ComplaintAssignment $assignment) {
             $complaintArray = $assignment->complaint->toArray();
+            $complaintArray['title'] = $this->encryption->decrypt($assignment->complaint->title_encrypted);
+            $complaintArray['description'] = $this->encryption->decrypt($assignment->complaint->description_encrypted);
             unset($complaintArray['title_encrypted'], $complaintArray['description_encrypted']);
             
             return [

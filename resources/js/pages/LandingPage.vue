@@ -1,39 +1,54 @@
 <template>
-  <section class="landing">
-    <h1>Welcome to the Secure Complaint Management System</h1>
-    <p>A Laravel 13 and Vue 3 foundation for encrypted complaint intake, role-based access, and application-layer security controls.</p>
-    <router-link class="primary-link" to="/login">Continue to login</router-link>
-  </section>
+  <div class="min-h-screen flex flex-col items-center justify-center bg-surface-50 dark:bg-surface-950 px-4">
+    <div class="text-center max-w-md space-y-6">
+      <div class="w-20 h-20 bg-blue-600/10 border border-blue-500/20 rounded-2xl flex items-center justify-center mx-auto text-blue-500 shadow-xl shadow-blue-500/5">
+        <i class="pi pi-shield text-4xl animate-pulse"></i>
+      </div>
+      <div class="space-y-2">
+        <h1 class="text-3xl font-extrabold text-surface-900 dark:text-surface-0 tracking-tight">Apex Secure CMS</h1>
+        <p class="text-sm text-surface-500 dark:text-surface-400">Loading secure portal credentials, please wait...</p>
+      </div>
+      <div class="flex justify-center">
+        <i class="pi pi-spin pi-spinner text-2xl text-blue-600"></i>
+      </div>
+    </div>
+  </div>
 </template>
 
-<style scoped>
-.landing {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 5rem 1rem;
-}
+<script setup>
+import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 
-.landing h1 {
-  color: #111827;
-  font-size: 2.5rem;
-  line-height: 1.1;
-  margin-bottom: 1rem;
-}
+const router = useRouter();
+const authStore = useAuthStore();
 
-.landing p {
-  color: #4b5563;
-  font-size: 1.1rem;
-  line-height: 1.7;
-  margin-bottom: 1.5rem;
-}
+const getDashboardRoute = (roleSlug, user) => {
+    switch(roleSlug) {
+        case 'admin': return '/admin';
+        case 'staff': return '/officer';
+        case 'security': return '/security';
+        case 'complainant': 
+            const isStudent = user?.institution_id?.startsWith('STD-') || user?.department === 'Student';
+            return isStudent ? '/student' : '/staff';
+        default: return '/login';
+    }
+};
 
-.primary-link {
-  color: #ffffff;
-  background: #2563eb;
-  border-radius: 0.5rem;
-  display: inline-flex;
-  font-weight: 700;
-  padding: 0.85rem 1.1rem;
-  text-decoration: none;
-}
-</style>
+onMounted(async () => {
+    // If token exists, load user profile
+    if (localStorage.getItem('auth_token')) {
+        try {
+            await authStore.fetchUser();
+        } catch (e) {
+            // ignore
+        }
+    }
+    
+    if (authStore.isAuthenticated) {
+        router.push(getDashboardRoute(authStore.role, authStore.user));
+    } else {
+        router.push('/login');
+    }
+});
+</script>
