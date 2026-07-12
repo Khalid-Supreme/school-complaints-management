@@ -89,7 +89,6 @@ class ComplaintAssignmentService
             $complaintArray['title'] = $this->encryption->decrypt($assignment->complaint->title_encrypted);
             $complaintArray['description'] = $this->encryption->decrypt($assignment->complaint->description_encrypted);
             unset($complaintArray['title_encrypted'], $complaintArray['description_encrypted']);
-            
             return [
                 'id' => $assignment->id,
                 'assigned_at' => $assignment->assigned_at,
@@ -126,6 +125,7 @@ class ComplaintAssignmentService
                 'assigned_by' => $a->assignedBy?->name,
                 'assigned_at' => $a->assigned_at,
                 'released_at' => $a->released_at,
+                'assignment_note' => $a->assignment_note_encrypted ? $this->encryption->decrypt($a->assignment_note_encrypted) : null,
                 'is_current' => $a->is_current,
             ];
         })->toArray();

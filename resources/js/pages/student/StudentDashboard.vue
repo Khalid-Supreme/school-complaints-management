@@ -1,65 +1,66 @@
 <template>
-    <div class="space-y-6">
-        <div class="flex justify-between items-center">
+    <div class="space-y-8">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-                <h1 class="text-3xl font-extrabold text-surface-900 dark:text-surface-0 tracking-tight">Student Dashboard</h1>
-                <p class="text-surface-500 text-sm">Welcome back. Securely lodge and track your complaints.</p>
+                <h1 class="text-3xl font-semibold text-charcoal tracking-tight">Student Dashboard</h1>
+                <p class="text-slate-500 text-sm mt-1 font-medium">Welcome back. Securely lodge and track your
+                    complaints.</p>
             </div>
-            <Button label="Submit Complaint" icon="pi pi-plus" class="bg-blue-600 hover:bg-blue-700 border-none rounded-lg text-white font-bold" @click="goToSubmit" />
+            <Button label="Submit Complaint" icon="pi pi-plus"
+                class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2.5 !px-5"
+                @click="goToSubmit" />
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card class="border border-surface-200 dark:border-surface-800 shadow-sm">
-                <template #title>
-                    <div class="flex justify-between items-center text-surface-500 dark:text-surface-400 font-bold text-sm tracking-wider uppercase">
-                        <span>Total Submitted</span>
-                        <i class="pi pi-file text-blue-500 text-lg"></i>
-                    </div>
-                </template>
-                <template #content>
-                    <div class="text-4xl font-extrabold mt-1 text-surface-900 dark:text-surface-0">{{ stats.total }}</div>
-                </template>
-            </Card>
-            <Card class="border border-surface-200 dark:border-surface-800 shadow-sm">
-                <template #title>
-                    <div class="flex justify-between items-center text-surface-500 dark:text-surface-400 font-bold text-sm tracking-wider uppercase">
-                        <span>Under Investigation</span>
-                        <i class="pi pi-clock text-amber-500 text-lg animate-spin" style="animation-duration: 3s"></i>
-                    </div>
-                </template>
-                <template #content>
-                    <div class="text-4xl font-extrabold mt-1 text-surface-900 dark:text-surface-0">{{ stats.pending }}</div>
-                </template>
-            </Card>
-            <Card class="border border-surface-200 dark:border-surface-800 shadow-sm">
-                <template #title>
-                    <div class="flex justify-between items-center text-surface-500 dark:text-surface-400 font-bold text-sm tracking-wider uppercase">
-                        <span>Resolved Cases</span>
-                        <i class="pi pi-check-circle text-green-500 text-lg"></i>
-                    </div>
-                </template>
-                <template #content>
-                    <div class="text-4xl font-extrabold mt-1 text-surface-900 dark:text-surface-0">{{ stats.resolved }}</div>
-                </template>
-            </Card>
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-for="card in metricCards" :key="card.label"
+                class="bg-white rounded-xl p-6 shadow-card transition-shadow hover:shadow-lg relative overflow-hidden flex flex-col justify-between"
+                style="border: 1px solid #E8EFE9;">
+                <div class="absolute -right-4 -bottom-4 text-[90px] opacity-5 font-black z-0"
+                    :style="`color: ${card.baseColor}40;`">
+                    <i :class="`pi ${card.icon}`"></i>
+                </div>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 relative z-10">{{
+                    card.label }}</p>
+                <div class="text-4xl font-semibold text-charcoal tracking-tight relative z-10">
+                    {{ loading ? '—' : card.value }}
+                </div>
+                <p class="text-xs mt-3 font-medium relative z-10" :style="`color: ${card.baseColor}`">{{ card.sub }}</p>
+            </div>
         </div>
 
-        <Card class="border border-surface-200 dark:border-surface-800 shadow-sm">
+        <!-- Recent Secure Complaints -->
+        <Card class="shadow-card">
             <template #title>
-                <div class="flex justify-between items-center border-b border-surface-100 dark:border-surface-800 pb-3">
-                    <span class="text-xl font-bold">Recent Secure Complaints</span>
-                    <span class="text-xs text-green-600 dark:text-green-400 font-semibold bg-green-50 dark:bg-green-950/30 px-2.5 py-1 rounded-full border border-green-200/30">AES-256 Decrypted View</span>
+                <div class="flex justify-between items-center pb-4 mb-4"
+                    style="border-bottom: 1px solid var(--color-border);">
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-list text-sage-600 text-lg"></i>
+                        <span class="text-lg font-semibold text-charcoal">Recent Secure Complaints</span>
+                    </div>
+                    <span
+                        class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">AES-256
+                        Decrypted View</span>
                 </div>
             </template>
             <template #content>
-                <DataTable :value="store.complaints" :loading="store.loading" responsiveLayout="scroll" class="p-datatable-sm" :rows="10">
-                    <Column field="reference_no" header="Ref No" sortable>
+                <DataTable :value="store.complaints" :loading="store.loading" responsiveLayout="scroll"
+                    class="p-datatable-sm" :rows="10">
+                    <Column field="reference_no" header="Ref No" style="width: 130px">
                         <template #body="slotProps">
-                            <span class="font-mono text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{{ slotProps.data.reference_no }}</span>
+                            <span
+                                class="font-mono text-xs font-medium text-slate-600 bg-sage-50 px-2 py-1 rounded-md">{{
+                                    slotProps.data.reference_no }}</span>
                         </template>
                     </Column>
-                    <Column field="category.name" header="Category"></Column>
-                    <Column field="title" header="Subject"></Column>
+                    <Column field="category.name" header="Category" />
+                    <Column field="title" header="Subject">
+                        <template #body="slotProps">
+                            <span class="text-sm font-medium line-clamp-1 text-charcoal">{{ slotProps.data.title
+                            }}</span>
+                        </template>
+                    </Column>
                     <Column field="status" header="Status">
                         <template #body="slotProps">
                             <StatusBadge :status="slotProps.data.status" />
@@ -67,18 +68,20 @@
                     </Column>
                     <Column field="submitted_at" header="Date Submitted">
                         <template #body="slotProps">
-                            {{ new Date(slotProps.data.submitted_at).toLocaleDateString() }}
+                            <span class="text-sm text-slate-500">{{ new
+                                Date(slotProps.data.submitted_at).toLocaleDateString() }}</span>
                         </template>
                     </Column>
-                    <Column header="Actions">
+                    <Column header="Actions" style="width: 100px">
                         <template #body="slotProps">
-                            <Button icon="pi pi-eye" label="View Securely" class="p-button-text p-button-sm text-blue-600 hover:bg-blue-500/10" @click="viewComplaint(slotProps.data.id)" />
+                            <Button icon="pi pi-eye" text rounded class="w-10 h-10"
+                                @click="viewComplaint(slotProps.data.id)" v-tooltip.bottom="'View Securely'" />
                         </template>
                     </Column>
                     <template #empty>
-                        <div class="text-center py-6 text-surface-500 dark:text-surface-400">
-                            <i class="pi pi-folder-open text-3xl block mb-2 text-slate-300"></i>
-                            <span>You have not submitted any complaints yet.</span>
+                        <div class="text-center py-8 text-slate-400">
+                            <i class="pi pi-inbox text-4xl block mb-3"></i>
+                            <p class="text-sm">You have not submitted any complaints yet.</p>
                         </div>
                     </template>
                 </DataTable>
@@ -88,7 +91,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useComplaintsStore } from '../../stores/complaints';
 import Card from 'primevue/card';
@@ -99,6 +102,7 @@ import StatusBadge from '../../components/StatusBadge.vue';
 
 const router = useRouter();
 const store = useComplaintsStore();
+const loading = ref(true); // Added loading state for metric cards
 
 const stats = computed(() => {
     const list = store.complaints || [];
@@ -108,10 +112,22 @@ const stats = computed(() => {
     return { total, pending, resolved };
 });
 
+// Re-map stats to metricCards for consistent styling
+const metricCards = computed(() => [
+    { label: 'Total Submitted', value: stats.value.total ?? 0, icon: 'pi-folder', baseColor: '#6A9C5E', sub: 'All your complaint records' },
+    { label: 'Under Investigation', value: stats.value.pending ?? 0, icon: 'pi-clock', baseColor: '#55834B', sub: 'Assigned & in progress' },
+    { label: 'Resolved Cases', value: stats.value.resolved ?? 0, icon: 'pi-check-circle', baseColor: '#45693C', sub: 'Successfully closed cases' },
+]);
+
+
 const goToSubmit = () => router.push('/student/submit');
-const viewComplaint = (id) => router.push(`/student/complaints/${id}`);
+const viewComplaint = (id) => {
+    console.log(id);
+    router.push(`/student/complaints/${id}`);
+};
 
 onMounted(async () => {
     await store.fetchComplaints(1);
+    loading.value = false; // Set loading to false after data is fetched
 });
 </script>

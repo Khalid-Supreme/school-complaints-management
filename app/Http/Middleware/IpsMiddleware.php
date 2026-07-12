@@ -167,7 +167,7 @@ class IpsMiddleware
         ];
 
         // Keep last 500 events
-        if (count($events) > 500) {
+        if (count($events) > 2000) {
             array_shift($events);
         }
         Cache::put('security_events', $events, now()->addDays(7));

@@ -1,16 +1,17 @@
 <template>
-    <div class="min-h-screen flex items-center justify-center bg-surface-50 dark:bg-surface-900 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full space-y-8">
-            <div>
-                <h2 class="mt-6 text-center text-3xl font-extrabold text-surface-900 dark:text-surface-0">
+    <div class="min-h-screen flex items-center justify-center bg-[#F8FAF6] px-6 py-12">
+        <div class="w-full max-w-[400px] space-y-10">
+            <div class="text-center">
+                <h2 class="text-[1.65rem] font-semibold text-[#1A252C] tracking-tight">
                     Complaint Management System
                 </h2>
-                <p class="mt-2 text-center text-sm text-surface-600 dark:text-surface-400">
+                <p class="mt-2 text-sm text-slate-400 font-medium">
                     Secure Authentication Portal
                 </p>
             </div>
             
-            <div class="bg-surface-0 dark:bg-surface-800 shadow sm:rounded-lg p-8">
+<div class="bg-white rounded-[14px] p-8 sm:p-10"
+                style="box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03); border: 1px solid #E8EFE9;">
                 <router-view></router-view>
             </div>
         </div>

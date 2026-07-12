@@ -40,7 +40,7 @@ class ComplaintService
         $complaintData = [
             'reference_no' => $referenceNo,
             'complainant_id' => $complainantId,
-            'category_id' => $data['category_id'],
+            'category_id' => $category ? $category->id : null,
             'title_encrypted' => $this->encryption->encrypt($data['title']),
             'description_encrypted' => $this->encryption->encrypt($data['description']),
             'priority' => $category ? $category->default_priority : 'medium',
@@ -61,13 +61,26 @@ class ComplaintService
     public function decryptComplaint(Complaint $complaint): array
     {
         $complaintArray = $complaint->toArray();
+        $complaintArray['category'] = $complaint->category->name??'Uncategorized';
         $complaintArray['title'] = $this->encryption->decrypt($complaint->title_encrypted);
         $complaintArray['description'] = $this->encryption->decrypt($complaint->description_encrypted);
-        
+        $complainantDetails = null; 
+        if ($complaint->complainant) {
+            $complainantDetails = [
+            'institution_id' => $complaint->complainant->institution_id,
+            'name' => $complaint->complainant->name,
+            'email' => $complaint->complainant->email,
+            'department' => $complaint->complainant->department,
+            ];
+        }
+        $complaintArray['complainant'] = $complainantDetails;
+        $complaintArray['assigned_at'] = $complaint->assigned_at ?? null;
+        $complaintArray['resolved_at'] = $complaint->resolved_at ?? null;
+
+
         // Remove encrypted payloads from the returned array for safety
         unset($complaintArray['title_encrypted']);
         unset($complaintArray['description_encrypted']);
-        
         return $complaintArray;
     }
 

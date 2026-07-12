@@ -1,14 +1,24 @@
 <template>
-    <div class="space-y-6">
-        <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-0">All Complaints</h1>
+    <div class="space-y-8">
+        <!-- Header Section -->
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-semibold text-charcoal tracking-tight">Complaint Management</h1>
+                <p class="text-slate-400 text-sm mt-1 font-medium">Overview of all complaints in the system</p>
+            </div>
+            <div class="flex gap-2">
+                <Button icon="pi pi-refresh" text rounded class="!text-slate-500 hover:!bg-sage-50"
+                    :loading="store.loading" @click="store.fetchComplaints(store.meta?.current_page || 1)"
+                    v-tooltip.bottom="'Refresh Data'" />
+            </div>
+        </div>
 
-        <div class="bg-surface-0 dark:bg-surface-800 p-6 rounded-lg shadow">
+        <div class="card p-6">
             <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
-            <DataTable 
-                :value="store.complaints" 
+            <DataTable :value="store.complaints"
                 :loading="store.loading"
-                paginator 
+paginator
                 :rows="store.meta?.per_page || 15"
                 :totalRecords="store.meta?.total || 0"
                 lazy
@@ -18,13 +28,25 @@
                 selectionMode="single"
                 @rowSelect="onRowSelect"
                 dataKey="id"
+                class="p-datatable-sm"
             >
-                <Column field="reference_no" header="Reference No"></Column>
-                <Column field="category.name" header="Category"></Column>
-                <Column field="title" header="Title"></Column>
+                <Column field="reference_no" header="Ref No" style="width: 130px">
+                    <template #body="slotProps">
+                        <span class="font-mono text-xs font-medium text-slate-600 bg-sage-50 px-2 py-1 rounded-md">{{
+                            slotProps.data.reference_no }}</span>
+                    </template>
+                </Column>
+                <Column field="category" header="Category" />
+                <Column field="title" header="Subject">
+                    <template #body="slotProps">
+                        <span class="text-sm font-medium line-clamp-1 text-charcoal">{{ slotProps.data.title
+                        }}</span>
+                    </template>
+                </Column>
                 <Column field="priority" header="Priority">
                     <template #body="slotProps">
-                        <Tag :value="slotProps.data.priority" :severity="prioritySeverity(slotProps.data.priority)" rounded />
+                        <Tag :value="slotProps.data.priority" :severity="prioritySeverity(slotProps.data.priority)"
+                            class="capitalize text-xs font-medium" />
                     </template>
                 </Column>
                 <Column field="status" header="Status">
@@ -34,63 +56,68 @@
                 </Column>
                 <Column field="submitted_at" header="Submitted">
                     <template #body="slotProps">
-                        {{ new Date(slotProps.data.submitted_at).toLocaleDateString() }}
+                        <span class="text-sm text-slate-500">{{ new
+                            Date(slotProps.data.submitted_at).toLocaleDateString() }}</span>
                     </template>
                 </Column>
-                <Column header="Actions">
+                <Column header="Actions" style="width: 120px; text-align: center;">
                     <template #body="slotProps">
-                        <Button 
-                            icon="pi pi-user-plus" 
-                            label="Assign" 
-                            text 
-                            rounded 
-                            size="small"
-                            @click="openAssignDialog(slotProps.data)" 
-                        />
+                        <Button icon="pi pi-user-plus" text rounded class="w-10 h-10"
+                            @click="openAssignDialog(slotProps.data)" v-tooltip.bottom="'Assign Complaint'" />
+                        <Button icon="pi pi-eye" text rounded class="w-10 h-10"
+                            @click="router.push(`/admin/complaints/${slotProps.data.id}`)"
+                            v-tooltip.bottom="'View Details'" />
                     </template>
                 </Column>
                 <template #empty>
-                    <div class="text-center p-4">No complaints found.</div>
+                    <div class="text-center py-8 text-slate-400">
+                        <i class="pi pi-inbox text-4xl block mb-3"></i>
+                        <p class="text-sm">No complaints found.</p>
+                    </div>
                 </template>
             </DataTable>
         </div>
 
         <!-- Assign Dialog -->
-        <Dialog v-model:visible="assignDialogVisible" header="Assign Complaint" :style="{ width: '450px' }" modal>
-            <div v-if="complaintToAssign" class="space-y-4">
-                <p class="text-surface-600 dark:text-surface-400">
-                    Assigning complaint <strong>{{ complaintToAssign.reference_no }}</strong>
+        <Dialog v-model:visible="assignDialogVisible" modal :style="{ width: '450px' }" class="complaint-assign-dialog">
+            <template #header>
+                <div class="text-xl font-semibold text-charcoal">Assign Complaint</div>
+            </template>
+            <div class="space-y-4">
+                <p class="text-sm text-slate-600">
+                    Assigning complaint <span class="font-semibold text-charcoal">{{ complaintToAssign?.reference_no
+                    }}</span>.
                 </p>
 
                 <div class="field">
-                    <label for="assignTo" class="block font-medium mb-2">Assign To</label>
-                    <Dropdown 
-                        id="assignTo"
-                        v-model="assignForm.assigned_to" 
-                        :options="store.staffList" 
-                        optionLabel="name" 
-                        optionValue="id" 
-                        placeholder="Select Staff Member" 
-                        class="w-full"
-                    >
+                    <label for="assignTo" class="block font-medium text-charcoal mb-2">Assign To</label>
+                    <Dropdown id="assignTo" v-model="assignForm.assigned_to" :options="store.staffList"
+                        optionLabel="name" optionValue="id" placeholder="Select Staff Member" class="w-full"
+                        inputClass="!py-2.5 !px-4 !rounded-lg" panelClass="!rounded-lg">
                         <template #option="slotProps">
-                            <div>
-                                <span class="font-medium">{{ slotProps.option.name }}</span>
-                                <span class="text-surface-400 ml-2">({{ slotProps.option.department || 'N/A' }})</span>
+                            <div class="flex items-center gap-2">
+                                <i class="pi pi-user text-slate-400"></i>
+                                <span class="font-medium text-charcoal">{{ slotProps.option.name }}</span>
+                                <span class="text-slate-400 text-sm ml-auto">({{ slotProps.option.department || 'N/A'
+                                    }})</span>
                             </div>
                         </template>
                     </Dropdown>
                 </div>
 
                 <div class="field">
-                    <label for="assignNote" class="block font-medium mb-2">Note (optional)</label>
-                    <Textarea id="assignNote" v-model="assignForm.note" rows="3" class="w-full" placeholder="Add assignment instructions..." />
+                    <label for="assignNote" class="block font-medium text-charcoal mb-2">Note (optional)</label>
+                    <Textarea id="assignNote" v-model="assignForm.note" rows="3" class="w-full"
+                        placeholder="Add assignment instructions..." />
                 </div>
             </div>
 
             <template #footer>
-                <Button label="Cancel" severity="secondary" @click="assignDialogVisible = false" />
-                <Button label="Assign" :loading="store.loading" @click="handleAssign" />
+                <Button label="Cancel" text class="!text-slate-600 hover:!bg-slate-50"
+                    @click="assignDialogVisible = false" />
+                <Button label="Assign" icon="pi pi-check" :loading="store.loading"
+                    class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2.5 !px-5"
+                    @click="handleAssign" />
             </template>
         </Dialog>
     </div>
@@ -98,6 +125,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useComplaintsStore } from '../../stores/complaints';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -109,6 +137,7 @@ import Textarea from 'primevue/textarea';
 import Message from 'primevue/message';
 import StatusBadge from '../../components/StatusBadge.vue';
 
+const router = useRouter();
 const store = useComplaintsStore();
 const selectedComplaint = ref(null);
 const assignDialogVisible = ref(false);
@@ -140,13 +169,13 @@ const handleAssign = async () => {
         // Show error message or handle the case where no staff member is selected
         return;
     }
-    
+
     const success = await store.assignComplaint(
         complaintToAssign.value.id,
         assignForm.assigned_to,
         assignForm.note || null
     );
-    
+
     if (success) {
         assignDialogVisible.value = false;
         store.fetchComplaints(store.meta?.current_page || 1);

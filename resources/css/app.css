@@ -1,43 +1,484 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import url('https://unpkg.com/primeicons@6.0.1/primeicons.css');
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    
+        --color-sage-50: #f8faf6;
+        --color-sage-100: #e2eed9;
+        --color-sage-200: #c9ddbf;
+        --color-sage-300: #a8c69c;
+        --color-sage-400: #88b07d;
+        --color-sage-500: #6a9c5e;
+        --color-sage-600: #55834b;
+        --color-sage-700: #45693c;
+        --color-sage-800: #365230;
+        --color-sage-900: #2a4026;
+        --color-sage-950: #152212;
+    
+        --color-charcoal: #1a252c;
+        --color-surface: #f8faf6;
+        --color-border: #e2e8ec;
+    
+        --radius-button: 8px;
+        --radius-card: 12px;
+        --radius-input: 8px;
+    
+        --shadow-card: 0 4px 30px rgba(0, 0, 0, 0.03);
 }
 
-* {
-    box-sizing: border-box;
+:root {
+    color-scheme: light;
+    --p-surface-0: #ffffff;
+    --p-surface-50: #f8faf6;
+    --p-surface-100: #f0f3ee;
+    --p-surface-200: #e2e7df;
+    --p-surface-300: #cdd5c8;
+    --p-surface-400: #b4bfb0;
+    --p-surface-500: #99a695;
+    --p-surface-600: #7e8d7a;
+    --p-surface-700: #657262;
+    --p-surface-800: #4e594a;
+    --p-surface-900: #3a4237;
+    --p-surface-950: #1f251e;
+    --p-content-background: #ffffff;
+    --p-overlay-background: #ffffff;
+    --p-menu-background: #ffffff;
+    --p-popover-background: #ffffff;
 }
 
-body {
-    margin: 0;
-    font-family: var(--font-sans);
-    color: #111827;
-    background: #f9fafb;
-}
+@layer base {
 
-.role-page {
-    max-width: 760px;
-}
+    html,
+    body,
+    #app {
+        min-height: 100%;
+        margin: 0;
+    body {
+        font-family: var(--font-sans);
+        color: var(--color-charcoal);
+            background: var(--color-surface);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #d6ddd4;
+            border-radius: 9999px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c0cfba;
+        }
+        }
+        
+        @layer components {
+            /* 1. Force all overlay panels (dropdowns, selects, dialogs) to white */
+                [class*="-panel"],
+                [class*="-dialog"],
+                [class*="-sidebar"] {
+                    background: #ffffff !important;
+                }
+            
+                /* 2. Force all list containers to white */
+                [class*="-list"] {
+                    background: #ffffff !important;
+                    color: var(--color-charcoal) !important;
+                }
+            
+                /* 3. Force all individual options/items to white with dark text */
+                [class*="-option"],
+                [class*="-item"] {
+                    background: #ffffff !important;
+                    color: var(--color-charcoal) !important;
+                }
+            
+                /* 4. Force focused/active states to stay light (override Aura's dark focus) */
+                [class*="-option"].p-focus,
+                [class*="-item"].p-focus,
+                .p-focus {
+                    background: var(--color-sage-50) !important;
+                    /* light hover color */
+                    color: var(--color-charcoal) !important;
+                    outline-color: var(--color-sage-400) !important;
+                }
+            
+                /* 5. Hover states – light background instead of dark */
+                [class*="-option"]:hover,
+                [class*="-item"]:hover {
+                    background: var(--color-sage-50) !important;
+                    color: var(--color-charcoal) !important;
+                }
+            
+                /* 6. Fix the input/trigger itself (the main Select/Dropdown box) */
+                .p-select,
+                .p-dropdown {
+                    background: #ffffff !important;
+                    color: var(--color-charcoal) !important;
+                    border-color: var(--color-border) !important;
+                }
+            .nav-link {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.75rem 1rem !important;
+                border-radius: 0.5rem;
+                color: #4a5568;
+                transition: background-color 0.2s ease, color 0.2s ease;
+            }
+        
+            .nav-link:hover {
+                background: var(--color-sage-50);
+                color: var(--color-charcoal);
+            }
+        
+            .nav-link-active {
+                background: var(--color-sage-100) !important;
+                color: var(--color-sage-700) !important;
+            }
+        
+            .nav-link-active .nav-icon {
+                color: var(--color-sage-600) !important;
+            }
+        
+            .nav-icon {
+                color: #94a3b8;
+                transition: color 0.2s ease;
+            }
+        
+            .nav-link:hover .nav-icon {
+                color: var(--color-sage-500);
+            }
+        
+            .p-inputtext,
+            .p-dropdown,
+            .p-textarea,
+            .p-select {
+                background: #ffffff !important;
+                color: var(--color-charcoal) !important;
+                border: 1px solid var(--color-border) !important;
+                box-shadow: none !important;
+                border-radius: var(--radius-input) !important;
+                font-size: 0.92rem;
+                transition: all 0.2s ease;
+            }
+        
+            .p-inputtext,
+            .p-textarea {
+                padding: 0.75rem 1rem;
+            }
+        
+            .p-inputtext::placeholder,
+            .p-textarea::placeholder {
+                color: #94a3b8;
+            }
+        
+            .p-inputtext:enabled:focus,
+            .p-dropdown:focus,
+            .p-textarea:focus,
+            .p-select:focus {
+                box-shadow: 0 0 0 3px rgba(168, 198, 156, 0.2) !important;
+                border-color: var(--color-sage-400) !important;
+            }
+        
+            .p-dropdown .p-dropdown-label,
+            .p-select .p-select-label {
+                color: var(--color-charcoal) !important;
+                background: #ffffff !important;
+            }
+            .p-select-overlay{
+                border: .5rem solid !important;
+            }
+            .p-dropdown:hover,
+            .p-textarea:hover,
+            .p-select:hover,
+            .p-inputtext:enabled:hover {
+                border-color: var(--color-sage-200) !important;
+            }
+        
+            .p-button {
+                border-radius: var(--radius-button);
+                font-weight: 600;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+        
+            .p-button.p-button-text {
+                background: transparent;
+                border-color: transparent;
+                color: var(--color-sage-600);
+            }
+        
+            .p-button.p-button-text:hover {
+                background: var(--color-sage-50);
+                color: var(--color-sage-700);
+            }
+        
+            .p-button.p-button-text.p-button-danger {
+                color: #b91c1c;
+                font-size: 0.825rem;
+            }
+        
+            .p-button.p-button-text.p-button-danger:hover {
+                background: rgba(254, 242, 242, 0.6);
+            }
+        
+            .p-card,
+            .p-dialog,
+            .p-select-panel,
+            .p-dropdown-panel,
+            .p-multiselect-panel,
+            .p-autocomplete-panel,
+            .p-listbox,
+            .p-overlaypanel,
+            .p-tieredmenu,
+            .p-contextmenu,
+            .p-menu,
+            .p-confirm-dialog,
+            .p-drawer,
+            .p-sidebar {
+                background: #ffffff !important;
+                color: var(--color-charcoal) !important;
+                border-color: var(--color-border) !important;
+            }
+        
+            .p-card {
+                border-radius: var(--radius-card);
+                box-shadow: var(--shadow-card);
+                border: 1px solid var(--color-border) !important;
+            }
+        
+            .p-card .p-card-content {
+                padding: 1.5rem;
+            }
+        
+            .p-card .p-card-body {
+                padding: 0;
+            }
+        
+            .p-dialog .p-dialog-header,
+            .p-dialog .p-dialog-content,
+            .p-dialog .p-dialog-footer {
+                background: #ffffff !important;
+                color: var(--color-charcoal) !important;
+            }
+        
+            .p-dialog .p-dialog-header,
+            .p-dialog .p-dialog-content,
+            .p-dialog .p-dialog-footer,
+            .p-select-panel,
+            .p-dropdown-panel,
+            .p-multiselect-panel,
+            .p-autocomplete-panel,
+            .p-listbox,
+            .p-overlaypanel,
+            .p-tieredmenu,
+            .p-contextmenu,
+            .p-menu,
+            .p-confirm-dialog,
+            .p-drawer,
+            .p-sidebar {
+                box-shadow: 0 20px 60px rgba(26, 37, 44, 0.12) !important;
+            }
+        
+            .p-dialog-mask {
+                backdrop-filter: blur(2px);
+                background: rgba(26, 37, 44, 0.35) !important;
+            }
+        
+            .p-dialog .p-dialog-header {
+                border-bottom: 1px solid var(--color-border) !important;
+                padding: 1.25rem 1.5rem 1rem !important;
+            }
+        
+            .p-dialog .p-dialog-content {
+                padding: 1.25rem 1.5rem !important;
+            }
+        
+            .p-dialog .p-dialog-footer {
+                border-top: 1px solid var(--color-border) !important;
+                padding: 1rem 1.5rem 1.25rem !important;
+            }
+        
+            .p-select-panel,
+            .p-dropdown-panel,
+            .p-multiselect-panel,
+            .p-autocomplete-panel,
+            .p-listbox,
+            .p-menu,
+            .p-tieredmenu,
+            .p-contextmenu {
+                background: #ffffff !important;
+            }
+        
+            .p-select-panel .p-select-items,
+            .p-dropdown-panel .p-dropdown-items,
+            .p-multiselect-panel .p-multiselect-items,
+            .p-autocomplete-panel .p-autocomplete-items,
+            .p-listbox .p-listbox-list,
+            .p-menu .p-menu-list,
+            .p-tieredmenu .p-menu-list,
+            .p-contextmenu .p-menu-list {
+                background: #ffffff !important;
+                color: var(--color-charcoal) !important;
+            }
 
-.role-page .eyebrow {
-    color: #2563eb;
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    margin: 0 0 0.5rem;
-    text-transform: uppercase;
-}
+        .p-datatable {
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            background: #ffffff !important;
+        }
 
-.role-page h1 {
-    font-size: 2rem;
-    margin: 0 0 0.75rem;
-}
+        .p-datatable .p-datatable-thead>tr>th {
+            background: var(--color-surface) !important;
+            color: var(--color-charcoal) !important;
+            font-weight: 600;
+            padding: 1.25rem 1.25rem;
+            border-color: var(--color-border) !important;
+            text-transform: uppercase;
+        font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .p-datatable .p-datatable-tbody>tr {
+            background: #ffffff !important;
+            color: var(--color-charcoal) !important;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        
+        .p-datatable .p-datatable-tbody>tr>td {
+            padding: 1rem 1.25rem;
+            border-color: var(--color-border) !important;
+            color: var(--color-charcoal) !important;
+            background: #ffffff !important;
+        }
+        
+        .p-datatable .p-datatable-tbody>tr:not(.p-highlight):hover {
+            background: var(--color-sage-50) !important;
+            color: var(--color-charcoal) !important;
+        }
+        
+        .p-datatable .p-button.p-button-text {
+            color: #6a9c5e !important;
+            background: transparent !important;
+            border-color: transparent !important;
+        }
+        
+        .p-datatable .p-button.p-button-text:hover {
+            background: var(--color-sage-50) !important;
+            color: var(--color-sage-700) !important;
+        }
+        
+        .p-datatable .p-paginator,
+        .p-datatable .p-paginator-top,
+        .p-datatable .p-paginator-bottom,
+        .p-datatable .p-datatable-footer {
+            background: #ffffff !important;
+            color: var(--color-charcoal) !important;
+            border-top: 1px solid var(--color-border);
+        }
+        
+        .p-datatable .p-paginator .p-paginator-page,
+        .p-datatable .p-paginator .p-paginator-first,
+        .p-datatable .p-paginator .p-paginator-prev,
+        .p-datatable .p-paginator .p-paginator-next,
+        .p-datatable .p-paginator .p-paginator-last {
+            color: var(--color-sage-600) !important;
+            background: #ffffff !important;
+            border-color: var(--color-border) !important;
+        }
+        
+        .p-datatable .p-paginator .p-paginator-page.p-highlight {
+            background: var(--color-sage-600) !important;
+            border-color: var(--color-sage-600) !important;
+            color: #ffffff !important;
+        }
+        
+        .p-datatable .p-paginator .p-paginator-page:not(.p-highlight):hover,
+        .p-datatable .p-paginator .p-paginator-first:hover,
+        .p-datatable .p-paginator .p-paginator-prev:hover,
+        .p-datatable .p-paginator .p-paginator-next:hover,
+        .p-datatable .p-paginator .p-paginator-last:hover {
+            background: var(--color-sage-50) !important;
+            color: var(--color-sage-700) !important;
+        }
+        
+        .p-message.p-message-error {
+            background: #fef2f2;
+            border-color: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.9rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-input);
+        }
+        
+        .p-tag {
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.35rem 0.65rem;
+            text-transform: capitalize;
+        }
+        
+        .p-tag.p-tag-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .p-tag.p-tag-info {
+            background: #ebf8ff;
+            color: #3182ce;
+        }
+        
+        .p-tag.p-tag-warning {
+            background: #fffbea;
+            color: #b7942f;
+        }
+        
+        .p-tag.p-tag-danger {
+            background: #fef2f2;
+            color: #c53030;
+        }
+        
+        .p-tag.p-tag-success {
+            background: #f0fff4;
+            color: #2f855a;
+        }
+        
+        .complaint-assign-dialog .p-dialog,
+        .complaint-assign-dialog .p-dialog-header,
+        .complaint-assign-dialog .p-dialog-content,
+        .complaint-assign-dialog .p-dialog-footer {
+            background: #ffffff !important;
+            color: var(--color-charcoal) !important;
+    
 
-.role-page p {
-    color: #4b5563;
-    line-height: 1.7;
+        .complaint-assign-dialog .p-dropdown,
+        .complaint-assign-dialog .p-select,
+        .complaint-assign-dialog .p-textarea,
+        .complaint-assign-dialog .p-inputtext {
+            background: #ffffff !important;
+            color: var(--color-charcoal) !important;
+        }
+
+        .complaint-assign-dialog .p-dropdown .p-dropdown-label,
+        .complaint-assign-dialog .p-select .p-select-label {
+            color: var(--color-charcoal) !important;
+        }
 }
+        }
+        
+    }

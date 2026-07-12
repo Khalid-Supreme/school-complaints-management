@@ -1,10 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import StudentLayout from '../layouts/StudentLayout.vue';
-import StaffLayout from '../layouts/StaffLayout.vue';
-import OfficerLayout from '../layouts/OfficerLayout.vue';
-import AdminLayout from '../layouts/AdminLayout.vue';
 import AuthLayout from '../layouts/AuthLayout.vue';
+import AppLayout from '../layouts/AppLayout.vue';
 
 const routes = [
     {
@@ -25,19 +22,19 @@ const routes = [
         path: '/student',
         name: 'StudentDashboard',
         component: () => import('../pages/student/StudentDashboard.vue'),
-        meta: { layout: StudentLayout, requiresAuth: true, roles: ['student'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['student'] }
     },
     {
         path: '/student/submit',
         name: 'StudentSubmitComplaint',
         component: () => import('../pages/student/SubmitComplaint.vue'),
-        meta: { layout: StudentLayout, requiresAuth: true, roles: ['student'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['student'] }
     },
     {
         path: '/student/complaints/:id',
         name: 'StudentComplaintDetails',
         component: () => import('../pages/complaints/ComplaintDetails.vue'),
-        meta: { layout: StudentLayout, requiresAuth: true, roles: ['student'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['student'] }
     },
 
     // Staff Complainant Routes (staff role)
@@ -45,19 +42,19 @@ const routes = [
         path: '/staff',
         name: 'StaffDashboard',
         component: () => import('../pages/staff/StaffDashboard.vue'),
-        meta: { layout: StaffLayout, requiresAuth: true, roles: ['staff'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['staff'] }
     },
     {
         path: '/staff/submit',
         name: 'StaffSubmitComplaint',
         component: () => import('../pages/student/SubmitComplaint.vue'), // Reuse student submit page
-        meta: { layout: StaffLayout, requiresAuth: true, roles: ['staff'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['staff'] }
     },
     {
         path: '/staff/complaints/:id',
         name: 'StaffComplaintDetails',
         component: () => import('../pages/complaints/ComplaintDetails.vue'),
-        meta: { layout: StaffLayout, requiresAuth: true, roles: ['staff'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['staff'] }
     },
 
     // Complaint Officer Routes
@@ -65,13 +62,13 @@ const routes = [
         path: '/officer',
         name: 'OfficerDashboard',
         component: () => import('../pages/officer/OfficerDashboard.vue'),
-        meta: { layout: OfficerLayout, requiresAuth: true, roles: ['complaint_officer'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['complaint_officer'] }
     },
     {
         path: '/officer/complaints/:id',
         name: 'OfficerComplaintDetails',
         component: () => import('../pages/complaints/ComplaintDetails.vue'),
-        meta: { layout: OfficerLayout, requiresAuth: true, roles: ['complaint_officer'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['complaint_officer'] }
     },
 
     // Admin Routes
@@ -79,19 +76,19 @@ const routes = [
         path: '/admin',
         name: 'AdminDashboard',
         component: () => import('../pages/admin/AdminDashboard.vue'),
-        meta: { layout: AdminLayout, requiresAuth: true, roles: ['admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
     },
     {
         path: '/admin/complaints',
         name: 'AdminComplaints',
         component: () => import('../pages/admin/Complaints.vue'),
-        meta: { layout: AdminLayout, requiresAuth: true, roles: ['admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
     },
     {
         path: '/admin/complaints/:id',
         name: 'AdminComplaintDetails',
         component: () => import('../pages/complaints/ComplaintDetails.vue'),
-        meta: { layout: AdminLayout, requiresAuth: true, roles: ['admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
     },
 
     // Security Dashboard (Admin or Security role)
@@ -99,7 +96,7 @@ const routes = [
         path: '/security',
         name: 'SecurityDashboard',
         component: () => import('../pages/security/SecurityDashboard.vue'),
-        meta: { layout: AdminLayout, requiresAuth: true, roles: ['security', 'admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['security', 'admin'] }
     },
     {
         path: '/:pathMatch(.*)*',

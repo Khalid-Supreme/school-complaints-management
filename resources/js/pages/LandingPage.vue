@@ -23,15 +23,14 @@ import { useAuthStore } from '../stores/auth';
 const router = useRouter();
 const authStore = useAuthStore();
 
-const getDashboardRoute = (roleSlug, user) => {
+const getDashboardRoute = (roleSlug) => {
     switch(roleSlug) {
-        case 'admin': return '/admin';
-        case 'staff': return '/officer';
-        case 'security': return '/security';
-        case 'complainant': 
-            const isStudent = user?.institution_id?.startsWith('STD-') || user?.department === 'Student';
-            return isStudent ? '/student' : '/staff';
-        default: return '/login';
+    case 'admin': return '/admin';
+    case 'staff': return '/staff';
+    case 'security': return '/security';
+    case 'student': return '/student';
+    case 'complaint_officer': return '/officer';
+    default: return '/login';
     }
 };
 
@@ -46,7 +45,7 @@ onMounted(async () => {
     }
     
     if (authStore.isAuthenticated) {
-        router.push(getDashboardRoute(authStore.role, authStore.user));
+        router.push(getDashboardRoute(authStore.role));
     } else {
         router.push('/login');
     }
