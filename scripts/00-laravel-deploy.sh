@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-echo "Running composer"
-composer install --no-dev --working-dir=/var/www/html --optimize-autoloader
-echo "Caching config..."
+echo "--- Starting Deployment Script ---"
+
+# 1. Compile Vue frontend assets
+npm install
+npm run build
+
+# 2. Cache Laravel configurations
 php artisan config:cache
-echo "Caching routes..."
 php artisan route:cache
-echo "Running migrations..."
+php artisan view:cache
+
+# 3. Run database migrations safely
 php artisan migrate --force
