@@ -1,7 +1,7 @@
 # ---- Stage 1: build frontend (Vite) ----
 FROM node:20-alpine AS frontend
 WORKDIR /app
-COPY package.json package-lock.json* ./
+COPY package*.json ./
 RUN npm ci --silent
 COPY . .
 RUN npm run build
@@ -33,7 +33,7 @@ RUN apk add --no-cache --update \
     supervisor
 
 # Configure and install required PHP extensions
-RUN docker-php-ext-configure zip --with-libzip && \
+RUN docker-php-ext-configure zip && \
     docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl intl && \
     apk del autoconf gcc g++ make
 
