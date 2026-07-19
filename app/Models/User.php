@@ -3,7 +3,6 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,14 +15,17 @@ use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
     'role_id',
-    'name', 
-    'email', 
+    'name',
+    'title',
+    'gender',
+    'email',
     'institution_id',
-    'password', 
-    'phone', 
-    'department', 
-    'is_active', 
-    'last_login_at'
+    'password',
+    'phone',
+    'department_id',
+    'is_active',
+    'last_login_at',
+    'email_verified_at'
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -60,5 +62,15 @@ class User extends Authenticatable
     public function loginAttempts(): HasMany
     {
         return $this->hasMany(LoginAttempt::class);
+    }
+
+    public function hasVerifiedEmail(): bool
+    {
+        return !is_null($this->email_verified_at);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 }

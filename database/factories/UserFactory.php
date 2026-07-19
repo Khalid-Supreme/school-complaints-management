@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Department;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +31,7 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
             'phone' => fake()->phoneNumber(),
-            'department' => fake()->word(),
+            'department_id' => Department::inRandomOrder()->first()?->id ?? 1,
             'is_active' => true,
             'last_login_at' => null,
             'email_verified_at' => now(),

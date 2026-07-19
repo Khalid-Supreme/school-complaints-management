@@ -35,7 +35,7 @@ class AuthService
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             $this->recordLoginAttempt($username, $request, false, 'Invalid credentials');
-            
+
             throw ValidationException::withMessages([
                 'username' => __('auth.failed'),
             ]);
@@ -46,6 +46,14 @@ class AuthService
             
             throw ValidationException::withMessages([
                 'username' => __('Account is inactive.'),
+            ]);
+        }
+
+        if (is_null($user->email_verified_at)) {
+            $this->recordLoginAttempt($username, $request, false, 'Email not verified');
+
+            throw ValidationException::withMessages([
+                'username' => __('Please verify your email address before logging in.'),
             ]);
         }
 

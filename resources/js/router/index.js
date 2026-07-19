@@ -16,6 +16,12 @@ const routes = [
         component: () => import('../pages/auth/LoginPage.vue'),
         meta: { layout: AuthLayout, guest: true }
     },
+    {
+        path: '/email-verification',
+        name: 'EmailVerification',
+        component: () => import('../pages/auth/EmailVerificationPage.vue'),
+        meta: { layout: AuthLayout, guest: true }
+    },
 
     // Student Routes
     {

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Middleware\IpsMiddleware;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\EnsureComplaintAccess;
+use App\Http\Middleware\EnsureEmailVerified;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'ips' => IpsMiddleware::class,
             'role' => EnsureRole::class,
             'complaint.access' => EnsureComplaintAccess::class,
+            'email.verified' => EnsureEmailVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -13,6 +13,11 @@
         </div>
 
         <!-- Error Message -->
+        <Message v-if="route.query.verified" severity="success" :closable="false"
+            class="!bg-green-50/50 !border-green-100/50 !text-green-700 !rounded-xl !text-sm">
+            Email verified successfully. Your Institution ID has been filled in below.
+        </Message>
+
         <Message v-if="authStore.error" severity="error" :closable="false"
             class="!bg-red-50/50 !border-red-100/50 !text-red-600 !rounded-xl !text-sm">
             {{ authStore.error }}
@@ -60,28 +65,39 @@
                 :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
         </form>
 
+            <div class="flex justify-center pt-1">
+                <p class="text-sm text-slate-400 font-medium">
+                    New user?
+                    <a class="text-sage-600 hover:text-sage-700 font-semibold cursor-pointer underline-offset-2 hover:underline" @click="showRegister = true">Create an account</a>
+                </p>
+            </div>
+
         <!-- Security Footer -->
         <div class="flex items-center justify-center gap-2 pt-2">
             <i class="pi pi-shield text-sage-400 text-xs"></i>
             <span class="text-[0.7rem] text-slate-400 font-medium tracking-wide">AES-256 Bit SSL Tunnel Active</span>
         </div>
+
+            <RegistrationModal v-model:visible="showRegister" @success="handleRegistrationSuccess" />
     </div>
 </template>
 
 <script setup>
-import { reactive } from 'vue';
+    import { reactive, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
+    import RegistrationModal from '../../components/RegistrationModal.vue';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+    const showRegister = ref(false);
 
 const form = reactive({
-    username: '',
+    username: route.query.institution_id || '',
     password: ''
 });
 
@@ -114,6 +130,10 @@ const handleLogin = async () => {
         const redirect = route.query.redirect || getDashboardRoute(authStore.role, authStore.user);
         router.push(redirect);
     }
+};
+
+const handleRegistrationSuccess = ({ email, institution_id }) => {
+    router.push({ path: '/email-verification', query: { email, institution_id, registered: '1' } });
 };
 
 const getDashboardRoute = (roleSlug, user) => {

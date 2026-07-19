@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\Department;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
@@ -20,6 +21,8 @@ class UserSeeder extends Seeder
         $complaintOfficerRole = Role::where('slug', 'complaint_officer')->first();
         $securityRole = Role::where('slug', 'security')->first();
 
+        $dept = fn(string $slug) => Department::where('slug', $slug)->value('id');
+
         // 1. Admin
         if ($adminRole) {
             User::updateOrCreate(
@@ -28,8 +31,8 @@ class UserSeeder extends Seeder
                     'role_id' => $adminRole->id,
                     'name' => 'Admin Supreme',
                     'institution_id' => 'STF-2026-001',
-                    'password' => Hash::make('password'),
-                    'department' => 'IT',
+                    'password' => Hash::make(hash('sha256', 'password')),
+                    'department_id' => $dept('vc-office'),
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ]
@@ -44,8 +47,8 @@ class UserSeeder extends Seeder
                     'role_id' => $staffRole->id,
                     'name' => 'Staff Sarah',
                     'institution_id' => 'STF-2026-099',
-                    'password' => Hash::make('password'),
-                    'department' => 'Sciences',
+                    'password' => Hash::make(hash('sha256', 'password')),
+                    'department_id' => $dept('sciences'),
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ]
@@ -84,8 +87,8 @@ class UserSeeder extends Seeder
                     'role_id' => $studentRole->id,
                     'name' => 'Student Aisha',
                     'institution_id' => 'STD-2026-201',
-                    'password' => Hash::make('password'),
-                    'department' => 'Cybersecurity',
+                    'password' => Hash::make(hash('sha256', 'password')),
+                    'department_id' => $dept('computing-it'),
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ]
@@ -97,8 +100,8 @@ class UserSeeder extends Seeder
                     'role_id' => $studentRole->id,
                     'name' => 'Student Bashir',
                     'institution_id' => 'STD-2026-202',
-                    'password' => Hash::make('password'),
-                    'department' => 'Cybersecurity',
+                    'password' => Hash::make(hash('sha256', 'password')),
+                    'department_id' => $dept('computing-it'),
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ]
@@ -111,8 +114,8 @@ class UserSeeder extends Seeder
                     'role_id' => $studentRole->id,
                     'name' => 'Student Abiodun',
                     'institution_id' => 'STD-2026-301',
-                    'password' => Hash::make('password'),
-                    'department' => 'Arabic',
+                    'password' => Hash::make(hash('sha256', 'password')),
+                    'department_id' => $dept('arts-humanities'),
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ]
@@ -124,8 +127,8 @@ class UserSeeder extends Seeder
                     'role_id' => $studentRole->id,
                     'name' => 'Student Naimah',
                     'institution_id' => 'STD-2026-302',
-                    'password' => Hash::make('password'),
-                    'department' => 'Arabic',
+                    'password' => Hash::make(hash('sha256', 'password')),
+                    'department_id' => $dept('arts-humanities'),
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ]
@@ -139,8 +142,8 @@ class UserSeeder extends Seeder
                     'role_id' => $studentRole->id,
                     'name' => 'Student Jane',
                     'institution_id' => 'STD-2026-101',
-                    'password' => Hash::make('password'),
-                    'department' => 'Computer Science',
+                    'password' => Hash::make(hash('sha256', 'password')),
+                    'department_id' => $dept('computing-it'),
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ]
@@ -155,8 +158,8 @@ class UserSeeder extends Seeder
                     'role_id' => $complaintOfficerRole->id,
                     'name' => 'Officer Aliyah',
                     'institution_id' => 'STF-2026-002',
-                    'password' => Hash::make('password'),
-                    'department' => 'Student Affairs',
+                    'password' => Hash::make(hash('sha256', 'password')),
+                    'department_id' => $dept('student-affairs'),
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ]
@@ -168,8 +171,8 @@ class UserSeeder extends Seeder
                     'role_id' => $complaintOfficerRole->id,
                     'name' => 'Officer Yunus',
                     'institution_id' => 'STF-2026-004',
-                    'password' => Hash::make('password'),
-                    'department' => 'Academic Registry',
+                    'password' => Hash::make(hash('sha256', 'password')),
+                    'department_id' => $dept('academic-registry'),
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ]
@@ -184,8 +187,8 @@ class UserSeeder extends Seeder
                     'role_id' => $securityRole->id,
                     'name' => 'Security Danjuma',
                     'institution_id' => 'STF-2026-003',
-                    'password' => Hash::make('password'),
-                    'department' => 'Campus Security',
+                    'password' => Hash::make(hash('sha256', 'password')),
+                    'department_id' => $dept('security-unit'),
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ]

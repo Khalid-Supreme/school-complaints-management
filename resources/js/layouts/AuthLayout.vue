@@ -1,5 +1,6 @@
 <template>
     <div class="min-h-screen flex items-center justify-center bg-[#F8FAF6] px-6 py-12">
+        <Toast />
         <div class="w-full max-w-[400px] space-y-10">
             <div class="text-center">
                 <h2 class="text-[1.65rem] font-semibold text-[#1A252C] tracking-tight">
@@ -19,5 +20,5 @@
 </template>
 
 <script setup>
-// Auth Layout component
+import Toast from 'primevue/toast';
 </script>
