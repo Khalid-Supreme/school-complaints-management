@@ -70,7 +70,7 @@ class ComplaintService
             'institution_id' => $complaint->complainant->institution_id,
             'name' => $complaint->complainant->name,
             'email' => $complaint->complainant->email,
-            'department' => $complaint->complainant->department,
+            'department' => $complaint->complainant->department?->name,
             ];
         }
         $complaintArray['complainant'] = $complainantDetails;

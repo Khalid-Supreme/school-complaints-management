@@ -69,9 +69,10 @@ class ComplaintAssignmentController extends Controller
      */
     public function staffList(): JsonResponse
     {
-        $staff = User::whereHas('role', function ($query) {
-            $query->where('slug', 'complaint_officer');
-        })->where('is_active', true)->get(['id','institution_id', 'name', 'email', 'department']);
+        $staff = User::with('department')
+            ->whereHas('role', fn($q) => $q->where('slug', 'complaint_officer'))
+            ->where('is_active', true)
+            ->get(['id', 'institution_id', 'name', 'email', 'department_id']);
 
         return response()->json(['data' => $staff]);
     }

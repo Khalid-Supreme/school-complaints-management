@@ -8,8 +8,17 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\AttachmentController;
 use App\Http\Controllers\Api\SecurityDashboardController;
 use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\Api\DepartmentController;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/departments', [DepartmentController::class, 'index']);
+Route::post('/register/student', [RegisterController::class, 'registerStudent']);
+Route::post('/register/staff', [RegisterController::class, 'registerStaff']);
+Route::get('/register/verify/{user}/{hash}', [RegisterController::class, 'verify'])
+    ->name('verification.verify')
+    ->middleware('signed');
+Route::post('/register/resend', [RegisterController::class, 'resend']);
 
 Route::middleware(['auth:sanctum', 'ips'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

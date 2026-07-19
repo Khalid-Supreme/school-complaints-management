@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+        'default' => env('APP_ENV') === 'production' ? 'resend' : 'mailtrap',
 
     /*
     |--------------------------------------------------------------------------
@@ -63,6 +63,7 @@ return [
 
         'resend' => [
             'transport' => 'resend',
+            'key' => env('MAIL_RESEND_API_KEY'),
         ],
 
         'sendmail' => [
@@ -95,6 +96,17 @@ return [
                 'postmark',
             ],
             'retry_after' => 60,
+        ],
+
+        'mailtrap' => [
+            'transport' => 'smtp',
+            'host' => env('MAIL_MAILTRAP_HOST', 'sandbox.smtp.mailtrap.io'),
+            'port' => env('MAIL_MAILTRAP_PORT', 2525),
+            'encryption' => env('MAIL_MAILTRAP_ENCRYPTION', 'tls'),
+            'username' => env('MAIL_MAILTRAP_USERNAME'),
+            'password' => env('MAIL_MAILTRAP_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
 
     ],
