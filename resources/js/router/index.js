@@ -85,6 +85,24 @@ const routes = [
         meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
     },
     {
+        path: '/admin/users',
+        name: 'AdminUsers',
+        component: () => import('../pages/admin/users/Users.vue'),
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+    },
+    {
+        path: '/admin/users/students',
+        name: 'AdminStudents',
+        component: () => import('../pages/admin/users/Students.vue'),
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+    },
+    {
+        path: '/admin/users/staff',
+        name: 'AdminStaff',
+        component: () => import('../pages/admin/users/Staff.vue'),
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+    },
+    {
         path: '/admin/complaints',
         name: 'AdminComplaints',
         component: () => import('../pages/admin/Complaints.vue'),

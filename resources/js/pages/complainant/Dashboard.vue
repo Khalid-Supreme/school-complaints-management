@@ -6,7 +6,7 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-surface-0 dark:bg-surface-800 p-6 rounded-lg shadow">
+        <div class="bg-white rounded-xl p-6 shadow-xl ring-1 ring-slate-900/5">
                 <div class="text-surface-500 dark:text-surface-400 font-medium mb-2">Total Complaints</div>
                 <div class="text-3xl font-bold text-primary-500">{{ store.meta?.total || 0 }}</div>
             </div>

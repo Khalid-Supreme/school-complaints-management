@@ -13,7 +13,7 @@
             </div>
         </div>
 
-        <div class="card p-6">
+        <div class="bg-white rounded-xl p-6 shadow-xl ring-1 ring-slate-900/5">
             <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
             <DataTable :value="store.complaints"

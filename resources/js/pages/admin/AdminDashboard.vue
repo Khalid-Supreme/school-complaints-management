@@ -33,7 +33,7 @@
 
         <!-- Recent Complaints & Quick Actions -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card class="lg:col-span-2 shadow-card">
+            <Card class="lg:col-span-2 shadow-xl ring-1 ring-slate-900/5">
                 <template #title>
                     <div class="flex justify-between items-center pb-4 mb-4"
                         style="border-bottom: 1px solid var(--color-border);">

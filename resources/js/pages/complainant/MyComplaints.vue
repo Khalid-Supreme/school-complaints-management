@@ -5,7 +5,7 @@
             <Button label="Submit New" icon="pi pi-plus" @click="router.push('/complainant/complaints/create')" />
         </div>
 
-        <div class="bg-surface-0 dark:bg-surface-800 p-6 rounded-lg shadow">
+        <div class="bg-white rounded-xl p-6 shadow-xl ring-1 ring-slate-900/5">
             <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
             <DataTable 

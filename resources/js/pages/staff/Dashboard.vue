@@ -3,13 +3,13 @@
         <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-0">Staff Dashboard</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-surface-0 dark:bg-surface-800 p-6 rounded-lg shadow">
+        <div class="bg-white rounded-xl p-6 shadow-xl ring-1 ring-slate-900/5">
                 <div class="text-surface-500 dark:text-surface-400 font-medium mb-2">Active Assignments</div>
                 <div class="text-3xl font-bold text-primary-500">{{ store.assignmentMeta?.total || 0 }}</div>
             </div>
         </div>
 
-        <div class="bg-surface-0 dark:bg-surface-800 p-6 rounded-lg shadow">
+        <div class="bg-white rounded-xl p-6 shadow-xl ring-1 ring-slate-900/5">
             <h2 class="text-xl font-bold mb-4">My Assigned Complaints</h2>
             <DataTable :value="store.assignments" :loading="store.loading" responsiveLayout="scroll" :rows="5">
                 <Column header="Reference No">
