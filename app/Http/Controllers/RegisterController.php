@@ -11,8 +11,16 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
+use App\Repositories\UserRepository;
+
 class RegisterController extends Controller
 {
+    protected UserRepository $userRepository;
+
+    public function __construct(UserRepository $userRepository)
+    {
+        $this->userRepository = $userRepository;
+    }
     public function registerStudent(RegisterStudentRequest $request)
     {
         return $this->registerUser($request, 'student', 'STD');
@@ -59,7 +67,7 @@ class RegisterController extends Controller
     protected function registerUser($request, string $roleSlug, string $prefix)
     {
         $role = Role::where('slug', $roleSlug)->firstOrFail();
-        $institutionId = $this->generateInstitutionId($prefix);
+        $institutionId = $this->userRepository->generateInstitutionId($prefix);
 
         $data = [
             'role_id' => $role->id,
@@ -92,15 +100,7 @@ class RegisterController extends Controller
 
     protected function generateInstitutionId(string $prefix): string
     {
-        $year = now()->year;
-        $highest = User::where('institution_id', 'like', "{$prefix}-{$year}-%")
-            ->pluck('institution_id')
-            ->map(function ($value) {
-                return (int) preg_replace('/^.*-(\d+)$/', '$1', $value);
-            })
-            ->max() ?? 0;
-
-        return sprintf('%s-%s-%04d', $prefix, $year, $highest + 1);
+        return $this->userRepository->generateInstitutionId($prefix);
     }
 
     protected function sendVerificationMail(User $user): void

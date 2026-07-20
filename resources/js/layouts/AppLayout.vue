@@ -96,6 +96,7 @@ const sideNav = computed(() => {
         { to: '/admin', icon: 'pi pi-sliders-h', label: 'System Metrics' },
         { to: '/admin/complaints', icon: 'pi pi-bars', label: 'All Complaints' },
         { to: '/security', icon: 'pi pi-exclamation-triangle', label: 'Security (IPS)' },
+        { to: '/admin/users', icon: 'pi pi-users', label: 'User Management' },
       ];
     case 'complaint_officer':
       return [{ to: '/officer', icon: 'pi pi-briefcase', label: 'My Assignments' }];

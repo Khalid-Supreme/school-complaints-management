@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\AttachmentController;
 use App\Http\Controllers\Api\SecurityDashboardController;
 use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\Api\DepartmentController;
 
@@ -65,6 +66,17 @@ Route::middleware(['auth:sanctum', 'ips'])->group(function () {
     // Admin Dashboard (admin only)
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
         ->middleware('role:admin');
+
+    // User Management (admin only)
+    Route::middleware('role:admin')->prefix('/admin/users')->group(function () {
+        Route::get('/students', [UserManagementController::class, 'students']);
+        Route::get('/staff', [UserManagementController::class, 'staff']);
+        Route::post('/', [UserManagementController::class, 'store']);
+        Route::get('/{user}', [UserManagementController::class, 'show']);
+        Route::put('/{user}', [UserManagementController::class, 'update']);
+        Route::delete('/{user}', [UserManagementController::class, 'destroy']);
+        Route::patch('/{user}/role', [UserManagementController::class, 'updateRole']);
+    });
 
     // Security Dashboard (Admin or Security role)
     Route::middleware(['role:admin,security'])->group(function () {

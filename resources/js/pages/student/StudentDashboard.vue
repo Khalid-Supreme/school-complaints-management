@@ -31,7 +31,7 @@
         </div>
 
         <!-- Recent Secure Complaints -->
-        <Card class="shadow-card">
+        <Card class="shadow-xl ring-1 ring-slate-900/5">
             <template #title>
                 <div class="flex justify-between items-center pb-4 mb-4"
                     style="border-bottom: 1px solid var(--color-border);">

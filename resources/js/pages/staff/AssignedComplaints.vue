@@ -2,7 +2,7 @@
     <div class="space-y-6">
         <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-0">Assigned Complaints</h1>
 
-        <div class="bg-surface-0 dark:bg-surface-800 p-6 rounded-lg shadow">
+        <div class="bg-white rounded-xl p-6 shadow-xl ring-1 ring-slate-900/5">
             <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
             <DataTable 
