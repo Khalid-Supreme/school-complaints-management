@@ -14,7 +14,7 @@ return [
     |
     */
 
-        'default' => env('APP_ENV') === 'production' ? 'resend' : 'mailtrap',
+    'default' => env('APP_ENV') === 'production' ? 'gmail' : 'mailtrap',
 
     /*
     |--------------------------------------------------------------------------
@@ -59,6 +59,17 @@ return [
             // 'client' => [
             //     'timeout' => 5,
             // ],
+        ],
+
+        'gmail' => [
+            'transport' => 'smtp',
+            'host' => env('MAIL_GMAIL_HOST', 'smtp.gmail.com'),
+            'port' => env('MAIL_GMAIL_PORT', 587),
+            'encryption' => env('MAIL_GMAIL_ENCRYPTION', 'tls'),
+            'username' => env('MAIL_GMAIL_USERNAME'),
+            'password' => env('MAIL_GMAIL_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
 
         'resend' => [
