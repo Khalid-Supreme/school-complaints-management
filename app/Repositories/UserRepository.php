@@ -20,11 +20,16 @@ class UserRepository
     public function generateInstitutionId(string $prefix): string
     {
         $year = now()->year;
-        $highest = User::where('institution_id', 'like', "{$prefix}-{$year}-%")
+        $highest = User::withTrashed()->where('institution_id', 'like', "{$prefix}-{$year}-%")
             ->pluck('institution_id')
             ->map(fn($value) => (int) preg_replace('/^.*-(\d+)$/', '$1', $value))
             ->max() ?? 0;
 
-        return sprintf('%s-%s-%04d', $prefix, $year, $highest + 1);
+        do {
+            $highest++;
+            $candidate = sprintf('%s-%s-%04d', $prefix, $year, $highest);
+        } while (User::withTrashed()->where('institution_id', $candidate)->exists());
+
+        return $candidate;
     }
 }
