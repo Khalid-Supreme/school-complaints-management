@@ -80,6 +80,50 @@ export const useAuthStore = defineStore('auth', {
             this.initialized = true;
             localStorage.removeItem('auth_token');
             delete axios.defaults.headers.common['Authorization'];
+        },
+
+        async forgotPassword(email) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await authService.forgotPassword(email);
+                return response.data.message;
+            } catch (err) {
+                this.error = err.response?.data?.message || 'Failed to send reset link';
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async resetPassword(payload) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await authService.resetPassword(payload);
+                return response.data.message;
+            } catch (err) {
+                this.error = err.response?.data?.errors?.email?.[0] 
+                    || err.response?.data?.message 
+                    || 'Failed to reset password';
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async resendVerification(email) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await authService.resendVerification(email);
+                return response.data.message;
+            } catch (err) {
+                this.error = err.response?.data?.message || 'Failed to resend verification email';
+                return false;
+            } finally {
+                this.loading = false;
+            }
         }
     }
 });

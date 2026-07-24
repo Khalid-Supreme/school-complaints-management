@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -142,7 +141,7 @@ class UserManagementController extends Controller
             'name' => $request->full_name,
             'email' => $request->email,
             'institution_id' => $this->userRepository->generateInstitutionId($prefix),
-            'password' => Hash::make($request->password),
+            'password' => $request->password,
             'department_id' => $request->department,
             'gender' => $request->gender,
             'title' => $title,
@@ -200,7 +199,7 @@ class UserManagementController extends Controller
             $data['is_active'] = $request->boolean('is_active');
         }
         if ($request->has('password')) {
-            $data['password'] = Hash::make($request->password);
+            $data['password'] = $request->password;
         }
 
         $user->update($data);

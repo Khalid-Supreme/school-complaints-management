@@ -53,7 +53,9 @@ class AuthService
             $this->recordLoginAttempt($username, $request, false, 'Email not verified');
 
             throw ValidationException::withMessages([
-                'username' => __('Please verify your email address before logging in.'),
+                'username' => __('Please verify your email address :email before logging in.', [
+                    'email' => $this->maskEmail($user->email),
+                ]),
             ]);
         }
 
@@ -122,5 +124,22 @@ class AuthService
             'successful' => $successful,
             'failure_reason' => $reason,
         ]);
+    }
+
+    protected function maskEmail(string $email): string
+    {
+        $parts = explode('@', $email);
+        $name = $parts[0];
+        $domain = $parts[1] ?? '';
+
+        if (strlen($name) <= 2) {
+            $visible = $name;
+            $masked = '';
+        } else {
+            $visible = substr($name, 0, 2);
+            $masked = str_repeat('*', strlen($name) - 2);
+        }
+
+        return $visible . $masked . '@' . $domain;
     }
 }

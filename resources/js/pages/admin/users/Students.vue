@@ -138,6 +138,7 @@ import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
 import api from '../../../services/api';
 import userService from '../../../services/userService';
+import { hashPassword } from '../../../utils/crypto';
 
 const toast = useToast();
 
@@ -265,6 +266,13 @@ const handleSubmit = async () => {
     formLoading.value = true;
     formError.value = '';
     formErrors.value = {};
+
+    if (form.password && form.password.length < 8) {
+        formErrors.value = { password: ['Password must be at least 8 characters.'] };
+        formLoading.value = false;
+        return;
+    }
+
     try {
         if (isEditing.value) {
             const payload = {
@@ -274,7 +282,7 @@ const handleSubmit = async () => {
                 department: form.department,
             };
             if (form.password) {
-                payload.password = form.password;
+                payload.password = await hashPassword(form.password);
             }
             await userService.update(editingId.value, payload);
             toast.add({ severity: 'success', summary: 'Updated', detail: 'Student updated successfully.', life: 3000 });
@@ -285,7 +293,7 @@ const handleSubmit = async () => {
                 email: form.email.trim(),
                 gender: form.gender,
                 department: form.department,
-                password: form.password,
+                password: await hashPassword(form.password),
             });
             toast.add({ severity: 'success', summary: 'Created', detail: 'Student created successfully.', life: 3000 });
         }
