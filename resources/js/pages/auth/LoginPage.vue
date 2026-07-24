@@ -12,15 +12,26 @@
             </p>
         </div>
 
-        <!-- Error Message -->
+        <!-- Success Messages -->
         <Message v-if="route.query.verified" severity="success" :closable="false"
             class="!bg-green-50/50 !border-green-100/50 !text-green-700 !rounded-xl !text-sm">
             Email verified successfully. Your Institution ID has been filled in below.
         </Message>
 
+        <Message v-if="route.query.reset === 'success'" severity="success" :closable="false"
+            class="!bg-green-50/50 !border-green-100/50 !text-green-700 !rounded-xl !text-sm">
+            Password has been reset successfully. You can now sign in with your new password.
+        </Message>
+
+        <!-- Error Message -->
         <Message v-if="authStore.error" severity="error" :closable="false"
             class="!bg-red-50/50 !border-red-100/50 !text-red-600 !rounded-xl !text-sm">
             {{ authStore.error }}
+            <template #icon>
+                <Button v-if="isEmailNotVerifiedError" icon="pi pi-refresh" v-tooltip="'Resend Verification Email'" text
+                    severity="secondary" size="small" :loading="authStore.loading" @click="handleResendVerification"
+                    class="mt-2" />
+            </template>
         </Message>
         
 <!-- Form -->
@@ -60,6 +71,14 @@
                     }}</small>
             </div>
 
+            <!-- Forgot Password Link -->
+            <div class="text-right mt-1">
+                <router-link to="/forgot-password"
+                    class="text-sm text-sage-600 hover:text-sage-700 font-medium underline-offset-2 hover:underline">
+                    Forgot Password?
+                </router-link>
+            </div>
+
             <Button type="submit" label="Authenticate Identity" icon="pi pi-shield" :loading="authStore.loading"
                 class="w-full !mt-7 !py-3 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[1px]"
                 :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
@@ -83,17 +102,19 @@
 </template>
 
 <script setup>
-    import { reactive, ref } from 'vue';
+import { reactive, ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
     import RegistrationModal from '../../components/RegistrationModal.vue';
+import { useToast } from 'primevue/usetoast';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const toast = useToast();
     const showRegister = ref(false);
 
 const form = reactive({
@@ -144,6 +165,18 @@ const getDashboardRoute = (roleSlug, user) => {
         case 'student': return '/student';
         case 'complaint_officer': return '/officer';
         default: return '/login';
+    }
+};
+
+const isEmailNotVerifiedError = computed(() =>
+    authStore.error && authStore.error.toLowerCase().includes('verify')
+);
+
+const handleResendVerification = async () => {
+    if (!form.username) return;
+    const message = await authStore.resendVerification(form.username);
+    if (message) {
+        toast.add({ severity: 'success', summary: 'Sent', detail: message, life: 3000 });
     }
 };
 </script>

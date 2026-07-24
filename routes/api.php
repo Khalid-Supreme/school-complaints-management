@@ -13,6 +13,8 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\Api\DepartmentController;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password', [AuthController::class, 'reset']);
 Route::get('/departments', [DepartmentController::class, 'index']);
 Route::post('/register/student', [RegisterController::class, 'registerStudent']);
 Route::post('/register/staff', [RegisterController::class, 'registerStaff']);

@@ -17,9 +17,33 @@ const routes = [
         meta: { layout: AuthLayout, guest: true }
     },
     {
+        path: '/forgot-password',
+        name: 'ForgotPassword',
+        component: () => import('../pages/auth/ForgotPasswordPage.vue'),
+        meta: { layout: AuthLayout, guest: true }
+    },
+    {
+        path: '/reset-password',
+        name: 'ResetPassword',
+        component: () => import('../pages/auth/ResetPasswordPage.vue'),
+        meta: { layout: AuthLayout, guest: true }
+    },
+    {
         path: '/email-verification',
         name: 'EmailVerification',
         component: () => import('../pages/auth/EmailVerificationPage.vue'),
+        meta: { layout: AuthLayout, guest: true }
+    },
+    {
+        path: '/forgot-password',
+        name: 'ForgotPassword',
+        component: () => import('../pages/auth/ForgotPasswordPage.vue'),
+        meta: { layout: AuthLayout, guest: true }
+    },
+    {
+        path: '/reset-password',
+        name: 'ResetPassword',
+        component: () => import('../pages/auth/ResetPasswordPage.vue'),
         meta: { layout: AuthLayout, guest: true }
     },
 

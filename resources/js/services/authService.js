@@ -33,6 +33,16 @@ export default {
         return api.post('/api/register/resend', { email });
     },
 
+    async forgotPassword(email) {
+        await initializeCsrf();
+        return api.post('/api/forgot-password', { email });
+    },
+
+    async resetPassword(payload) {
+        await initializeCsrf();
+        return api.post('/api/reset-password', payload);
+    },
+
     async logout() {
         return api.post('/api/logout');
     },
