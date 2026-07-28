@@ -31,6 +31,22 @@
             </div>
         </div>
 
+        <!-- Complaints Chart -->
+        <Card class="shadow-xl ring-1 ring-slate-900/5">
+            <template #title>
+                <div class="flex items-center gap-2 text-lg font-semibold text-charcoal pb-4 mb-4"
+                    style="border-bottom: 1px solid var(--color-border);">
+                    <i class="pi pi-chart-bar text-sage-600"></i>
+                    <span>Complaints Overview (Last 12 Months)</span>
+                </div>
+            </template>
+            <template #content>
+                <div class="relative" style="height: 300px;">
+                    <Chart type="bar" :data="chartData" :options="chartOptions" />
+                </div>
+            </template>
+        </Card>
+
         <!-- Recent Complaints & Quick Actions -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card class="lg:col-span-2 shadow-xl ring-1 ring-slate-900/5">
@@ -158,6 +174,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../../services/api';
 import Card from 'primevue/card';
+import Chart from 'primevue/chart';
 import Button from 'primevue/button';
 import Badge from 'primevue/badge';
 import DataTable from 'primevue/datatable';
@@ -171,11 +188,48 @@ const metrics = ref(null);
 const recentComplaints = ref([]);
 
 const metricCards = computed(() => [
-    { label: 'Total Complaints', value: metrics.value?.total_complaints ?? 0, icon: 'pi-folder', baseColor: '#6A9C5E', sub: 'All complaint records' },
     { label: 'Total Users', value: metrics.value?.total_users ?? 0, icon: 'pi-users', baseColor: '#45693C', sub: 'Registered accounts' },
-    { label: 'Active Cases', value: metrics.value?.assigned_complaints ?? 0, icon: 'pi-clock', baseColor: '#55834B', sub: 'Assigned & in progress' },
-    { label: 'Security Alerts', value: metrics.value?.security_events ?? 0, icon: 'pi-exclamation-triangle', baseColor: '#B91C1C', sub: 'SQLi & XSS detections' },
+    { label: 'Total Students', value: metrics.value?.total_students ?? 0, icon: 'pi-graduation-cap', baseColor: '#3B82F6', sub: 'Student accounts' },
+    { label: 'Total Staff', value: metrics.value?.total_staff ?? 0, icon: 'pi-briefcase', baseColor: '#8B5CF6', sub: 'Staff accounts' },
+    { label: 'Total Complaints', value: metrics.value?.total_complaints ?? 0, icon: 'pi-folder', baseColor: '#6A9C5E', sub: 'All complaint records' },
+    { label: 'Pending Complaints', value: metrics.value?.pending_complaints ?? 0, icon: 'pi-clock', baseColor: '#F59E0B', sub: 'Awaiting review' },
+    { label: 'Resolved Complaints', value: metrics.value?.resolved_complaints ?? 0, icon: 'pi-check-circle', baseColor: '#10B981', sub: 'Successfully resolved' },
 ]);
+
+const chartData = computed(() => {
+    const labels = metrics.value?.chart_data?.labels?.map(m => {
+        const [y, mo] = m.split('-');
+        return new Date(y, mo - 1).toLocaleString('default', { month: 'short', year: 'numeric' });
+    }) ?? [];
+    return {
+        labels,
+        datasets: [
+            {
+                label: 'Complaints Filed',
+                backgroundColor: '#F59E0B',
+                borderRadius: 4,
+                data: metrics.value?.chart_data?.complaints ?? [],
+            },
+            {
+                label: 'Resolved',
+                backgroundColor: '#10B981',
+                borderRadius: 4,
+                data: metrics.value?.chart_data?.resolved ?? [],
+            },
+        ],
+    };
+});
+
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+    },
+    scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+    },
+};
 
 const prioritySeverity = (p) => ({ high: 'danger', critical: 'danger', medium: 'warn', low: 'info' }[p] ?? 'secondary');
 
