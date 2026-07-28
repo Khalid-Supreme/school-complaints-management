@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model:visible="visibleProxy" :header="dialogHeader" :style="{ width: '28rem' }" @after-hide="resetForm" :closable="!loading" :draggable="false">
+  <Dialog v-model:visible="visibleProxy" :header="dialogHeader" :style="{ width: '28rem' }" :breakpoints="{ '640px': '95vw', '768px': '28rem' }" @after-hide="resetForm" :closable="!loading" :draggable="false">
     <div class="space-y-5">
       <div class="flex bg-sage-100/70 rounded-lg p-1 max-w-xs mx-auto">
         <button type="button" class="flex-1 text-sm font-medium py-2 px-4 rounded-md transition-all duration-200" :class="form.account_type === 'student' ? 'bg-white text-charcoal shadow-sm' : 'text-slate-500 hover:text-charcoal'" :disabled="loading" @click="switchType('student')">Student</button>
@@ -13,13 +13,13 @@
 
       <div>
         <label class="block text-sm font-medium text-charcoal/80 mb-2">Full Name</label>
-        <InputText v-model="form.full_name" placeholder="e.g. John Doe" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.full_name || localErrors.full_name }" :disabled="loading" @update:model-value="clearError('full_name')" />
+        <InputText v-model="form.full_name" placeholder="e.g. John Doe" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.full_name || localErrors.full_name }" :disabled="loading" @update:model-value="clearError('full_name')" />
         <small v-if="errors.full_name || localErrors.full_name" class="text-red-500 block mt-1.5 text-xs font-medium">{{ (errors.full_name && errors.full_name[0]) || localErrors.full_name }}</small>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-charcoal/80 mb-2">Email Address</label>
-        <InputText v-model="form.email" type="email" placeholder="e.g. johndoe@example.com" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.email || localErrors.email }" :disabled="loading" @update:model-value="clearError('email')" />
+        <InputText v-model="form.email" type="email" placeholder="e.g. johndoe@example.com" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.email || localErrors.email }" :disabled="loading" @update:model-value="clearError('email')" />
         <small v-if="errors.email || localErrors.email" class="text-red-500 block mt-1.5 text-xs font-medium">{{ (errors.email && errors.email[0]) || localErrors.email }}</small>
       </div>
 
@@ -43,7 +43,7 @@
 
       <div>
         <label class="block text-sm font-medium text-charcoal/80 mb-2">Password</label>
-        <InputText v-model="form.password" type="password" placeholder="Min. 8 characters" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.password || localErrors.password }" :disabled="loading" @update:model-value="clearError('password')" />
+        <InputText v-model="form.password" type="password" placeholder="Min. 8 characters" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.password || localErrors.password }" :disabled="loading" @update:model-value="clearError('password')" />
         <div v-if="form.password.length > 0" class="mt-2">
           <div class="h-1.5 rounded-full bg-sage-100 overflow-hidden">
             <div class="h-full rounded-full transition-all duration-300" :class="strengthBarClass" :style="{ width: strengthPercent + '%' }"></div>
@@ -55,13 +55,13 @@
 
       <div>
         <label class="block text-sm font-medium text-charcoal/80 mb-2">Confirm Password</label>
-        <InputText v-model="form.confirm_password" type="password" placeholder="Re-enter your password" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.confirm_password || localErrors.confirm_password }" :disabled="loading" @update:model-value="clearError('confirm_password')" />
+        <InputText v-model="form.confirm_password" type="password" placeholder="Re-enter your password" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.confirm_password || localErrors.confirm_password }" :disabled="loading" @update:model-value="clearError('confirm_password')" />
         <small v-if="errors.confirm_password || localErrors.confirm_password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ (errors.confirm_password && errors.confirm_password[0]) || localErrors.confirm_password }}</small>
       </div>
 
       <div class="flex justify-end gap-2 pt-2">
         <Button label="Cancel" severity="secondary" text :disabled="loading" @click="visibleProxy = false" />
-        <Button label="Register" :loading="loading" @click="submitRegistration" class="!py-2.5 !px-5 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[0.5px]" :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
+        <Button label="Register" :loading="loading" @click="submitRegistration" class="!py-2 sm:!py-2.5 !px-4 sm:!px-5 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.85rem] sm:!text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[0.5px]" :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
       </div>
     </div>
   </Dialog>

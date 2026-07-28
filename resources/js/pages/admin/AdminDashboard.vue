@@ -3,7 +3,7 @@
         <!-- Header Section -->
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-                <h1 class="text-3xl font-semibold text-charcoal tracking-tight">System Administration Dashboard</h1>
+                <h1 class="text-2xl lg:text-3xl font-semibold text-charcoal tracking-tight">System Administration Dashboard</h1>
                 <!-- <p class="text-slate-400 text-sm mt-1 font-medium">Al-Hikmah University — Secure Complaint Management
                     Console</p> -->
             </div>
@@ -16,15 +16,15 @@
         <!-- Metrics Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div v-for="card in metricCards" :key="card.label"
-                class="bg-white rounded-xl p-6 shadow-card transition-shadow hover:shadow-lg relative overflow-hidden flex flex-col justify-between"
+                class="bg-white rounded-xl p-4 sm:p-6 shadow-card transition-shadow hover:shadow-lg relative overflow-hidden flex flex-col justify-between"
                 style="border: 1px solid #E8EFE9;">
-                <div class="absolute -right-4 -bottom-4 text-[90px] opacity-5 font-black z-0"
+                <div class="absolute -right-4 -bottom-4 text-[60px] sm:text-[90px] opacity-5 font-black z-0"
                     :style="`color: ${card.baseColor}40;`">
                     <i :class="`pi ${card.icon}`"></i>
                 </div>
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 relative z-10">{{
                     card.label }}</p>
-                <div class="text-4xl font-semibold text-charcoal tracking-tight relative z-10">
+                <div class="text-2xl sm:text-4xl font-semibold text-charcoal tracking-tight relative z-10">
                     {{ loading ? '—' : card.value }}
                 </div>
                 <p class="text-xs mt-3 font-medium relative z-10" :style="`color: ${card.baseColor}`">{{ card.sub }}</p>
@@ -34,7 +34,7 @@
         <!-- Complaints Chart -->
         <Card class="shadow-xl ring-1 ring-slate-900/5">
             <template #title>
-                <div class="flex items-center gap-2 text-lg font-semibold text-charcoal pb-4 mb-4"
+                <div class="flex items-center gap-2 text-base lg:text-lg font-semibold text-charcoal pb-4 mb-4"
                     style="border-bottom: 1px solid var(--color-border);">
                     <i class="pi pi-chart-bar text-sage-600"></i>
                     <span>Complaints Overview (Last 12 Months)</span>
@@ -55,7 +55,7 @@
                         style="border-bottom: 1px solid var(--color-border);">
                         <div class="flex items-center gap-2">
                             <i class="pi pi-list text-sage-600 text-lg"></i>
-                            <span class="text-lg font-semibold text-charcoal">Recent Complaints</span>
+                            <span class="text-base lg:text-lg font-semibold text-charcoal">Recent Complaints</span>
                         </div>
                         <Button label="View All" icon="pi pi-arrow-right" icon-pos="right" text
                             class="!text-sage-600 hover:!bg-sage-50 !font-semibold"
@@ -63,6 +63,7 @@
                     </div>
                 </template>
                 <template #content>
+                    <div class="overflow-x-auto">
                     <DataTable :value="recentComplaints" :loading="loading" responsiveLayout="scroll"
                         class="p-datatable-sm" :rows="5">
                         <Column field="reference_no" header="Ref No" style="width: 130px">
@@ -106,6 +107,7 @@
                             </div>
                         </template>
                     </DataTable>
+                    </div>
                 </template>
             </Card>
 
@@ -113,7 +115,7 @@
             <div class="space-y-6">
                 <Card class="shadow-card">
                     <template #title>
-                        <div class="flex items-center gap-2 text-lg font-semibold text-charcoal pb-4 mb-4"
+                        <div class="flex items-center gap-2 text-base lg:text-lg font-semibold text-charcoal pb-4 mb-4"
                             style="border-bottom: 1px solid var(--color-border);">
                             <i class="pi pi-bolt text-amber-500"></i>
                             Quick Actions
@@ -133,7 +135,7 @@
 
                 <Card class="shadow-card" style="border: 1px solid #ECFDF5; background: #F6FEF9;">
                     <template #title>
-                        <div class="flex items-center gap-2 text-lg font-semibold text-charcoal pb-4 mb-4"
+                        <div class="flex items-center gap-2 text-base lg:text-lg font-semibold text-charcoal pb-4 mb-4"
                             style="border-bottom: 1px solid #E0F2F7;">
                             <i class="pi pi-shield text-sage-600"></i>
                             Security Status

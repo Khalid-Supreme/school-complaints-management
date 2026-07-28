@@ -5,7 +5,7 @@
         style="box-shadow: 0 4px 20px rgba(106, 156, 94, 0.08);">
         <i class="pi pi-envelope text-xl"></i>
       </div>
-      <h1 class="text-[1.6rem] font-semibold text-charcoal tracking-tight">Verify your email</h1>
+      <h1 class="text-[1.25rem] sm:text-[1.6rem] font-semibold text-charcoal tracking-tight">Verify your email</h1>
 
       <Message v-if="route.query.registered" severity="success" :closable="false"
         class="!bg-green-50/50 !border-green-100/50 !text-green-700 !rounded-xl !text-sm !mt-0">
@@ -41,12 +41,12 @@
     <div class="text-left space-y-2">
       <label class="block text-sm font-medium text-charcoal/80">Email Address</label>
       <InputText v-model="targetEmail" type="email" placeholder="Enter your email address"
-        class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" />
+        class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" />
     </div>
 
     <div class="flex flex-col gap-3">
       <Button label="Resend verification email" :loading="loading"
-        class="!py-3 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[1px]"
+        class="!py-2 sm:!py-3 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.85rem] sm:!text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[1px]"
         :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
       <Button label="Back to login" severity="secondary" outlined @click="router.push('/login')" />
     </div>

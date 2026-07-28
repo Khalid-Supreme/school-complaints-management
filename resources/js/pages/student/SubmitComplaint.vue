@@ -5,7 +5,7 @@
             <Button icon="pi pi-arrow-left" text rounded class="!text-slate-500 hover:!bg-sage-50"
                 @click="$router.back()" />
             <div>
-                <h1 class="text-3xl font-semibold text-charcoal tracking-tight">Submit Complaint</h1>
+                <h1 class="text-2xl lg:text-3xl font-semibold text-charcoal tracking-tight">Submit Complaint</h1>
                 <p class="text-slate-500 text-sm mt-0.5 font-medium">All data is encrypted with AES-256 before
                     transmission.</p>
             </div>
@@ -99,7 +99,7 @@
                         <Button type="submit"
                             :label="store.loading ? 'Encrypting & Submitting...' : 'Submit Securely'"
                             icon="pi pi-shield" :loading="store.loading"
-                            class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2.5 !px-5" />
+                            class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2 sm:!py-2.5 !px-4 sm:!px-5" />
                     </div>
                 </form>
             </template>

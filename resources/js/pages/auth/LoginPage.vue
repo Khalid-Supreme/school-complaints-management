@@ -6,7 +6,7 @@
                 style="box-shadow: 0 4px 20px rgba(106, 156, 94, 0.08);">
                 <i class="pi pi-lock text-xl"></i>
             </div>
-            <h1 class="text-[1.6rem] font-semibold text-charcoal tracking-tight">Sign In</h1>
+            <h1 class="text-[1.25rem] sm:text-[1.6rem] font-semibold text-charcoal tracking-tight">Sign In</h1>
             <p class="text-[0.8rem] text-slate-400 mt-1.5 font-medium leading-relaxed">
                 Enter your credentials to access the secure complaints terminal.
             </p>
@@ -47,7 +47,7 @@
                     </span>
                     <InputText id="username" v-model="form.username" type="text"
                         placeholder="e.g. STD-2026-001 or staff@example.com" required autofocus
-                        class="w-full !pl-10 !bg-white !border-sage-200/60 !text-charcoal !text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
+                        class="w-full !pl-10 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 !px-3 sm:!px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
                         :class="{ 'p-invalid': errors.username }" />
                 </div>
                 <small v-if="errors.username" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.username
@@ -64,7 +64,7 @@
                         <i class="pi pi-key text-sm"></i>
                     </span>
                     <InputText id="password" v-model="form.password" type="password" placeholder="••••••••" required
-                        class="w-full !pl-10 !bg-white !border-sage-200/60 !text-charcoal !text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
+                        class="w-full !pl-10 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 !px-3 sm:!px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
                         :class="{ 'p-invalid': errors.password }" />
                 </div>
                 <small v-if="errors.password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.password
@@ -80,7 +80,7 @@
             </div>
 
             <Button type="submit" label="Authenticate Identity" icon="pi pi-shield" :loading="authStore.loading"
-                class="w-full !mt-7 !py-3 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[1px]"
+                class="w-full !mt-7 !py-2 sm:!py-3 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.85rem] sm:!text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[1px]"
                 :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
         </form>
 

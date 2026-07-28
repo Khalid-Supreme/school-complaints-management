@@ -3,7 +3,7 @@
         <Toast />
         <div class="w-full max-w-[400px] space-y-10">
             <div class="text-center">
-                <h2 class="text-[1.65rem] font-semibold text-[#1A252C] tracking-tight">
+                <h2 class="text-[1.35rem] sm:text-[1.65rem] font-semibold text-[#1A252C] tracking-tight">
                     Complaint Management System
                 </h2>
                 <p class="mt-2 text-sm text-slate-400 font-medium">

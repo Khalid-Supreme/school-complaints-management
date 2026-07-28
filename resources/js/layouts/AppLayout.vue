@@ -12,7 +12,7 @@
             <i :class="brand.icon" class="text-lg"></i>
           </div>
           <div :class="sidebarCollapsed ? 'md:hidden' : 'md:block'">
-            <span class="block font-semibold text-[0.95rem] tracking-tight text-charcoal">{{ brand.title }}</span>
+            <span class="block font-semibold text-[0.85rem] lg:text-[0.95rem] tracking-tight text-charcoal">{{ brand.title }}</span>
             <span class="block text-[0.65rem] text-sage-500 font-medium tracking-[0.12em] uppercase">{{ brand.subtitle
               }}</span>
           </div>
@@ -22,7 +22,7 @@
           <template v-for="nav in sideNav" :key="nav.to">
             <router-link :to="nav.to" class="nav-link" active-class="nav-link-active" @click="closeSidebarOnMobile">
               <i :class="nav.icon" class="text-base nav-icon"></i>
-              <span class="font-medium text-[0.875rem]" :class="sidebarCollapsed ? 'md:hidden' : 'md:inline'">{{
+              <span class="font-medium text-[0.8rem] lg:text-[0.875rem]" :class="sidebarCollapsed ? 'md:hidden' : 'md:inline'">{{
                 nav.label }}</span>
             </router-link>
           </template>
@@ -35,7 +35,7 @@
               {{ authStore.user?.name ? authStore.user.name.charAt(0).toUpperCase() : 'U' }}
             </div>
             <div class="overflow-hidden flex-1 min-w-0">
-              <span class="block text-[0.825rem] font-semibold text-charcoal truncate"
+              <span class="block text-[0.8rem] lg:text-[0.825rem] font-semibold text-charcoal truncate"
                 :class="sidebarCollapsed ? 'md:hidden' : 'md:block'">{{ authStore.user?.name }}</span>
               <span class="block text-[0.7rem] text-slate-400 truncate"
                 :class="sidebarCollapsed ? 'md:hidden' : 'md:block'">{{ authStore.user?.institution_id }}</span>

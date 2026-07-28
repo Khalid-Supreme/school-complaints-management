@@ -6,7 +6,7 @@
                 style="box-shadow: 0 4px 20px rgba(106, 156, 94, 0.08);">
                 <i class="pi pi-key text-xl"></i>
             </div>
-            <h1 class="text-[1.6rem] font-semibold text-charcoal tracking-tight">Forgot Password?</h1>
+            <h1 class="text-[1.25rem] sm:text-[1.6rem] font-semibold text-charcoal tracking-tight">Forgot Password?</h1>
             <p class="text-[0.8rem] text-slate-400 mt-1.5 font-medium leading-relaxed">
                 Enter your email and we'll send you a secure link to reset your password.
             </p>
@@ -37,14 +37,14 @@
                     </span>
                     <InputText id="email" v-model="form.email" type="email" 
                         placeholder="you@example.com" required autocomplete="email"
-                        class="w-full !pl-10 !bg-white !border-sage-200/60 !text-charcoal !text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
+                        class="w-full !pl-10 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 !px-3 sm:!px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
                         :class="{ 'p-invalid': errors.email }" />
                 </div>
                 <small v-if="errors.email" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.email }}</small>
             </div>
 
             <Button type="submit" label="Send Password Reset Link" icon="pi pi-paper-plane" :loading="loading"
-                class="w-full !mt-7 !py-3 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[1px]"
+                class="w-full !mt-7 !py-2 sm:!py-3 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.85rem] sm:!text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[1px]"
                 :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
         </form>
 

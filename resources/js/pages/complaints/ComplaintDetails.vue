@@ -5,7 +5,7 @@
                 @click="$router.back()" />
             <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-3 flex-wrap">
-                    <h1 class="text-3xl font-semibold text-charcoal tracking-tight">Complaint Details</h1>
+                    <h1 class="text-2xl lg:text-3xl font-semibold text-charcoal tracking-tight">Complaint Details</h1>
                     <span class="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{{
                         complaint?.reference_no }}</span>
                     <StatusBadge v-if="complaint?.status" :status="complaint.status" />
@@ -45,7 +45,7 @@
                         <div class="space-y-5 text-charcoal">
                             <div>
                                 <p class="text-xs font-bold text-slate-500 uppercase tracking-[0.18em] mb-2">Subject</p>
-                                <p class="text-xl font-semibold text-charcoal leading-tight">{{ complaint.title }}</p>
+                                <p class="text-lg lg:text-xl font-semibold text-charcoal leading-tight">{{ complaint.title }}</p>
                             </div>
                             <div>
                                 <p class="text-xs font-bold text-slate-500 uppercase tracking-[0.18em] mb-2">Description
