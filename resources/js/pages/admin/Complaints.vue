@@ -3,7 +3,7 @@
         <!-- Header Section -->
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-                <h1 class="text-3xl font-semibold text-charcoal tracking-tight">Complaint Management</h1>
+                <h1 class="text-2xl lg:text-3xl font-semibold text-charcoal tracking-tight">Complaint Management</h1>
                 <p class="text-slate-400 text-sm mt-1 font-medium">Overview of all complaints in the system</p>
             </div>
             <div class="flex gap-2">
@@ -13,12 +13,13 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl p-6 shadow-xl ring-1 ring-slate-900/5">
+        <div class="bg-white rounded-xl p-4 sm:p-6 shadow-xl ring-1 ring-slate-900/5">
             <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
+            <div class="overflow-x-auto">
             <DataTable :value="store.complaints"
                 :loading="store.loading"
-paginator
+                paginator
                 :rows="store.meta?.per_page || 15"
                 :totalRecords="store.meta?.total || 0"
                 lazy
@@ -76,10 +77,11 @@ paginator
                     </div>
                 </template>
             </DataTable>
+            </div>
         </div>
 
         <!-- Assign Dialog -->
-        <Dialog v-model:visible="assignDialogVisible" modal :style="{ width: '450px' }" class="complaint-assign-dialog">
+        <Dialog v-model:visible="assignDialogVisible" modal :style="{ width: '450px' }" :breakpoints="{ '640px': '95vw', '768px': '450px' }" class="complaint-assign-dialog">
             <template #header>
                 <div class="text-xl font-semibold text-charcoal">Assign Complaint</div>
             </template>
@@ -116,7 +118,7 @@ paginator
                 <Button label="Cancel" text class="!text-slate-600 hover:!bg-slate-50"
                     @click="assignDialogVisible = false" />
                 <Button label="Assign" icon="pi pi-check" :loading="store.loading"
-                    class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2.5 !px-5"
+                    class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2 sm:!py-2.5 !px-4 sm:!px-5"
                     @click="handleAssign" />
             </template>
         </Dialog>

@@ -3,7 +3,7 @@
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-                <h1 class="text-3xl font-semibold text-charcoal tracking-tight">Officer Dashboard</h1>
+                <h1 class="text-2xl lg:text-3xl font-semibold text-charcoal tracking-tight">Officer Dashboard</h1>
                 <p class="text-slate-500 text-sm mt-1 font-medium">Review and resolve assigned complaints securely.</p>
             </div>
             <div class="flex gap-2">
@@ -15,15 +15,15 @@
         <!-- Stats Row -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div v-for="stat in statCards" :key="stat.label"
-                class="bg-white rounded-xl p-6 shadow-card transition-shadow hover:shadow-lg relative overflow-hidden flex flex-col justify-between"
+                class="bg-white rounded-xl p-4 sm:p-6 shadow-card transition-shadow hover:shadow-lg relative overflow-hidden flex flex-col justify-between"
                 style="border: 1px solid #E8EFE9;">
-                <div class="absolute -right-4 -bottom-4 text-[90px] opacity-5 font-black z-0"
+                <div class="absolute -right-4 -bottom-4 text-[60px] sm:text-[90px] opacity-5 font-black z-0"
                     :style="`color: ${stat.baseColor}40;`">
                     <i :class="`pi ${stat.icon}`"></i>
                 </div>
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 relative z-10">{{
                     stat.label }}</p>
-                <div class="text-4xl font-semibold text-charcoal tracking-tight relative z-10">
+                <div class="text-2xl sm:text-4xl font-semibold text-charcoal tracking-tight relative z-10">
                     {{ loading ? '—' : stat.value }}
                 </div>
                 <p class="text-xs mt-3 font-medium relative z-10" :style="`color: ${stat.baseColor}`">{{ stat.sub }}</p>
@@ -37,7 +37,7 @@
                     style="border-bottom: 1px solid var(--color-border);">
                     <div class="flex items-center gap-2">
                         <i class="pi pi-list text-sage-600 text-lg"></i>
-                        <span class="text-lg font-semibold text-charcoal">Assigned Complaints</span>
+                        <span class="text-base lg:text-lg font-semibold text-charcoal">Assigned Complaints</span>
                     </div>
                     <Button icon="pi pi-refresh" text rounded class="!text-slate-500 hover:!bg-sage-50"
                         :loading="store.loading" @click="store.fetchStaffAssignments(1)"
@@ -45,6 +45,7 @@
                 </div>
             </template>
             <template #content>
+                <div class="overflow-x-auto">
                 <DataTable :value="assignments" :loading="store.loading" responsiveLayout="scroll"
                     class="p-datatable-sm" dataKey="id" :rows="10">
                     <Column field="complaint.reference_no" header="Ref No" style="width: 130px">
@@ -93,6 +94,7 @@
                         </div>
                     </template>
                 </DataTable>
+                </div>
             </template>
         </Card>
     </div>

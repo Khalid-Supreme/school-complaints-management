@@ -10,16 +10,16 @@
 
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-                <h1 class="text-3xl font-semibold text-charcoal tracking-tight">Staff Management</h1>
+                <h1 class="text-2xl lg:text-3xl font-semibold text-charcoal tracking-tight">Staff Management</h1>
                 <p class="text-slate-400 text-sm mt-1 font-medium">Manage staff and complaint officer accounts</p>
             </div>
             <div class="flex gap-2">
-                <Button label="New Staff" icon="pi pi-plus" class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2.5 !px-5" @click="openCreateDialog" />
+                <Button label="New Staff" icon="pi pi-plus" class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2 sm:!py-2.5 !px-4 sm:!px-5" @click="openCreateDialog" />
                 <Button icon="pi pi-refresh" text rounded class="!text-slate-500 hover:!bg-sage-50" :loading="loading" @click="fetchStaff" v-tooltip.bottom="'Refresh'" />
             </div>
         </div>
 
-        <div class="bg-white rounded-xl p-6 shadow-xl ring-1 ring-slate-900/5">
+        <div class="bg-white rounded-xl p-4 sm:p-6 shadow-xl ring-1 ring-slate-900/5">
             <div class="flex flex-col sm:flex-row gap-3 mb-5">
                 <div class="relative flex-1">
                     <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><i class="pi pi-search text-sm"></i></span>
@@ -32,6 +32,7 @@
 
             <Message v-if="error" severity="error" :closable="true" @close="error = ''">{{ error }}</Message>
 
+            <div class="overflow-x-auto">
             <DataTable :value="staff" :loading="loading" paginator lazy :rows="meta?.per_page || 15" :totalRecords="meta?.total || 0" @page="onPage" responsiveLayout="scroll" dataKey="id" class="p-datatable-sm">
                 <Column field="institution_id" header="ID" style="width: 140px">
                     <template #body="slotProps">
@@ -71,9 +72,10 @@
                     </div>
                 </template>
             </DataTable>
+            </div>
         </div>
 
-        <Dialog v-model:visible="formDialogVisible" :header="isEditing ? 'Edit Staff' : 'New Staff'" modal :style="{ width: '28rem' }" :closable="!formLoading" @after-hide="resetForm">
+        <Dialog v-model:visible="formDialogVisible" :header="isEditing ? 'Edit Staff' : 'New Staff'" modal :style="{ width: '28rem' }" :breakpoints="{ '640px': '95vw', '768px': '28rem' }" :closable="!formLoading" @after-hide="resetForm">
             <div class="space-y-4">
                 <Message v-if="formError" severity="error" :closable="false" class="!text-sm">{{ formError }}</Message>
 
@@ -127,11 +129,11 @@
 
             <template #footer>
                 <Button label="Cancel" text class="!text-slate-600 hover:!bg-slate-50" :disabled="formLoading" @click="formDialogVisible = false" />
-                <Button :label="isEditing ? 'Update' : 'Create Staff'" :loading="formLoading" class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2.5 !px-5" @click="handleSubmit" />
+                <Button :label="isEditing ? 'Update' : 'Create Staff'" :loading="formLoading" class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2 sm:!py-2.5 !px-4 sm:!px-5" @click="handleSubmit" />
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="roleDialogVisible" header="Change Role" modal :style="{ width: '400px' }">
+        <Dialog v-model:visible="roleDialogVisible" header="Change Role" modal :style="{ width: '400px' }" :breakpoints="{ '640px': '95vw', '768px': '400px' }">
             <div class="space-y-4">
                 <p class="text-sm text-slate-600">
                     Change role for <span class="font-semibold text-charcoal">{{ userToChangeRole?.name }}</span>.
@@ -144,11 +146,11 @@
             </div>
             <template #footer>
                 <Button label="Cancel" text class="!text-slate-600 hover:!bg-slate-50" :disabled="roleLoading" @click="roleDialogVisible = false" />
-                <Button label="Update Role" :loading="roleLoading" class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2.5 !px-5" @click="handleRoleChange" />
+                <Button label="Update Role" :loading="roleLoading" class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2 sm:!py-2.5 !px-4 sm:!px-5" @click="handleRoleChange" />
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="deleteDialogVisible" modal :style="{ width: '400px' }" header="Confirm Delete">
+        <Dialog v-model:visible="deleteDialogVisible" modal :style="{ width: '400px' }" :breakpoints="{ '640px': '95vw', '768px': '400px' }" header="Confirm Delete">
             <p class="text-sm text-slate-600">
                 Are you sure you want to delete <span class="font-semibold text-charcoal">{{ userToDelete?.name }}</span>?
                 This action cannot be undone.
