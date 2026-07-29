@@ -72,13 +72,13 @@ const copied = ref(false);
 
 const targetEmail = ref(route.query.email || '');
 
-const idLabel = route.query.institution_id?.startsWith('STF') ? 'Staff ID' : 'Student ID';
+const idLabel = route.query.institution_id?.startsWith('STF') ? 'Staff No.' : 'Matric No.';
 
 const copyInstitutionId = async () => {
   try {
     await navigator.clipboard.writeText(route.query.institution_id);
     copied.value = true;
-    toast.add({ severity: 'success', summary: 'Copied', detail: 'Institution ID copied to clipboard', life: 2000 });
+    toast.add({ severity: 'success', summary: 'Copied', detail: idLabel + ' copied to clipboard', life: 2000 });
     setTimeout(() => { copied.value = false; }, 2000);
   } catch {
     toast.add({ severity: 'error', summary: 'Failed', detail: 'Unable to copy', life: 3000 });

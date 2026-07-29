@@ -34,9 +34,21 @@
 
             <div class="overflow-x-auto">
             <DataTable :value="students" :loading="loading" paginator lazy :rows="meta?.per_page || 15" :totalRecords="meta?.total || 0" @page="onPage" responsiveLayout="scroll" dataKey="id" class="p-datatable-sm">
-                <Column field="institution_id" header="ID" style="width: 140px">
+                    <Column field="institution_id" header="Matric No." style="width: 180px">
+   
                     <template #body="slotProps">
-                        <span class="font-mono text-xs font-medium text-slate-600 bg-sage-50 px-2 py-1 rounded-md">{{ slotProps.data.institution_id }}</span>
+                            <div class="flex items-center gap-1.5">
+   
+                                <span
+                                    class="font-mono text-xs font-medium text-slate-600 bg-sage-50 px-2 py-1 rounded-md">{{
+                                    slotProps.data.institution_id }}</span>
+   
+                                <Button icon="pi pi-copy" text rounded
+                                    class="w-7 h-7 !text-slate-400 hover:!text-sage-600 hover:!bg-sage-50"
+                                    v-tooltip.bottom="'Copy Matric No.'"
+                                    @click="copyToClipboard(slotProps.data.institution_id)" />
+                            </div>
+   
                     </template>
                 </Column>
                 <Column field="name" header="Name" />
@@ -187,6 +199,15 @@ const fetchDepartments = async () => {
         departments.value = res.data.data;
     } catch {
         // silent
+    }
+};
+
+const copyToClipboard = async (text) => {
+    try {
+        await navigator.clipboard.writeText(text);
+        toast.add({ severity: 'success', summary: 'Copied', detail: 'ID copied to clipboard.', life: 2000 });
+    } catch {
+        toast.add({ severity: 'error', summary: 'Failed', detail: 'Could not copy ID.', life: 2000 });
     }
 };
 

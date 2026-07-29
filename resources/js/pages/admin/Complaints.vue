@@ -100,7 +100,8 @@
                             <div class="flex items-center gap-2">
                                 <i class="pi pi-user text-slate-400"></i>
                                 <span class="font-medium text-charcoal">{{ slotProps.option.name }}</span>
-                                <span class="text-slate-400 text-sm ml-auto">({{ slotProps.option.department || 'N/A'
+                                <span class="text-slate-400 text-sm ml-auto">({{ slotProps.option.department?.name ||
+                                    slotProps.option.department || 'N/A'
                                     }})</span>
                             </div>
                         </template>

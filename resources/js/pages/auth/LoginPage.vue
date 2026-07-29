@@ -15,7 +15,7 @@
         <!-- Success Messages -->
         <Message v-if="route.query.verified" severity="success" :closable="false"
             class="!bg-green-50/50 !border-green-100/50 !text-green-700 !rounded-xl !text-sm">
-            Email verified successfully. Your Institution ID has been filled in below.
+            Email verified successfully. Your {{ idLabel }} has been filled in below.
         </Message>
 
         <Message v-if="route.query.reset === 'success'" severity="success" :closable="false"
@@ -38,7 +38,7 @@
         <form @submit.prevent="handleLogin" class="space-y-5">
             <div>
                 <label for="username" class="block text-sm font-medium text-charcoal/80 mb-2">
-                    Institution ID or Email
+                    {{ idLabel }} or Email
                 </label>
                 <div class="relative group">
                     <span
@@ -127,13 +127,18 @@ const errors = reactive({
     password: ''
 });
 
+const idLabel = computed(() => {
+    const id = form.username || route.query.institution_id || '';
+    return id.startsWith('STF') ? 'Staff No.' : 'Matric No.';
+});
+
 const validate = () => {
     let valid = true;
     errors.username = '';
     errors.password = '';
     
     if (!form.username) {
-        errors.username = 'Institution ID or Email is required';
+        errors.username = idLabel.value + ' or Email is required';
         valid = false;
     }
     if (!form.password) {
