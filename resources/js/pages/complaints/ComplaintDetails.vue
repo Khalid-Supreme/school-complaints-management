@@ -126,7 +126,7 @@
                         <div class="flex gap-2 pt-4 border-t border-sage-100">
                             <InputText v-model="newMessage" placeholder="Type a secure message..." class="flex-1" @keyup.enter="sendMessage" />
                             <Button icon="pi pi-send" :loading="sendingMessage"
-                                class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white" @click="sendMessage" />
+                                class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white" @click="sendMessage" v-tooltip.bottom="'Send'" />
                         </div>
                     </template>
                 </Card>
