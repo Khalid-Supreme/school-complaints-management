@@ -13,13 +13,13 @@
 
       <div>
         <label class="block text-sm font-medium text-charcoal/80 mb-2">Full Name</label>
-        <InputText v-model="form.full_name" placeholder="e.g. John Doe" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.full_name || localErrors.full_name }" :disabled="loading" @update:model-value="clearError('full_name')" />
+        <InputText v-model="form.full_name" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.full_name || localErrors.full_name }" :disabled="loading" @update:model-value="clearError('full_name')" />
         <small v-if="errors.full_name || localErrors.full_name" class="text-red-500 block mt-1.5 text-xs font-medium">{{ (errors.full_name && errors.full_name[0]) || localErrors.full_name }}</small>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-charcoal/80 mb-2">Email Address</label>
-        <InputText v-model="form.email" type="email" placeholder="e.g. johndoe@example.com" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.email || localErrors.email }" :disabled="loading" @update:model-value="clearError('email')" />
+        <InputText v-model="form.email" type="email" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.email || localErrors.email }" :disabled="loading" @update:model-value="clearError('email')" />
         <small v-if="errors.email || localErrors.email" class="text-red-500 block mt-1.5 text-xs font-medium">{{ (errors.email && errors.email[0]) || localErrors.email }}</small>
       </div>
 

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             ComplaintCategorySeeder::class,
             UserSeeder::class,
+            SettingSeeder::class,
         ]);
     }
 }

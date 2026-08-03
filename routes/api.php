@@ -1,16 +1,17 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ComplaintController;
-use App\Http\Controllers\Api\ComplaintAssignmentController;
-use App\Http\Controllers\Api\ChatController;
-use App\Http\Controllers\Api\AttachmentController;
-use App\Http\Controllers\Api\SecurityDashboardController;
 use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\AttachmentController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\ComplaintAssignmentController;
+use App\Http\Controllers\Api\ComplaintController;
+use App\Http\Controllers\Api\DepartmentController;
+use App\Http\Controllers\Api\SecurityDashboardController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\RegisterController;
-use App\Http\Controllers\Api\DepartmentController;
+use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail']);
@@ -23,10 +24,13 @@ Route::get('/register/verify/{user}/{hash}', [RegisterController::class, 'verify
     ->middleware('signed');
 Route::post('/register/resend', [RegisterController::class, 'resend']);
 
+// Public settings (readable without auth for landing/login pages)
+Route::get('/settings', [SettingsController::class, 'index']);
+
 Route::middleware(['auth:sanctum', 'ips'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
-    
+
     // Complaints
     Route::get('/categories', [ComplaintController::class, 'categories']);
 
@@ -84,5 +88,9 @@ Route::middleware(['auth:sanctum', 'ips'])->group(function () {
     Route::middleware(['role:admin,security'])->group(function () {
         Route::get('/security/dashboard', [SecurityDashboardController::class, 'index']);
         Route::get('/security/audit/logins', [SecurityDashboardController::class, 'loginAudit']);
+    });
+
+    Route::middleware('role:admin')->prefix('/settings')->group(function () {
+        Route::put('/', [SettingsController::class, 'update']);
     });
 });

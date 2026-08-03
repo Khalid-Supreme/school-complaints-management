@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complaint System</title>
+    <title>{{ config('app.name', 'Complaint System') }}</title>
+    <link rel="icon" href="data:,">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>

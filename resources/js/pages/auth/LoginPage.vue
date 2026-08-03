@@ -2,20 +2,13 @@
     <div class="space-y-8">
         <!-- Header -->
         <div class="text-center">
-            <div class="inline-flex w-14 h-14 rounded-[12px] bg-sage-100 border border-sage-200/50 items-center justify-center text-sage-600 mb-5"
-                style="box-shadow: 0 4px 20px rgba(106, 156, 94, 0.08);">
-                <i class="pi pi-lock text-xl"></i>
-            </div>
-            <h1 class="text-[1.25rem] sm:text-[1.6rem] font-semibold text-charcoal tracking-tight">Sign In</h1>
-            <p class="text-[0.8rem] text-slate-400 mt-1.5 font-medium leading-relaxed">
-                Enter your credentials to access the secure complaints terminal.
-            </p>
+            <h3 class="text-[1.1rem] sm:text-[1.25rem] font-semibold text-charcoal tracking-tight">Sign In</h3>
         </div>
 
         <!-- Success Messages -->
         <Message v-if="route.query.verified" severity="success" :closable="false"
             class="!bg-green-50/50 !border-green-100/50 !text-green-700 !rounded-xl !text-sm">
-            Email verified successfully. Your Institution ID has been filled in below.
+            Email verified successfully. Your {{ loginIdLabel }} has been filled in below.
         </Message>
 
         <Message v-if="route.query.reset === 'success'" severity="success" :closable="false"
@@ -38,15 +31,15 @@
         <form @submit.prevent="handleLogin" class="space-y-5">
             <div>
                 <label for="username" class="block text-sm font-medium text-charcoal/80 mb-2">
-                    Institution ID or Email
+                    {{ loginIdLabel }}
                 </label>
                 <div class="relative group">
-                    <span
-                        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 group-focus-within:text-sage-500 transition-colors duration-200">
+                    <span v-if="!usernameFocused && !form.username"
+                        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 transition-colors duration-200">
                         <i class="pi pi-user text-sm"></i>
                     </span>
-                    <InputText id="username" v-model="form.username" type="text"
-                        placeholder="e.g. STD-2026-001 or staff@example.com" required autofocus
+                    <InputText id="username" v-model="form.username" type="text" required autofocus
+                        @focus="usernameFocused = true" @blur="usernameFocused = false"
                         class="w-full !pl-10 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 !px-3 sm:!px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
                         :class="{ 'p-invalid': errors.username }" />
                 </div>
@@ -59,11 +52,12 @@
                     Security Password
                 </label>
                 <div class="relative group">
-                    <span
-                        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 group-focus-within:text-sage-500 transition-colors duration-200">
+                    <span v-if="!passwordFocused && !form.password"
+                        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 transition-colors duration-200">
                         <i class="pi pi-key text-sm"></i>
                     </span>
-                    <InputText id="password" v-model="form.password" type="password" placeholder="••••••••" required
+                    <InputText id="password" v-model="form.password" type="password" required
+                        @focus="passwordFocused = true" @blur="passwordFocused = false"
                         class="w-full !pl-10 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 !px-3 sm:!px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
                         :class="{ 'p-invalid': errors.password }" />
                 </div>
@@ -79,7 +73,7 @@
                 </router-link>
             </div>
 
-            <Button type="submit" label="Authenticate Identity" icon="pi pi-shield" :loading="authStore.loading"
+            <Button type="submit" label="Authenticate" icon="pi pi-shield" :loading="authStore.loading"
                 class="w-full !mt-7 !py-2 sm:!py-3 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.85rem] sm:!text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[1px]"
                 :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
         </form>
@@ -91,11 +85,11 @@
                 </p>
             </div>
 
-        <!-- Security Footer -->
+        <!-- Security Footer
         <div class="flex items-center justify-center gap-2 pt-2">
             <i class="pi pi-shield text-sage-400 text-xs"></i>
             <span class="text-[0.7rem] text-slate-400 font-medium tracking-wide">AES-256 Bit SSL Tunnel Active</span>
-        </div>
+        </div> -->
 
             <RegistrationModal v-model:visible="showRegister" @success="handleRegistrationSuccess" />
     </div>
@@ -108,14 +102,16 @@ import { useAuthStore } from '../../stores/auth';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
-    import RegistrationModal from '../../components/RegistrationModal.vue';
+import RegistrationModal from '../../components/RegistrationModal.vue';
 import { useToast } from 'primevue/usetoast';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const toast = useToast();
-    const showRegister = ref(false);
+const showRegister = ref(false);
+const usernameFocused = ref(false);
+const passwordFocused = ref(false);
 
 const form = reactive({
     username: route.query.institution_id || '',
@@ -127,13 +123,26 @@ const errors = reactive({
     password: ''
 });
 
+const isPostRegistrationFlow = computed(() =>
+    Boolean(route.query.verified || route.query.registered)
+);
+
+const loginIdLabel = computed(() => {
+    if (!isPostRegistrationFlow.value) {
+        return 'Staff No. or Matric No.';
+    }
+
+    const id = String(form.username || route.query.institution_id || '').toUpperCase();
+    return id.startsWith('STF') ? 'Staff No.' : 'Matric No.';
+});
+
 const validate = () => {
     let valid = true;
     errors.username = '';
     errors.password = '';
     
     if (!form.username) {
-        errors.username = 'Institution ID or Email is required';
+        errors.username = `${loginIdLabel.value} is required`;
         valid = false;
     }
     if (!form.password) {

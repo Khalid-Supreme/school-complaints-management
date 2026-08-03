@@ -126,7 +126,7 @@
                         <div class="flex gap-2 pt-4 border-t border-sage-100">
                             <InputText v-model="newMessage" placeholder="Type a secure message..." class="flex-1" @keyup.enter="sendMessage" />
                             <Button icon="pi pi-send" :loading="sendingMessage"
-                                class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white" @click="sendMessage" />
+                                class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white" @click="sendMessage" v-tooltip.bottom="'Send'" />
                         </div>
                     </template>
                 </Card>
@@ -219,7 +219,10 @@
                                 <template #option="slotProps">
                                     <div class="flex items-center gap-2">
                                         <span class="font-medium text-charcoal">{{ slotProps.option.name }}</span>
-                                        <span class="text-slate-400 text-xs">({{ slotProps.option.department || 'N/A'
+                                        <span class="text-slate-400 text-xs">({{ slotProps.option.department?.name ||
+                                            slotProps.option.department || 'N/A'
+
+   
                                         }})</span>
                                     </div>
                                 </template>
@@ -256,7 +259,7 @@
                                     complaint.complainant?.email || 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between gap-4">
-                                <span class="text-slate-500">Institution ID</span>
+                                <span class="text-slate-500">{{ complainantIdLabel }}</span>
                                 <span class="font-semibold text-charcoal text-right capitalize">{{
                                     complaint.complainant?.institution_id || 'N/A' }}</span>
                             </div>
@@ -360,6 +363,9 @@ const officerStatusOptions = [
 ];
 
 const submittedDate = computed(() => complaint.value?.submitted_at ? new Date(complaint.value.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
+const complainantIdLabel = computed(() =>
+    complaint.value?.complainant?.institution_id?.startsWith('STF') ? 'Staff No.' : 'Matric No.'
+);
 const prioritySeverity = (p) => ({ high: 'danger', critical: 'danger', medium: 'warn', low: 'info' }[p] ?? 'secondary');
 const fileIcon = (mime) => mime?.startsWith('image/') ? 'pi-image' : mime === 'application/pdf' ? 'pi-file-pdf' : 'pi-file';
 const currentAssignment = computed(() => assignmentHistory.value.find((item) => item.is_current) || null);

@@ -1,10 +1,6 @@
 <template>
   <div class="space-y-6 text-center">
     <div>
-      <div class="inline-flex w-14 h-14 rounded-[12px] bg-sage-100 border border-sage-200/50 items-center justify-center text-sage-600 mb-5"
-        style="box-shadow: 0 4px 20px rgba(106, 156, 94, 0.08);">
-        <i class="pi pi-envelope text-xl"></i>
-      </div>
       <h1 class="text-[1.25rem] sm:text-[1.6rem] font-semibold text-charcoal tracking-tight">Verify your email</h1>
 
       <Message v-if="route.query.registered" severity="success" :closable="false"
@@ -72,13 +68,13 @@ const copied = ref(false);
 
 const targetEmail = ref(route.query.email || '');
 
-const idLabel = route.query.institution_id?.startsWith('STF') ? 'Staff ID' : 'Student ID';
+const idLabel = route.query.institution_id?.startsWith('STF') ? 'Staff No.' : 'Matric No.';
 
 const copyInstitutionId = async () => {
   try {
     await navigator.clipboard.writeText(route.query.institution_id);
     copied.value = true;
-    toast.add({ severity: 'success', summary: 'Copied', detail: 'Institution ID copied to clipboard', life: 2000 });
+    toast.add({ severity: 'success', summary: 'Copied', detail: idLabel + ' copied to clipboard', life: 2000 });
     setTimeout(() => { copied.value = false; }, 2000);
   } catch {
     toast.add({ severity: 'error', summary: 'Failed', detail: 'Unable to copy', life: 3000 });

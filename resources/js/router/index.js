@@ -138,6 +138,12 @@ const routes = [
         component: () => import('../pages/complaints/ComplaintDetails.vue'),
         meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
     },
+    {
+        path: '/admin/settings',
+        name: 'AdminSettings',
+        component: () => import('../pages/admin/Settings.vue'),
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+    },
 
     // Security Dashboard (Admin or Security role)
     {
@@ -171,9 +177,18 @@ const getDashboardRoute = (roleSlug, user) => {
 router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore();
 
+    // Keep splash/public routes independent from auth loading so they render instantly.
+    if (to.meta.public) {
+        return next();
+    }
+
     // Try to load user if token is present and user is not loaded
     if (localStorage.getItem('auth_token') && !authStore.user) {
-        await authStore.fetchUser();
+        try {
+            await authStore.fetchUser();
+        } catch (error) {
+            // If token is invalid/expired, route guards below will treat the user as guest.
+        }
     }
 
     const isAuthenticated = authStore.isAuthenticated;

@@ -2,11 +2,7 @@
     <div class="space-y-8">
         <!-- Header -->
         <div class="text-center">
-            <div class="inline-flex w-14 h-14 rounded-[12px] bg-sage-100 border border-sage-200/50 items-center justify-center text-sage-600 mb-5"
-                style="box-shadow: 0 4px 20px rgba(106, 156, 94, 0.08);">
-                <i class="pi pi-key text-xl"></i>
-            </div>
-            <h1 class="text-[1.25rem] sm:text-[1.6rem] font-semibold text-charcoal tracking-tight">Forgot Password?</h1>
+            <h1 class="text-[1.1rem] sm:text-[1.25rem] font-semibold text-charcoal tracking-tight">Forgot Password?</h1>
             <p class="text-[0.8rem] text-slate-400 mt-1.5 font-medium leading-relaxed">
                 Enter your email and we'll send you a secure link to reset your password.
             </p>
@@ -32,13 +28,13 @@
                 </label>
                 <div class="relative group">
                     <span
-                        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 group-focus-within:text-sage-500 transition-colors duration-200">
+                        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 group-focus-within:text-sage-500 transition-colors duration-200" v-if="!emailFocused && !form.email">
                         <i class="pi pi-envelope text-sm"></i>
                     </span>
-                    <InputText id="email" v-model="form.email" type="email" 
-                        placeholder="you@example.com" required autocomplete="email"
+                    <InputText id="email" v-model="form.email" type="email" required autocomplete="email"
                         class="w-full !pl-10 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 !px-3 sm:!px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
-                        :class="{ 'p-invalid': errors.email }" />
+                        :class="{ 'p-invalid': errors.email }" @focus="emailFocused = true"
+                        @blur="emailFocused = false" />
                 </div>
                 <small v-if="errors.email" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.email }}</small>
             </div>
@@ -58,10 +54,10 @@
         </div>
 
         <!-- Security Footer -->
-        <div class="flex items-center justify-center gap-2 pt-2">
+        <!-- <div class="flex items-center justify-center gap-2 pt-2">
             <i class="pi pi-shield text-sage-400 text-xs"></i>
             <span class="text-[0.7rem] text-slate-400 font-medium tracking-wide">AES-256 Bit SSL Tunnel Active</span>
-        </div>
+        </div> -->
     </div>
 </template>
 
@@ -77,6 +73,8 @@
     const route = useRoute();
     const authStore = useAuthStore();
 
+    const passwordFocused = ref(false);
+    const emailFocused = ref(false);
     const loading = ref(false);
     const error = ref('');
     const success = ref('');
