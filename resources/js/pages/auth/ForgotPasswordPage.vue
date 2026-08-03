@@ -28,7 +28,7 @@
                 </label>
                 <div class="relative group">
                     <span
-                        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 group-focus-within:text-sage-500 transition-colors duration-200" v-if="!emailFocused && !form.email">
+                        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 group-focus-within:text-sage-500 transition-colors duration-200">
                         <i class="pi pi-envelope text-sm"></i>
                     </span>
                     <InputText id="email" v-model="form.email" type="email" required autocomplete="email"

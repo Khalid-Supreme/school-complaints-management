@@ -34,7 +34,7 @@
                     {{ loginIdLabel }}
                 </label>
                 <div class="relative group">
-                    <span v-if="!usernameFocused && !form.username"
+                    <span
                         class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 transition-colors duration-200">
                         <i class="pi pi-user text-sm"></i>
                     </span>
@@ -49,10 +49,10 @@
 
             <div>
                 <label for="password" class="block text-sm font-medium text-charcoal/80 mb-2">
-                    Security Password
+                    Password
                 </label>
                 <div class="relative group">
-                    <span v-if="!passwordFocused && !form.password"
+                    <span
                         class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 transition-colors duration-200">
                         <i class="pi pi-key text-sm"></i>
                     </span>

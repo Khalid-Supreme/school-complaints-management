@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Models\LoginAttempt;
+use App\Models\User;
 use App\Repositories\UserRepository;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Http\Request;
 
 class AuthService
 {
@@ -21,9 +21,6 @@ class AuthService
     /**
      * Authenticate user and issue token (or session if SPA).
      *
-     * @param array $credentials
-     * @param Request $request
-     * @return array
      * @throws ValidationException
      */
     public function login(array $credentials, Request $request): array
@@ -33,7 +30,7 @@ class AuthService
             ->orWhere('institution_id', $username)
             ->first();
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             $this->recordLoginAttempt($username, $request, false, 'Invalid credentials');
 
             throw ValidationException::withMessages([
@@ -41,9 +38,9 @@ class AuthService
             ]);
         }
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             $this->recordLoginAttempt($username, $request, false, 'Account inactive');
-            
+
             throw ValidationException::withMessages([
                 'username' => __('Account is inactive.'),
             ]);
@@ -62,7 +59,7 @@ class AuthService
         $this->recordLoginAttempt($username, $request, true);
         $this->userRepository->updateLastLogin($user);
 
-        // For SPA using Sanctum, token might not be needed if session-based, 
+        // For SPA using Sanctum, token might not be needed if session-based,
         // but returning standard structure if using tokens.
         // We will assume stateful SPA authentication based on the design,
         // so token generation isn't strictly needed, but we provide it just in case.
@@ -77,7 +74,9 @@ class AuthService
          *                This token can be used for subsequent API requests to authenticate
          *                the user without requiring their password.
          */
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $expirationMinutes = (int) config('sanctum.expiration');
+        $expiresAt = $expirationMinutes > 0 ? now()->addMinutes($expirationMinutes) : null;
+        $token = $user->createToken('auth_token', ['*'], $expiresAt)->plainTextToken;
 
         return [
             'user' => $user->load('role'),
@@ -87,9 +86,6 @@ class AuthService
 
     /**
      * Logout user.
-     *
-     * @param Request $request
-     * @return void
      */
     public function logout(Request $request): void
     {
@@ -97,7 +93,7 @@ class AuthService
         // auth()->guard('web')->logout();
         // $request->session()->invalidate();
         // $request->session()->regenerateToken();
-        
+
         // If using token:
         if ($request->user()) {
             $request->user()->currentAccessToken()->delete();
@@ -107,11 +103,7 @@ class AuthService
     /**
      * Record a login attempt.
      *
-     * @param string $email
-     * @param Request $request
-     * @param bool $successful
-     * @param string|null $reason
-     * @return void
+     * @param  string  $email
      */
     protected function recordLoginAttempt(string $username, Request $request, bool $successful, ?string $reason = null): void
     {
@@ -140,6 +132,6 @@ class AuthService
             $masked = str_repeat('*', strlen($name) - 2);
         }
 
-        return $visible . $masked . '@' . $domain;
+        return $visible.$masked.'@'.$domain;
     }
 }

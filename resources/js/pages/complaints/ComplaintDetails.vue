@@ -254,7 +254,7 @@
                                     complaint.complainant?.department || 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between gap-4">
-                                <span class="text-slate-500">Department</span>
+                                <span class="text-slate-500">Email</span>
                                 <span class="font-semibold text-charcoal text-right">{{
                                     complaint.complainant?.email || 'N/A' }}</span>
                             </div>
