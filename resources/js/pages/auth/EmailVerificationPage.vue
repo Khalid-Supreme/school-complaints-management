@@ -1,10 +1,6 @@
 <template>
   <div class="space-y-6 text-center">
     <div>
-      <div class="inline-flex w-14 h-14 rounded-[12px] bg-sage-100 border border-sage-200/50 items-center justify-center text-sage-600 mb-5"
-        style="box-shadow: 0 4px 20px rgba(106, 156, 94, 0.08);">
-        <i class="pi pi-envelope text-xl"></i>
-      </div>
       <h1 class="text-[1.25rem] sm:text-[1.6rem] font-semibold text-charcoal tracking-tight">Verify your email</h1>
 
       <Message v-if="route.query.registered" severity="success" :closable="false"

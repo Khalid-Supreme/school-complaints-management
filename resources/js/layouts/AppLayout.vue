@@ -6,23 +6,21 @@
       <aside
         class="fixed inset-y-0 left-0 z-40 flex w-[280px] flex-col bg-white transition-all duration-300 md:static md:flex-shrink-0 md:overflow-y-auto"
         :class="sidebarClasses" style="border-right: 1px solid #E8EFE9;">
-        <div class="flex items-center gap-3 px-6 py-7">
-          <div class="w-10 h-10 rounded-[10px] bg-sage-600 flex items-center justify-center text-white"
-            style="box-shadow: 0 2px 8px rgba(106, 156, 94, 0.25);">
-            <img v-if="appSettings?.logo_url" :src="appSettings.logo_url" alt="App Logo"
-              class="w-full h-full object-contain" />
-            <i v-else :class="brand.icon" class="text-lg"></i>
-          </div>
+        <div class="px-6 py-7">
           <div :class="sidebarCollapsed ? 'md:hidden' : 'md:block'">
-            <span class="block font-semibold text-[0.85rem] lg:text-[0.95rem] tracking-tight text-charcoal">{{ brand.title }}</span>
-            <span class="block text-[0.65rem] text-sage-500 font-medium tracking-[0.12em] uppercase">{{ brand.subtitle
+            <span class="block font-semibold text-[2.0rem] lg:text-[2.25rem] tracking-tight text-charcoal">
+              <span class="font-medium lowercase text-sage-700">{{ brand.titleParts.primary }}</span>
+              <span v-if="brand.titleParts.secondary" class="font-extrabold lowercase text-sage-700">{{ brand.titleParts.secondary }}</span>
+            </span>
+            <span class="block text-[0.5rem] font-medium tracking-[0.12em] uppercase">{{ brand.subtitle
               }}</span>
           </div>
         </div>
 
         <nav class="flex-1 space-y-1 px-4 py-2">
           <template v-for="nav in sideNav" :key="nav.to">
-            <router-link :to="nav.to" class="nav-link" active-class="nav-link-active" @click="closeSidebarOnMobile">
+            <router-link :to="nav.to" class="nav-link" active-class="nav-link-active"
+              @click="closeSidebarOnMobile" v-tooltip.right="sidebarCollapsed ? nav.label : ''">
               <i :class="nav.icon" class="text-base nav-icon"></i>
               <span class="font-medium text-[0.8rem] lg:text-[0.875rem]" :class="sidebarCollapsed ? 'md:hidden' : 'md:inline'">{{
                 nav.label }}</span>
@@ -44,7 +42,7 @@
             </div>
           </div>
           <Button :label="sidebarCollapsed ? '' : 'Sign Out'" icon="pi pi-sign-out" severity="danger" text
-            class="w-full !justify-start hover:!bg-red-50/60" @click="handleLogout" />
+            class="w-full !justify-start hover:!bg-red-50/60" @click="handleLogout" v-tooltip.right="'Sign Out'" />
         </div>
       </aside>
 
@@ -55,13 +53,17 @@
           <div class="flex items-center gap-3">
             <Button icon="pi pi-bars" text rounded class="!h-9 !w-9" @click="toggleSidebar"
               aria-label="Toggle sidebar" />
-            <i class="pi pi-shield text-sage-500 text-xs hidden sm:inline"></i>
-            <span class="text-[0.7rem] text-slate-400 font-medium tracking-wider uppercase">{{ headerText }}</span>
+            <!-- <i class="pi pi-shield text-sage-500 text-xs hidden sm:inline"></i> -->
+            <span v-if="showHeaderBrand" class="flex items-center text-[2.0rem] sm:text-[2.25rem] tracking-tight">
+              <span class="font-medium lowercase text-sage-700">{{ brand.titleParts.primary }}</span>
+              <span v-if="brand.titleParts.secondary" class="font-extrabold lowercase text-sage-700">{{ brand.titleParts.secondary }}</span>
+            </span>
+            <span v-else class="text-[0.7rem] text-slate-400 font-medium tracking-wider uppercase">{{ headerText }}</span>
           </div>
           <div class="flex items-center gap-3">
             <span class="text-[0.7rem] font-semibold tracking-wide px-2.5 py-1 rounded-full"
               :style="{ background: badge.bg, color: badge.text }">{{ badge.label }}</span>
-            <span class="text-[0.7rem] text-slate-400 hidden md:inline">{{ footerStatus }}</span>
+            <!-- <span class="text-[0.7rem] text-slate-400 hidden md:inline">{{ footerStatus }}</span> -->
           </div>
         </header>
 
@@ -76,7 +78,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 import Button from 'primevue/button';
@@ -104,24 +106,6 @@ const loadAppSettings = async () => {
 onMounted(() => {
   loadAppSettings();
 });
-
-watch(appSettings, (newSettings) => {
-  if (newSettings?.favicon_url) {
-    updateFavicon(newSettings.favicon_url);
-  } else if (newSettings?.logo_url) {
-    updateFavicon(newSettings.logo_url);
-  }
-}, { immediate: true, deep: true });
-
-const updateFavicon = (url) => {
-  let link = document.querySelector("link[rel~='icon']");
-  if (!link) {
-    link = document.createElement('link');
-    link.rel = 'icon';
-    document.head.appendChild(link);
-  }
-  link.href = url;
-};
 
 const sideNav = computed(() => {
   switch (role.value) {
@@ -154,20 +138,24 @@ const sideNav = computed(() => {
 
 const brand = computed(() => {
   const baseBrand = {
-    admin: { title: 'SUPER ADMIN', subtitle: 'System Console', icon: 'pi pi-shield' },
-    security: { title: 'SECURITY OFFICER', subtitle: 'System Console', icon: 'pi pi-shield' },
-    complaint_officer: { title: 'COMPLAINT OFFICER', subtitle: 'Officer Portal', icon: 'pi pi-briefcase' },
-    student: { title: 'STUDENT', subtitle: 'Student Portal', icon: 'pi pi-graduation-cap' },
-    staff: { title: 'STAFF', subtitle: 'Staff Portal', icon: 'pi pi-briefcase' },
-    default: { title: 'GUEST', subtitle: 'Portal', icon: 'pi pi-shield' },
+    admin: { title: 'SUPER ADMIN', subtitle: 'System Console' },
+    security: { title: 'SECURITY OFFICER', subtitle: 'System Console' },
+    complaint_officer: { title: 'COMPLAINT OFFICER', subtitle: 'Officer Portal' },
+    student: { title: 'STUDENT', subtitle: 'Student Portal' },
+    staff: { title: 'STAFF', subtitle: 'Staff Portal' },
+    default: { title: 'GUEST', subtitle: 'Portal' },
   };
 
   const brandConfig = baseBrand[role.value] || baseBrand.default;
 
   // Use custom app name from settings if available
   if (appSettings.value?.app_name) {
-    brandConfig.title = appSettings.value.app_name.toUpperCase();
+    brandConfig.title = appSettings.value.app_name.toLowerCase();
   }
+
+  const titleParts = settingsService.getBrandNameParts();
+
+  brandConfig.titleParts = titleParts;
 
   return brandConfig;
 });
@@ -205,7 +193,9 @@ const badge = computed(() => {
   }
 });
 
-const footerStatus = computed(() => 'Database Guard Layer Active');
+const showHeaderBrand = computed(() => sidebarCollapsed.value || (isMobile.value && !sidebarOpen.value));
+
+// const footerStatus = computed(() => 'Database Guard Layer Active');
 
 const sidebarClasses = computed(() => {
   if (isMobile.value) {

@@ -30,7 +30,7 @@ Route::get('/settings', [SettingsController::class, 'index']);
 Route::middleware(['auth:sanctum', 'ips'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
-    
+
     // Complaints
     Route::get('/categories', [ComplaintController::class, 'categories']);
 
@@ -92,9 +92,5 @@ Route::middleware(['auth:sanctum', 'ips'])->group(function () {
 
     Route::middleware('role:admin')->prefix('/settings')->group(function () {
         Route::put('/', [SettingsController::class, 'update']);
-        Route::post('/logo', [SettingsController::class, 'uploadLogo']);
-        Route::post('/favicon', [SettingsController::class, 'uploadFavicon']);
-        Route::delete('/logo', [SettingsController::class, 'removeLogo']);
-        Route::delete('/favicon', [SettingsController::class, 'removeFavicon']);
     });
 });

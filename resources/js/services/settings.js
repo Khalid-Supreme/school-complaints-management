@@ -31,9 +31,24 @@ export function useSettings() {
 
     const getAppName = () => settings.value?.app_name || 'SchoolVoice';
 
-    const getLogoUrl = () => settings.value?.logo_url || null;
+    const getBrandNameParts = () => {
+        const appName = getAppName().toLowerCase();
+        const parts = appName.split(/\s+/).filter(Boolean);
 
-    const getFaviconUrl = () => settings.value?.favicon_url || null;
+        if (parts.length >= 2) {
+            return {
+                primary: parts[0],
+                secondary: parts.slice(1).join(' '),
+            };
+        }
+
+        const compact = appName.replace(/\s+/g, '');
+        if (compact === 'schoolvoice') {
+            return { primary: 'school', secondary: 'voice' };
+        }
+
+        return { primary: appName, secondary: '' };
+    };
 
     const getContactEmail = () => settings.value?.contact_email || null;
 
@@ -47,8 +62,7 @@ export function useSettings() {
         loadSettings,
         getSettings,
         getAppName,
-        getLogoUrl,
-        getFaviconUrl,
+        getBrandNameParts,
         getContactEmail,
         getContactPhone,
         getAddress,

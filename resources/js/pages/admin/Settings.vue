@@ -24,44 +24,6 @@
                         <InputText id="app_name" v-model="form.app_name" class="w-full !bg-white !border-sage-200/60 !rounded-lg !py-2.5 !px-4" :disabled="saving" />
                     </div>
 
-                    <!-- Logo -->
-                    <div>
-                        <label class="block text-sm font-medium text-charcoal/80 mb-2">Logo</label>
-                        <div class="flex items-center gap-4 flex-wrap">
-<div v-if="settings && settings.logo_url" class="relative">
-                            <img :src="settings.logo_url" alt="Current Logo" class="h-16 w-auto rounded-lg border border-sage-100 bg-white" />
-                                <Button icon="pi pi-trash" text severity="secondary" size="small" class="absolute -top-2 -right-2 !bg-red-50 hover:!bg-red-100 !text-red-600" @click="removeLogo" :disabled="saving" />
-                            </div>
-                            <div v-else class="h-16 w-16 rounded-lg border-2 border-dashed border-sage-200 flex items-center justify-center text-slate-400">
-                                <i class="pi pi-image text-xl"></i>
-                            </div> 
-                            <div class="flex-1 min-w-[200px]">
-                                <input type="file" ref="logoInput" accept="image/png,image/jpeg,image/svg+xml" class="hidden" @change="onLogoSelect" />
-                                <Button label="Upload Logo" icon="pi pi-upload" @click="$refs.logoInput.click()" :disabled="saving" class="!bg-sage-100 hover:!bg-sage-200 !border-none !text-sage-700 !font-medium" />
-                                <p class="text-xs text-slate-400 mt-1">PNG, JPG, or SVG. Max 2MB. Recommended: 200x60px</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Favicon -->
-                    <div>
-                        <label class="block text-sm font-medium text-charcoal/80 mb-2">Favicon</label>
-                        <div class="flex items-center gap-4 flex-wrap">
-<div v-if="settings && settings.favicon_url" class="relative">
-                            <img :src="settings.favicon_url" alt="Current Favicon" class="h-10 w-10 rounded border border-sage-100 bg-white" />
-                                <Button icon="pi pi-trash" text severity="secondary" size="small" class="absolute -top-2 -right-2 !bg-red-50 hover:!bg-red-100 !text-red-600" @click="removeFavicon" :disabled="saving" />
-                            </div>
-                            <div v-else class="h-10 w-10 rounded border-2 border-dashed border-sage-200 flex items-center justify-center text-slate-400">
-                                <i class="pi pi-image text-lg"></i>
-                            </div>
-                            <div class="flex-1 min-w-[200px]">
-                                <input type="file" ref="faviconInput" accept="image/png,image/x-icon" class="hidden" @change="onFaviconSelect" />
-                                <Button label="Upload Favicon" icon="pi pi-upload" @click="$refs.faviconInput.click()" :disabled="saving" class="!bg-sage-100 hover:!bg-sage-200 !border-none !text-sage-700 !font-medium" />
-                                <p class="text-xs text-slate-400 mt-1">PNG or ICO. Max 512KB. Recommended: 32x32px</p>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Save Branding Button -->
                     <div class="pt-4 border-t border-sage-100">
                         <Button label="Save Branding" icon="pi pi-check" :loading="saving" class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2 !px-4" @click="saveSettings('branding')" />
@@ -159,11 +121,6 @@ const form = reactive({
     },
 });
 
-const logoInput = ref(null);
-const faviconInput = ref(null);
-const selectedLogo = ref(null);
-const selectedFavicon = ref(null);
-
 const loadSettings = async () => {
     try {
         const res = await api.get('/api/settings');
@@ -198,102 +155,6 @@ const saveSettings = async (section) => {
         }
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Failed to save settings', life: 3000 });
-    } finally {
-        saving.value = false;
-    }
-};
-
-const onLogoSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-        toast.add({ severity: 'error', summary: 'File too large', detail: 'Logo must be under 2MB', life: 3000 });
-        return;
-    }
-    selectedLogo.value = file;
-    uploadLogo();
-};
-
-const onFaviconSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 512 * 1024) {
-        toast.add({ severity: 'error', summary: 'File too large', detail: 'Favicon must be under 512KB', life: 3000 });
-        return;
-    }
-    selectedFavicon.value = file;
-    uploadFavicon();
-};
-
-const uploadLogo = async () => {
-    if (!selectedLogo.value) return;
-    saving.value = true;
-    try {
-        const formData = new FormData();
-        formData.append('logo', selectedLogo.value);
-        const res = await api.post('/api/settings/logo', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        if (res.data.success) {
-            toast.add({ severity: 'success', summary: 'Uploaded', detail: 'Logo uploaded successfully', life: 3000 });
-            await loadSettings();
-            selectedLogo.value = null;
-            if (logoInput.value) logoInput.value.value = '';
-        }
-    } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Failed to upload logo', life: 3000 });
-    } finally {
-        saving.value = false;
-    }
-};
-
-const uploadFavicon = async () => {
-    if (!selectedFavicon.value) return;
-    saving.value = true;
-    try {
-        const formData = new FormData();
-        formData.append('favicon', selectedFavicon.value);
-        const res = await api.post('/api/settings/favicon', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        if (res.data.success) {
-            toast.add({ severity: 'success', summary: 'Uploaded', detail: 'Favicon uploaded successfully', life: 3000 });
-            await loadSettings();
-            selectedFavicon.value = null;
-            if (faviconInput.value) faviconInput.value.value = '';
-        }
-    } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Failed to upload favicon', life: 3000 });
-    } finally {
-        saving.value = false;
-    }
-};
-
-const removeLogo = async () => {
-    saving.value = true;
-    try {
-        const res = await api.delete('/api/settings/logo');
-        if (res.data.success) {
-            toast.add({ severity: 'success', summary: 'Removed', detail: 'Logo removed successfully', life: 3000 });
-            await loadSettings();
-        }
-    } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove logo', life: 3000 });
-    } finally {
-        saving.value = false;
-    }
-};
-
-const removeFavicon = async () => {
-    saving.value = true;
-    try {
-        const res = await api.delete('/api/settings/favicon');
-        if (res.data.success) {
-            toast.add({ severity: 'success', summary: 'Removed', detail: 'Favicon removed successfully', life: 3000 });
-            await loadSettings();
-        }
-    } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove favicon', life: 3000 });
     } finally {
         saving.value = false;
     }
