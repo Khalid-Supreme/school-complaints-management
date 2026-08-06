@@ -20,6 +20,12 @@ class RoleSeeder extends Seeder
                 'is_system' => true,
             ],
             [
+                'name' => 'Sub-Administrator',
+                'slug' => 'sub_admin',
+                'description' => 'Sub-Administrator with administrative access (restricted role management).',
+                'is_system' => true,
+            ],
+            [
                 'name' => 'Staff',
                 'slug' => 'staff',
                 'description' => 'Staff member to handle complaints.',

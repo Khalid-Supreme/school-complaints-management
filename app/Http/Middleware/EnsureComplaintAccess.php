@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Centralized per-complaint access control.
  *
  * Allows:
- *   - admins
+ *   - admins and sub-admins
  *   - complaint officers
  *   - the complainant themselves (student or staff role)
  *
@@ -51,7 +51,7 @@ class EnsureComplaintAccess
         $slug = $user->role?->slug;
 
         // Allowed roles for read/write operations
-        if (in_array($slug, ['admin', 'complaint_officer'], true)) {
+        if (in_array($slug, ['admin', 'sub_admin', 'complaint_officer'], true)) {
             return $next($request);
         }
 

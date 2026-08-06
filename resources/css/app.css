@@ -465,7 +465,7 @@
         .complaint-assign-dialog .p-dialog-footer {
             background: #ffffff !important;
             color: var(--color-charcoal) !important;
-    
+        
 
         .complaint-assign-dialog .p-dropdown,
         .complaint-assign-dialog .p-select,
@@ -479,7 +479,38 @@
         .complaint-assign-dialog .p-select .p-select-label {
             color: var(--color-charcoal) !important;
         }
+/* Responsive Toast Styles */
+.p-toast {
+    width: min(24rem, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    right: 1rem !important;
+    left: auto !important;
+    box-sizing: border-box;
+        
+.p-toast-message {
+    min-width: 0;
+    width: 100%;
+        }
+
+                .p-toast-message-content {
+                    overflow-wrap: anywhere;
+                    word-break: break-word;
+                }
+        
+                @media (max-width: 640px) {
+                    .p-toast {
+                        width: calc(100vw - 1rem);
+                        max-width: calc(100vw - 1rem);
+                        right: 0.5rem !important;
+                        left: 0.5rem !important;
+                    }
+        
+                    .p-toast-message {
+                        font-size: 0.875rem;
+                        padding: 0.75rem;
+                    }
+                }
+                }
 }
         }
-        
     }

@@ -40,7 +40,7 @@
                     </span>
                     <InputText id="username" v-model="form.username" type="text" required autofocus
                         @focus="usernameFocused = true" @blur="usernameFocused = false"
-                        class="w-full !pl-10 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 !px-3 sm:!px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
+                        class="w-full !pl-11 !pr-3 sm:!pr-4 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
                         :class="{ 'p-invalid': errors.username }" />
                 </div>
                 <small v-if="errors.username" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.username
@@ -58,7 +58,7 @@
                     </span>
                     <InputText id="password" v-model="form.password" type="password" required
                         @focus="passwordFocused = true" @blur="passwordFocused = false"
-                        class="w-full !pl-10 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 !px-3 sm:!px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
+                        class="w-full !pl-11 !pr-3 sm:!pr-4 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
                         :class="{ 'p-invalid': errors.password }" />
                 </div>
                 <small v-if="errors.password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.password
@@ -168,7 +168,9 @@ const handleRegistrationSuccess = ({ email, institution_id }) => {
 
 const getDashboardRoute = (roleSlug, user) => {
     switch(roleSlug) {
-        case 'admin': return '/admin';
+        case 'admin':
+        case 'sub_admin':
+            return '/admin';
         case 'staff': return '/staff';
         case 'security': return '/security';
         case 'student': return '/student';

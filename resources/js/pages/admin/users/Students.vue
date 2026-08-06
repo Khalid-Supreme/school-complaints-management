@@ -14,7 +14,7 @@
                 <p class="text-slate-400 text-sm mt-1 font-medium">Manage all registered student accounts</p>
             </div>
             <div class="flex gap-2">
-                <Button label="New Student" icon="pi pi-plus" class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2 sm:!py-2.5 !px-4 sm:!px-5" @click="openCreateDialog" />
+                <Button v-if="authStore.canManageUsers" label="New Student" icon="pi pi-plus" class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2 sm:!py-2.5 !px-4 sm:!px-5" @click="openCreateDialog" />
                 <Button icon="pi pi-refresh" text rounded class="!text-slate-500 hover:!bg-sage-50" :loading="loading" @click="fetchStudents" v-tooltip.bottom="'Refresh'" />
             </div>
         </div>
@@ -64,10 +64,11 @@
                         <Tag :value="slotProps.data.is_active ? 'Active' : 'Inactive'" :severity="slotProps.data.is_active ? 'success' : 'danger'" class="text-xs font-medium" />
                     </template>
                 </Column>
-                <Column header="Actions" style="width: 120px">
+                <Column header="Actions" style="width: 160px">
                     <template #body="slotProps">
-                        <Button icon="pi pi-pencil" text rounded class="w-9 h-9 !text-blue-600 hover:!bg-blue-50" @click="openEditDialog(slotProps.data)" v-tooltip.bottom="'Edit'" />
-                        <Button icon="pi pi-trash" text rounded class="w-9 h-9 !text-red-500 hover:!bg-red-50" @click="confirmDelete(slotProps.data)" v-tooltip.bottom="'Delete'" />
+                        <Button v-if="authStore.canManageUsers" icon="pi pi-key" text rounded class="w-9 h-9 !text-amber-600 hover:!bg-amber-50" @click="openResetPasswordDialog(slotProps.data)" v-tooltip.bottom="'Reset Password'" />
+                        <Button v-if="authStore.canManageUsers" icon="pi pi-pencil" text rounded class="w-9 h-9 !text-blue-600 hover:!bg-blue-50" @click="openEditDialog(slotProps.data)" v-tooltip.bottom="'Edit'" />
+                        <Button v-if="authStore.canManageUsers" icon="pi pi-trash" text rounded class="w-9 h-9 !text-red-500 hover:!bg-red-50" @click="confirmDelete(slotProps.data)" v-tooltip.bottom="'Delete'" />
                     </template>
                 </Column>
                 <template #empty>
@@ -107,22 +108,31 @@
                     <Select v-model="form.department" :options="academicDepartments" optionLabel="name" optionValue="id" placeholder="Select academic department" class="w-full" :class="{ 'p-invalid': formErrors.department }" :disabled="formLoading" filter />
                     <small v-if="formErrors.department" class="text-red-500 block mt-1 text-xs">{{ formErrors.department[0] }}</small>
                 </div>
-
-                <div v-if="!isEditing">
-                    <label class="block text-sm font-medium text-charcoal/80 mb-2">Password</label>
-                    <InputText v-model="form.password" type="password" placeholder="Min. 8 characters" class="w-full !bg-white !border-sage-200/60 !rounded-lg !py-2.5 !px-4" :class="{ 'p-invalid': formErrors.password }" :disabled="formLoading" />
-                    <small v-if="formErrors.password" class="text-red-500 block mt-1 text-xs">{{ formErrors.password[0] }}</small>
-                </div>
-                <div v-else>
-                    <label class="block text-sm font-medium text-charcoal/80 mb-2">Password <span class="text-slate-400 font-normal">(leave blank to keep current)</span></label>
-                    <InputText v-model="form.password" type="password" placeholder="New password" class="w-full !bg-white !border-sage-200/60 !rounded-lg !py-2.5 !px-4" :class="{ 'p-invalid': formErrors.password }" :disabled="formLoading" />
-                    <small v-if="formErrors.password" class="text-red-500 block mt-1 text-xs">{{ formErrors.password[0] }}</small>
-                </div>
             </div>
 
             <template #footer>
                 <Button label="Cancel" text class="!text-slate-600 hover:!bg-slate-50" :disabled="formLoading" @click="formDialogVisible = false" />
                 <Button :label="isEditing ? 'Update' : 'Create Student'" :loading="formLoading" class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !rounded-lg !py-2 sm:!py-2.5 !px-4 sm:!px-5" @click="handleSubmit" />
+            </template>
+        </Dialog>
+
+        <Dialog v-model:visible="resetDialogVisible" header="Reset Password" modal :style="{ width: '420px' }" :breakpoints="{ '640px': '95vw', '768px': '420px' }">
+            <div class="space-y-4">
+                <p class="text-sm text-slate-600">
+                    Reset the password for <span class="font-semibold text-charcoal">{{ userToReset?.name }}</span>?
+                </p>
+                <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-amber-700 mb-1">Default Password</p>
+                    <p class="text-sm text-slate-700">
+                        The user's password will be reset to their Matric No.
+                        <span class="font-mono font-semibold text-charcoal">{{ userToReset?.institution_id }}</span>.
+                    </p>
+                </div>
+                <Message v-if="resetError" severity="error" :closable="false" class="!text-sm">{{ resetError }}</Message>
+            </div>
+            <template #footer>
+                <Button label="Cancel" text class="!text-slate-600 hover:!bg-slate-50" :disabled="resetLoading" @click="resetDialogVisible = false" />
+                <Button label="Reset Password" icon="pi pi-key" :loading="resetLoading" class="!bg-amber-600 hover:!bg-amber-700 !border-none !text-white !font-semibold !rounded-lg" @click="handleResetPassword" />
             </template>
         </Dialog>
 
@@ -152,9 +162,11 @@ import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
 import api from '../../../services/api';
 import userService from '../../../services/userService';
+import { useAuthStore } from '../../../stores/auth';
 import { hashPassword } from '../../../utils/crypto';
 
 const toast = useToast();
+const authStore = useAuthStore();
 
 const students = ref([]);
 const meta = ref(null);
@@ -254,7 +266,6 @@ const form = reactive({
     email: '',
     gender: null,
     department: null,
-    password: '',
 });
 
 const resetForm = () => {
@@ -262,7 +273,6 @@ const resetForm = () => {
     form.email = '';
     form.gender = null;
     form.department = null;
-    form.password = '';
     formError.value = '';
     formErrors.value = {};
     isEditing.value = false;
@@ -290,12 +300,6 @@ const handleSubmit = async () => {
     formError.value = '';
     formErrors.value = {};
 
-    if (form.password && form.password.length < 8) {
-        formErrors.value = { password: ['Password must be at least 8 characters.'] };
-        formLoading.value = false;
-        return;
-    }
-
     try {
         if (isEditing.value) {
             const payload = {
@@ -304,21 +308,22 @@ const handleSubmit = async () => {
                 gender: form.gender,
                 department: form.department,
             };
-            if (form.password) {
-                payload.password = await hashPassword(form.password);
-            }
             await userService.update(editingId.value, payload);
             toast.add({ severity: 'success', summary: 'Updated', detail: 'Student updated successfully.', life: 3000 });
         } else {
-            await userService.create({
+            const res = await userService.create({
                 role: 'student',
                 full_name: form.full_name.trim(),
                 email: form.email.trim(),
                 gender: form.gender,
                 department: form.department,
-                password: await hashPassword(form.password),
             });
-            toast.add({ severity: 'success', summary: 'Created', detail: 'Student created successfully.', life: 3000 });
+            toast.add({
+                severity: 'success',
+                summary: 'Created',
+                detail: `Student created successfully. Default password is their Matric No. (${res.data.user.institution_id}).`,
+                life: 5000,
+            });
         }
         formDialogVisible.value = false;
         await fetchStudents();
@@ -353,6 +358,39 @@ const handleDelete = async () => {
         toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Failed to delete student.', life: 3000 });
     } finally {
         deleteLoading.value = false;
+    }
+};
+
+const resetDialogVisible = ref(false);
+const resetLoading = ref(false);
+const resetError = ref('');
+const userToReset = ref(null);
+
+const openResetPasswordDialog = (user) => {
+    userToReset.value = user;
+    resetError.value = '';
+    resetDialogVisible.value = true;
+};
+
+const handleResetPassword = async () => {
+    if (!userToReset.value) return;
+    resetLoading.value = true;
+    resetError.value = '';
+    try {
+        const hashed = await hashPassword(userToReset.value.institution_id);
+        await userService.resetPassword(userToReset.value.id, hashed);
+        toast.add({
+            severity: 'success',
+            summary: 'Password Reset',
+            detail: `Password for ${userToReset.value.name} has been reset to their Matric No. (${userToReset.value.institution_id}).`,
+            life: 5000,
+        });
+        resetDialogVisible.value = false;
+        userToReset.value = null;
+    } catch (e) {
+        resetError.value = e.response?.data?.message || 'Failed to reset password.';
+    } finally {
+        resetLoading.value = false;
     }
 };
 </script>

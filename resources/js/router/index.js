@@ -101,56 +101,56 @@ const routes = [
         meta: { layout: AppLayout, requiresAuth: true, roles: ['complaint_officer'] }
     },
 
-    // Admin Routes
+    // Admin Routes (admin or sub_admin)
     {
         path: '/admin',
         name: 'AdminDashboard',
         component: () => import('../pages/admin/AdminDashboard.vue'),
-        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin', 'sub_admin'] }
     },
     {
         path: '/admin/users',
         name: 'AdminUsers',
         component: () => import('../pages/admin/users/Users.vue'),
-        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin', 'sub_admin'] }
     },
     {
         path: '/admin/users/students',
         name: 'AdminStudents',
         component: () => import('../pages/admin/users/Students.vue'),
-        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin', 'sub_admin'] }
     },
     {
         path: '/admin/users/staff',
         name: 'AdminStaff',
         component: () => import('../pages/admin/users/Staff.vue'),
-        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin', 'sub_admin'] }
     },
     {
         path: '/admin/complaints',
         name: 'AdminComplaints',
         component: () => import('../pages/admin/Complaints.vue'),
-        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin', 'sub_admin'] }
     },
     {
         path: '/admin/complaints/:id',
         name: 'AdminComplaintDetails',
         component: () => import('../pages/complaints/ComplaintDetails.vue'),
-        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin', 'sub_admin'] }
     },
     {
         path: '/admin/settings',
         name: 'AdminSettings',
         component: () => import('../pages/admin/Settings.vue'),
-        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin', 'sub_admin'] }
     },
 
-    // Security Dashboard (Admin or Security role)
+    // Security Dashboard (Admin, Sub-Admin, or Security role)
     {
         path: '/security',
         name: 'SecurityDashboard',
         component: () => import('../pages/security/SecurityDashboard.vue'),
-        meta: { layout: AppLayout, requiresAuth: true, roles: ['security', 'admin'] }
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['security', 'admin', 'sub_admin'] }
     },
     {
         path: '/:pathMatch(.*)*',
@@ -165,7 +165,9 @@ const router = createRouter({
 
 const getDashboardRoute = (roleSlug, user) => {
     switch (roleSlug) {
-        case 'admin': return '/admin';
+        case 'admin':
+        case 'sub_admin':
+            return '/admin';
         case 'staff': return '/staff';
         case 'security': return '/security';
         case 'student': return '/student';

@@ -42,4 +42,8 @@ export default {
     async updateRole(id, role) {
         return api.patch(`/api/admin/users/${id}/role`, { role });
     },
+
+    async resetPassword(id, password) {
+        return api.post(`/api/admin/users/${id}/reset-password`, { password });
+    },
 };

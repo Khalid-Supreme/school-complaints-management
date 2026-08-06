@@ -51,7 +51,9 @@ export const useComplaintsStore = defineStore('complaints', {
                 this.lastReferenceNo = response.data.complaint?.reference_no;
                 return true;
             } catch (err) {
-                this.error = err.response?.data?.message || 'Failed to submit complaint';
+                this.error = err.response?.data?.message
+                    || Object.values(err.response?.data?.errors || {}).flat()[0]
+                    || 'Failed to submit complaint';
                 return false;
             } finally {
                 this.loading = false;

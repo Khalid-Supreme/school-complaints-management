@@ -38,8 +38,8 @@ class ComplaintController extends Controller
             return response()->json($complaints);
         }
 
-        // Admins see everything (paginated, decrypted)
-        if ($slug === 'admin') {
+        // Admins and Sub-Admins see everything (paginated, decrypted)
+        if (in_array($slug, ['admin', 'sub_admin'], true)) {
             $paginator = Complaint::with(['complainant', 'category', 'currentAssignment.assignedTo'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(15);

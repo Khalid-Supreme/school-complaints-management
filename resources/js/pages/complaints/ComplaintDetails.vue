@@ -133,7 +133,7 @@
             </div>
 
             <div class="space-y-6">
-                <Card v-if="authStore.isAdmin || authStore.isOfficer"
+                <Card v-if="authStore.isAdministrator || authStore.isOfficer"
                     class="shadow-card border border-sage-100 bg-white">
                     <template #title>
                         <div class="flex items-center gap-2 text-base font-semibold pb-4 mb-4 border-b border-sage-100">
@@ -194,7 +194,7 @@
                     </template>
                 </Card>
 
-                <Card v-if="authStore.hasRole('admin')" class="shadow-card border border-sage-100 bg-white">
+                <Card v-if="authStore.isAdministrator" class="shadow-card border border-sage-100 bg-white">
                     <template #title>
                         <div class="flex items-center gap-2 text-base font-semibold pb-4 mb-4 border-b border-sage-100">
                             <i class="pi pi-user-plus text-sage-600"></i>
@@ -282,7 +282,7 @@
                     </template>
                 </Card>
 
-                <Card v-if="authStore.isAdmin || authStore.isOfficer" class="shadow-card border border-sage-100">
+                <Card v-if="authStore.isAdministrator || authStore.isOfficer" class="shadow-card border border-sage-100">
                     <template #title>
                         <div class="text-sm font-semibold pb-4 mb-4 border-b border-sage-100 text-charcoal">Assignment
                             History</div>
@@ -433,7 +433,7 @@ const loadAttachments = async () => {
 };
 
 const loadAssignmentHistory = async () => {
-    if (!authStore.isAdmin && !authStore.isOfficer) return;
+    if (!authStore.isAdministrator && !authStore.isOfficer) return;
     try {
         const res = await api.get(`/api/complaints/${complaintId}/assignments`);
         assignmentHistory.value = res.data.data || [];
@@ -441,7 +441,7 @@ const loadAssignmentHistory = async () => {
 };
 
 const loadStaffList = async () => {
-    if (!authStore.isAdmin) return;
+    if (!authStore.isAdministrator) return;
     try {
         const res = await api.get('/api/staff/list');
         staffList.value = res.data.data || [];
