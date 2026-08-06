@@ -37,8 +37,11 @@ class EnsureRole
             return response()->json(['message' => 'Forbidden — no role assigned'], 403);
         }
 
-        // Allow always when 'admin' is in the allowed list — admins are super-users.
-        if (in_array('admin', $roles, true) && $userRoleSlug === 'admin') {
+        // Admin and Sub-Admin are treated as administrators.
+        // When 'admin' is in the allowed list, both admin and sub_admin are granted access.
+        $isAdministrator = in_array($userRoleSlug, ['admin', 'sub_admin'], true);
+
+        if (in_array('admin', $roles, true) && $isAdministrator) {
             return $next($request);
         }
 

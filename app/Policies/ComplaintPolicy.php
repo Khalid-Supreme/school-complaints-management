@@ -17,11 +17,11 @@ class ComplaintPolicy
 
     /**
      * Determine whether the user can view the model.
-     * Visible to: admin, complaint_officer, or the complainant themselves.
+     * Visible to: admin, sub_admin, complaint_officer, or the complainant themselves.
      */
     public function view(User $user, Complaint $complaint): bool
     {
-        if (in_array($user->role->slug, ['admin', 'complaint_officer'], true)) {
+        if (in_array($user->role->slug, ['admin', 'sub_admin', 'complaint_officer'], true)) {
             return true;
         }
 

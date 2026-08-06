@@ -159,8 +159,36 @@ const validate = () => {
     return valid;
 };
 
-const onFileChange = (e) => { form.file = e.target.files[0] || null; };
-const onDrop = (e) => { form.file = e.dataTransfer.files[0] || null; dragOver.value = false; };
+const onFileChange = (e) => {
+    const file = e.target.files[0] || null;
+    if (file && file.size > 10 * 1024 * 1024) {
+        toast.add({
+            severity: 'error',
+            summary: 'File Too Large',
+            detail: 'File size must be less than 10MB',
+            life: 3000,
+        });
+        e.target.value = '';
+        form.file = null;
+        return;
+    }
+    form.file = file;
+};
+const onDrop = (e) => {
+    const file = e.dataTransfer.files[0] || null;
+    if (file && file.size > 10 * 1024 * 1024) {
+        toast.add({
+            severity: 'error',
+            summary: 'File Too Large',
+            detail: 'File size must be less than 10MB',
+            life: 3000,
+        });
+        dragOver.value = false;
+        return;
+    }
+    form.file = file;
+    dragOver.value = false;
+};
 
 const handleSubmit = async () => {
     if (!validate()) return;

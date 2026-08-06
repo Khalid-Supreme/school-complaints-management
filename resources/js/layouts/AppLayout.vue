@@ -110,6 +110,7 @@ onMounted(() => {
 const sideNav = computed(() => {
   switch (role.value) {
     case 'admin':
+    case 'sub_admin':
       return [
         { to: '/admin', icon: 'pi pi-sliders-h', label: 'System Metrics' },
         { to: '/admin/complaints', icon: 'pi pi-bars', label: 'All Complaints' },
@@ -139,6 +140,7 @@ const sideNav = computed(() => {
 const brand = computed(() => {
   const baseBrand = {
     admin: { title: 'SUPER ADMIN', subtitle: 'System Console' },
+    sub_admin: { title: 'SUB ADMIN', subtitle: 'System Console' },
     security: { title: 'SECURITY OFFICER', subtitle: 'System Console' },
     complaint_officer: { title: 'COMPLAINT OFFICER', subtitle: 'Officer Portal' },
     student: { title: 'STUDENT', subtitle: 'Student Portal' },
@@ -163,6 +165,7 @@ const brand = computed(() => {
 const headerText = computed(() => {
   switch (role.value) {
     case 'admin':
+    case 'sub_admin':
     case 'security':
       return 'Apex Firewall & IPS Protection Daemon Active';
     case 'complaint_officer':
@@ -180,6 +183,8 @@ const badge = computed(() => {
   switch (role.value) {
     case 'admin':
       return { label: 'Super Admin', bg: '#fef2f2', text: '#b91c1c' };
+    case 'sub_admin':
+      return { label: 'Sub Admin', bg: '#f0fdfa', text: '#0f766e' };
     case 'security':
       return { label: 'Security Officer', bg: '#fef3c7', text: '#b45309' };
     case 'complaint_officer':

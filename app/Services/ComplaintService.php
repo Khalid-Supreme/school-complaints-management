@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Complaint;
 use App\Models\ComplaintCategory;
 use App\Repositories\ComplaintRepository;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 
 class ComplaintService
@@ -32,6 +33,18 @@ class ComplaintService
      */
     public function submitComplaint(array $data, int $complainantId): Complaint
     {
+        // Enforce a maximum of two complaints per user per day.
+        $dailyLimit = (int) config('complaints.daily_limit', 2);
+        $todayCount = Complaint::where('complainant_id', $complainantId)
+            ->whereDate('submitted_at', now()->toDateString())
+            ->count();
+
+        if ($todayCount >= $dailyLimit) {
+            throw ValidationException::withMessages([
+                'category_id' => "Daily complaint limit reached. You can submit a maximum of {$dailyLimit} complaints per day.",
+            ]);
+        }
+
         $category = ComplaintCategory::find($data['category_id']);
         
         // Generate a unique reference number

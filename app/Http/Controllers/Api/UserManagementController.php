@@ -73,7 +73,15 @@ class UserManagementController extends Controller
         $status = $request->get('status');
 
         $query = User::with('role', 'department')
-            ->whereHas('role', fn($q) => $q->whereIn('slug', ['staff', 'complaint_officer']));
+            ->whereHas('role', function ($q) use ($request) {
+                $manageableRoles = ['staff', 'complaint_officer'];
+
+                if ($request->user()->canManageRole('sub_admin')) {
+                    $manageableRoles[] = 'sub_admin';
+                }
+
+                $q->whereIn('slug', $manageableRoles);
+            });
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -112,13 +120,17 @@ class UserManagementController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (!$request->user()->canManageUsers()) {
+            return response()->json(['message' => 'You are not authorized to create users.'], 403);
+        }
+
         $rules = [
             'role' => ['required', 'string', 'in:student,staff,complaint_officer'],
             'full_name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'string', 'email', 'max:150', 'unique:users,email'],
             'gender' => ['required', 'string', 'in:male,female'],
             'department' => ['required', 'integer', 'exists:departments,id'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['sometimes', 'string', 'min:8'],
         ];
 
         if ($request->role === 'staff' || $request->role === 'complaint_officer') {
@@ -136,12 +148,16 @@ class UserManagementController extends Controller
 
         $title = $request->title ?? ($request->gender === 'male' ? 'Mr.' : 'Miss');
 
+        $institutionId = $this->userRepository->generateInstitutionId($prefix);
+
         $user = User::create([
             'role_id' => $role->id,
             'name' => $request->full_name,
             'email' => $request->email,
-            'institution_id' => $this->userRepository->generateInstitutionId($prefix),
-            'password' => $request->password,
+            'institution_id' => $institutionId,
+            'password' => $request->filled('password')
+                ? $request->password
+                : hash('sha256', $institutionId),
             'department_id' => $request->department,
             'gender' => $request->gender,
             'title' => $title,
@@ -164,6 +180,10 @@ class UserManagementController extends Controller
 
     public function update(Request $request, User $user): JsonResponse
     {
+        if (!$request->user()->canManageUsers()) {
+            return response()->json(['message' => 'You are not authorized to update users.'], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'full_name' => ['sometimes', 'string', 'max:150'],
             'email' => ['sometimes', 'string', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id)],
@@ -171,7 +191,6 @@ class UserManagementController extends Controller
             'title' => ['sometimes', 'string', 'in:Mr.,Mrs.,Miss,Dr.,Prof.'],
             'department' => ['sometimes', 'integer', 'exists:departments,id'],
             'is_active' => ['sometimes', 'boolean'],
-            'password' => ['sometimes', 'string', 'min:8'],
         ]);
 
         if ($validator->fails()) {
@@ -198,9 +217,6 @@ class UserManagementController extends Controller
         if ($request->has('is_active')) {
             $data['is_active'] = $request->boolean('is_active');
         }
-        if ($request->has('password')) {
-            $data['password'] = $request->password;
-        }
 
         $user->update($data);
         $user->load('role', 'department');
@@ -211,8 +227,12 @@ class UserManagementController extends Controller
         ]);
     }
 
-    public function destroy(User $user): JsonResponse
+    public function destroy(Request $request, User $user): JsonResponse
     {
+        if (!$request->user()->canManageUsers()) {
+            return response()->json(['message' => 'You are not authorized to delete users.'], 403);
+        }
+
         $user->delete();
 
         return response()->json([
@@ -222,17 +242,25 @@ class UserManagementController extends Controller
 
     public function updateRole(Request $request, User $user): JsonResponse
     {
-        $allowedSlugs = ['staff', 'complaint_officer'];
-
         $validator = Validator::make($request->all(), [
-            'role' => ['required', 'string', Rule::in($allowedSlugs)],
+            'role' => ['required', 'string', 'max:50'],
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $role = Role::where('slug', $request->role)->firstOrFail();
+        $roleSlug = $request->role;
+
+        if (!$request->user()->canAssignRole($roleSlug)) {
+            return response()->json(['message' => 'You are not authorized to assign this role.'], 403);
+        }
+
+        if ((int) $user->id === (int) $request->user()->id) {
+            return response()->json(['message' => 'You cannot change your own role.'], 403);
+        }
+
+        $role = Role::where('slug', $roleSlug)->firstOrFail();
         $user->role_id = $role->id;
         $user->save();
         $user->load('role', 'department');
@@ -240,6 +268,33 @@ class UserManagementController extends Controller
         return response()->json([
             'message' => 'Role updated successfully.',
             'user' => $user,
+        ]);
+    }
+
+    public function resetPassword(Request $request, User $user): JsonResponse
+    {
+        if (!$request->user()->canManageUsers()) {
+            return response()->json(['message' => 'You are not authorized to reset passwords.'], 403);
+        }
+
+        if (!$user->institution_id) {
+            return response()->json(['message' => 'This user has no registration number to use as a default password.'], 422);
+        }
+
+        // Default password is the user's registration number. The client sends the
+        // SHA-256 digest (matching the login/register pattern); fall back to hashing
+        // server-side if it is missing. The 'hashed' cast bcrypts the value on save.
+        $password = $request->input('password');
+        if (!is_string($password) || strlen($password) < 8) {
+            $password = hash('sha256', $user->institution_id);
+        }
+
+        $user->password = $password;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Password has been reset successfully.',
+            'default_password' => $user->institution_id,
         ]);
     }
 }

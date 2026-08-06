@@ -34,9 +34,9 @@ Route::middleware(['auth:sanctum', 'ips'])->group(function () {
     // Complaints
     Route::get('/categories', [ComplaintController::class, 'categories']);
 
-    // Status updates: ONLY complaint_officer (admins also allowed via EnsureRole)
+    // Status updates: complaint_officer (admins/sub_admins also allowed)
     Route::patch('/complaints/{complaint}/status', [ComplaintController::class, 'updateStatus'])
-        ->middleware('role:complaint_officer');
+        ->middleware('role:admin,complaint_officer');
 
     // Show / store / index
     Route::get('/complaints/{complaint}', [ComplaintController::class, 'show'])
@@ -69,12 +69,12 @@ Route::middleware(['auth:sanctum', 'ips'])->group(function () {
     Route::get('/staff/list', [ComplaintAssignmentController::class, 'staffList'])
         ->middleware('role:admin');
 
-    // Admin Dashboard (admin only)
+    // Admin Dashboard (admin or sub_admin)
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
-        ->middleware('role:admin');
+        ->middleware('role:admin,sub_admin');
 
-    // User Management (admin only)
-    Route::middleware('role:admin')->prefix('/admin/users')->group(function () {
+    // User Management (admin or sub_admin; create/edit/delete/role are guarded in the controller)
+    Route::middleware('role:admin,sub_admin')->prefix('/admin/users')->group(function () {
         Route::get('/students', [UserManagementController::class, 'students']);
         Route::get('/staff', [UserManagementController::class, 'staff']);
         Route::post('/', [UserManagementController::class, 'store']);
@@ -82,15 +82,16 @@ Route::middleware(['auth:sanctum', 'ips'])->group(function () {
         Route::put('/{user}', [UserManagementController::class, 'update']);
         Route::delete('/{user}', [UserManagementController::class, 'destroy']);
         Route::patch('/{user}/role', [UserManagementController::class, 'updateRole']);
+        Route::post('/{user}/reset-password', [UserManagementController::class, 'resetPassword']);
     });
 
-    // Security Dashboard (Admin or Security role)
+    // Security Dashboard (Admin, Sub-Admin, or Security role)
     Route::middleware(['role:admin,security'])->group(function () {
         Route::get('/security/dashboard', [SecurityDashboardController::class, 'index']);
         Route::get('/security/audit/logins', [SecurityDashboardController::class, 'loginAudit']);
     });
 
-    Route::middleware('role:admin')->prefix('/settings')->group(function () {
+    Route::middleware('role:admin,sub_admin')->prefix('/settings')->group(function () {
         Route::put('/', [SettingsController::class, 'update']);
     });
 });
