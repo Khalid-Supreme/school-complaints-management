@@ -73,7 +73,7 @@
                                         slotProps.data.reference_no }}</span>
                             </template>
                         </Column>
-                        <Column field="complainant.name" header="Complainant" />
+                        <Column field="complainant.full_name" header="Complainant" />
                         <Column field="category" header="Category" />
                         <Column field="title" header="Subject">
                             <template #body="slotProps">

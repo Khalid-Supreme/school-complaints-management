@@ -39,7 +39,7 @@ class AttachmentService
     public function getAttachments(int $complaintId): \Illuminate\Database\Eloquent\Collection
     {
         return ComplaintAttachment::where('complaint_id', $complaintId)
-            ->with('user:id,name')
+            ->with(['user:id,name,first_name,last_name,title,role_id', 'user.role:id,slug'])
             ->orderBy('created_at', 'desc')
             ->get();
     }

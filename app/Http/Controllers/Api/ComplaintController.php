@@ -40,7 +40,7 @@ class ComplaintController extends Controller
 
         // Admins and Sub-Admins see everything (paginated, decrypted)
         if (in_array($slug, ['admin', 'sub_admin'], true)) {
-            $paginator = Complaint::with(['complainant', 'category', 'currentAssignment.assignedTo'])
+            $paginator = Complaint::with(['complainant.role', 'category', 'currentAssignment.assignedTo.role'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(15);
 

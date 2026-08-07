@@ -29,17 +29,20 @@
         </nav>
 
         <div class="p-4 border-t" :class="sidebarCollapsed ? 'md:px-3' : ''" style="border-color: #E8EFE9;">
-          <div class="flex items-center gap-3 mb-3 px-2">
+          <div class="flex items-center gap-3 mb-3 px-2"
+            :class="sidebarCollapsed ? 'md:flex-col md:items-center md:gap-2 md:px-0 md:mb-2' : ''">
             <div
               class="w-9 h-9 rounded-full bg-sage-100 flex items-center justify-center text-sage-600 font-semibold text-sm">
-              {{ authStore.user?.name ? authStore.user.name.charAt(0).toUpperCase() : 'U' }}
+              {{ authStore.user?.initials || (authStore.user?.full_name ? authStore.user.full_name.charAt(0).toUpperCase() : 'U') }}
             </div>
-            <div class="overflow-hidden flex-1 min-w-0">
+            <div class="overflow-hidden flex-1 min-w-0" :class="sidebarCollapsed ? 'md:hidden' : ''">
               <span class="block text-[0.8rem] lg:text-[0.825rem] font-semibold text-charcoal truncate"
-                :class="sidebarCollapsed ? 'md:hidden' : 'md:block'">{{ authStore.user?.name }}</span>
+                :class="sidebarCollapsed ? 'md:hidden' : 'md:block'">{{ authStore.user?.full_name_with_title || authStore.user?.full_name }}</span>
               <span class="block text-[0.7rem] text-slate-400 truncate"
                 :class="sidebarCollapsed ? 'md:hidden' : 'md:block'">{{ authStore.user?.institution_id }}</span>
             </div>
+            <Button v-if="isAdminRole" icon="pi pi-cog" text rounded class="!h-9 !w-9 shrink-0"
+              @click="router.push('/admin/settings')" aria-label="Settings" v-tooltip.right="'Settings'" />
           </div>
           <Button :label="sidebarCollapsed ? '' : 'Sign Out'" icon="pi pi-sign-out" severity="danger" text
             class="w-full !justify-start hover:!bg-red-50/60" @click="handleLogout" v-tooltip.right="'Sign Out'" />
@@ -88,6 +91,7 @@ import settingsService from '../services/settings';
 const authStore = useAuthStore();
 const router = useRouter();
 const role = computed(() => authStore.role);
+const isAdminRole = computed(() => role.value === 'admin' || role.value === 'sub_admin');
 const sidebarOpen = ref(false);
 const sidebarCollapsed = ref(false);
 const viewportWidth = ref(window.innerWidth);
@@ -116,7 +120,6 @@ const sideNav = computed(() => {
         { to: '/admin/complaints', icon: 'pi pi-bars', label: 'All Complaints' },
         { to: '/security', icon: 'pi pi-exclamation-triangle', label: 'Security (IPS)' },
         { to: '/admin/users', icon: 'pi pi-users', label: 'User Management' },
-        { to: '/admin/settings', icon: 'pi pi-cog', label: 'Settings' },
       ];
     case 'complaint_officer':
       return [{ to: '/officer', icon: 'pi pi-briefcase', label: 'My Assignments' }];

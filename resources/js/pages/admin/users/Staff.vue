@@ -51,7 +51,7 @@
    
                     </template>
                 </Column>
-                <Column field="name" header="Name" />
+                <Column field="full_name" header="Name" />
                 <Column field="email" header="Email" />
                 <Column field="role.name" header="Role">
                     <template #body="slotProps">
@@ -92,10 +92,17 @@
             <div class="space-y-4">
                 <Message v-if="formError" severity="error" :closable="false" class="!text-sm">{{ formError }}</Message>
 
-                <div>
-                    <label class="block text-sm font-medium text-charcoal/80 mb-2">Full Name</label>
-                    <InputText v-model="form.full_name" placeholder="e.g. John Doe" class="w-full !bg-white !border-sage-200/60 !rounded-lg !py-2.5 !px-4" :class="{ 'p-invalid': formErrors.full_name }" :disabled="formLoading" />
-                    <small v-if="formErrors.full_name" class="text-red-500 block mt-1 text-xs">{{ formErrors.full_name[0] }}</small>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-charcoal/80 mb-2">First Name</label>
+                        <InputText v-model="form.first_name" placeholder="e.g. John" class="w-full !bg-white !border-sage-200/60 !rounded-lg !py-2.5 !px-4" :class="{ 'p-invalid': formErrors.first_name }" :disabled="formLoading" />
+                        <small v-if="formErrors.first_name" class="text-red-500 block mt-1 text-xs">{{ formErrors.first_name[0] }}</small>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-charcoal/80 mb-2">Last Name</label>
+                        <InputText v-model="form.last_name" placeholder="e.g. Doe" class="w-full !bg-white !border-sage-200/60 !rounded-lg !py-2.5 !px-4" :class="{ 'p-invalid': formErrors.last_name }" :disabled="formLoading" />
+                        <small v-if="formErrors.last_name" class="text-red-500 block mt-1 text-xs">{{ formErrors.last_name[0] }}</small>
+                    </div>
                 </div>
 
                 <div>
@@ -138,7 +145,7 @@
         <Dialog v-model:visible="roleDialogVisible" header="Change Role" modal :style="{ width: '400px' }" :breakpoints="{ '640px': '95vw', '768px': '400px' }">
             <div class="space-y-4">
                 <p class="text-sm text-slate-600">
-                    Change role for <span class="font-semibold text-charcoal">{{ userToChangeRole?.name }}</span>.
+                    Change role for <span class="font-semibold text-charcoal">{{ userToChangeRole?.full_name }}</span>.
                 </p>
                 <div>
                     <label class="block text-sm font-medium text-charcoal/80 mb-2">New Role</label>
@@ -155,7 +162,7 @@
         <Dialog v-model:visible="resetDialogVisible" header="Reset Password" modal :style="{ width: '420px' }" :breakpoints="{ '640px': '95vw', '768px': '420px' }">
             <div class="space-y-4">
                 <p class="text-sm text-slate-600">
-                    Reset the password for <span class="font-semibold text-charcoal">{{ userToReset?.name }}</span>?
+                    Reset the password for <span class="font-semibold text-charcoal">{{ userToReset?.full_name }}</span>?
                 </p>
                 <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                     <p class="text-xs font-bold uppercase tracking-[0.18em] text-amber-700 mb-1">Default Password</p>
@@ -174,7 +181,7 @@
 
         <Dialog v-model:visible="deleteDialogVisible" modal :style="{ width: '400px' }" :breakpoints="{ '640px': '95vw', '768px': '400px' }" header="Confirm Delete">
             <p class="text-sm text-slate-600">
-                Are you sure you want to delete <span class="font-semibold text-charcoal">{{ userToDelete?.name }}</span>?
+                Are you sure you want to delete <span class="font-semibold text-charcoal">{{ userToDelete?.full_name }}</span>?
                 This action cannot be undone.
             </p>
             <template #footer>
@@ -322,7 +329,8 @@ const formError = ref('');
 const formErrors = ref({});
 const form = reactive({
     role: null,
-    full_name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     title: null,
     gender: null,
@@ -331,7 +339,8 @@ const form = reactive({
 
 const resetForm = () => {
     form.role = null;
-    form.full_name = '';
+    form.first_name = '';
+    form.last_name = '';
     form.email = '';
     form.title = null;
     form.gender = null;
@@ -352,7 +361,8 @@ const openEditDialog = async (user) => {
     isEditing.value = true;
     editingId.value = user.id;
     form.role = user.role.slug;
-    form.full_name = user.name;
+    form.first_name = user.first_name ?? '';
+    form.last_name = user.last_name ?? '';
     form.email = user.email;
     form.title = user.title;
     form.gender = user.gender;
@@ -368,7 +378,8 @@ const handleSubmit = async () => {
     try {
         if (isEditing.value) {
             const payload = {
-                full_name: form.full_name.trim(),
+                first_name: form.first_name.trim(),
+                last_name: form.last_name.trim(),
                 email: form.email.trim(),
                 title: form.title,
                 gender: form.gender,
@@ -379,7 +390,8 @@ const handleSubmit = async () => {
         } else {
             const res = await userService.create({
                 role: form.role,
-                full_name: form.full_name.trim(),
+                first_name: form.first_name.trim(),
+                last_name: form.last_name.trim(),
                 email: form.email.trim(),
                 title: form.title,
                 gender: form.gender,
@@ -478,7 +490,7 @@ const handleResetPassword = async () => {
         toast.add({
             severity: 'success',
             summary: 'Password Reset',
-            detail: `Password for ${userToReset.value.name} has been reset to their Staff No. (${userToReset.value.institution_id}).`,
+            detail: `Password for ${userToReset.value.full_name} has been reset to their Staff No. (${userToReset.value.institution_id}).`,
             life: 5000,
         });
         resetDialogVisible.value = false;

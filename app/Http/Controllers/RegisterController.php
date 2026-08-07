@@ -69,9 +69,15 @@ class RegisterController extends Controller
         $role = Role::where('slug', $roleSlug)->firstOrFail();
         $institutionId = $this->userRepository->generateInstitutionId($prefix);
 
+        $firstName = $request->first_name;
+        $lastName = $request->last_name;
+        $fullName = User::composeName($firstName, $lastName);
+
         $data = [
             'role_id' => $role->id,
-            'name' => $request->full_name,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'name' => $fullName,
             'email' => $request->email,
             'institution_id' => $institutionId,
             'password' => Hash::make($request->password),
@@ -115,7 +121,7 @@ class RegisterController extends Controller
             'user' => $user,
             'verificationUrl' => $verificationUrl,
         ], function ($message) use ($user) {
-            $message->to($user->email, $user->name)->subject('Verify your email address');
+            $message->to($user->email, $user->full_name)->subject('Verify your email address');
         });
     }
 }

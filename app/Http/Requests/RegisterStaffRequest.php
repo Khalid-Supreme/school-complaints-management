@@ -14,7 +14,8 @@ class RegisterStaffRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'full_name' => ['required', 'string', 'max:150'],
+            'first_name' => ['required', 'string', 'max:150'],
+            'last_name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'string', 'email', 'max:150', 'unique:users,email'],
             'department' => ['required', 'integer', 'exists:departments,id'],
             'title' => ['required', 'string', 'in:Mr.,Mrs.,Miss,Dr.,Prof.'],

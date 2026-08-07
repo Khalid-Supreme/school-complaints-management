@@ -23,36 +23,47 @@ class UserSeeder extends Seeder
 
         $dept = fn(string $slug) => Department::where('slug', $slug)->value('id');
 
+        // Upsert a user by email, restoring soft-deleted rows so the unique
+        // email constraint never collides with a previously-deleted seed user.
+        $upsert = function (string $email, array $attributes): User {
+            $user = User::withTrashed()->firstOrNew(['email' => $email]);
+            $user->fill($attributes);
+            $user->save();
+            if ($user->trashed()) {
+                $user->restore();
+            }
+
+            return $user;
+        };
+
         // 1. Admin
         if ($adminRole) {
-            User::updateOrCreate(
-                ['email' => 'admin@example.com'],
-                [
-                    'role_id' => $adminRole->id,
-                    'name' => 'Admin Supreme',
-                    'institution_id' => 'STF-2026-001',
-                    'password' => Hash::make(hash('sha256', 'password')),
-                    'department_id' => $dept('vc-office'),
-                    'is_active' => true,
-                    'email_verified_at' => now(),
-                ]
-            );
+            $upsert('admin@example.com', [
+                'role_id' => $adminRole->id,
+                'first_name' => 'Admin',
+                'last_name' => 'Supreme',
+                'name' => 'Admin Supreme',
+                'institution_id' => 'STF-2026-001',
+                'password' => Hash::make(hash('sha256', 'password')),
+                'department_id' => $dept('vc-office'),
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
         }
 
         // 2. Staff (complaint handlers) - uses staff role
         if ($staffRole) {
-            User::updateOrCreate(
-                ['email' => 'staff@example.com'],
-                [
-                    'role_id' => $staffRole->id,
-                    'name' => 'Staff Sarah',
-                    'institution_id' => 'STF-2026-099',
-                    'password' => Hash::make(hash('sha256', 'password')),
-                    'department_id' => $dept('sciences'),
-                    'is_active' => true,
-                    'email_verified_at' => now(),
-                ]
-            );
+            $upsert('staff@example.com', [
+                'role_id' => $staffRole->id,
+                'first_name' => 'Staff',
+                'last_name' => 'Sarah',
+                'name' => 'Staff Sarah',
+                'institution_id' => 'STF-2026-099',
+                'password' => Hash::make(hash('sha256', 'password')),
+                'department_id' => $dept('sciences'),
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
         }
 
         // 3. Student
@@ -81,118 +92,110 @@ class UserSeeder extends Seeder
 
             // Seed additional students with distinct institution_id values.
             // Cybersecurity
-            User::updateOrCreate(
-                ['email' => 'cybersecurity-student-1@example.com'],
-                [
-                    'role_id' => $studentRole->id,
-                    'name' => 'Student Aisha',
-                    'institution_id' => 'STD-2026-201',
-                    'password' => Hash::make(hash('sha256', 'password')),
-                    'department_id' => $dept('computing-it'),
-                    'is_active' => true,
-                    'email_verified_at' => now(),
-                ]
-            );
+            $upsert('cybersecurity-student-1@example.com', [
+                'role_id' => $studentRole->id,
+                'first_name' => 'Student',
+                'last_name' => 'Aisha',
+                'name' => 'Student Aisha',
+                'institution_id' => 'STD-2026-201',
+                'password' => Hash::make(hash('sha256', 'password')),
+                'department_id' => $dept('computing-it'),
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
 
-            User::updateOrCreate(
-                ['email' => 'cybersecurity-student-2@example.com'],
-                [
-                    'role_id' => $studentRole->id,
-                    'name' => 'Student Bashir',
-                    'institution_id' => 'STD-2026-202',
-                    'password' => Hash::make(hash('sha256', 'password')),
-                    'department_id' => $dept('computing-it'),
-                    'is_active' => true,
-                    'email_verified_at' => now(),
-                ]
-            );
+            $upsert('cybersecurity-student-2@example.com', [
+                'role_id' => $studentRole->id,
+                'first_name' => 'Student',
+                'last_name' => 'Bashir',
+                'name' => 'Student Bashir',
+                'institution_id' => 'STD-2026-202',
+                'password' => Hash::make(hash('sha256', 'password')),
+                'department_id' => $dept('computing-it'),
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
 
             // Arabic
-            User::updateOrCreate(
-                ['email' => 'arabic-student-1@example.com'],
-                [
-                    'role_id' => $studentRole->id,
-                    'name' => 'Student Abiodun',
-                    'institution_id' => 'STD-2026-301',
-                    'password' => Hash::make(hash('sha256', 'password')),
-                    'department_id' => $dept('arts-humanities'),
-                    'is_active' => true,
-                    'email_verified_at' => now(),
-                ]
-            );
+            $upsert('arabic-student-1@example.com', [
+                'role_id' => $studentRole->id,
+                'first_name' => 'Student',
+                'last_name' => 'Abiodun',
+                'name' => 'Student Abiodun',
+                'institution_id' => 'STD-2026-301',
+                'password' => Hash::make(hash('sha256', 'password')),
+                'department_id' => $dept('arts-humanities'),
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
 
-            User::updateOrCreate(
-                ['email' => 'arabic-student-2@example.com'],
-                [
-                    'role_id' => $studentRole->id,
-                    'name' => 'Student Naimah',
-                    'institution_id' => 'STD-2026-302',
-                    'password' => Hash::make(hash('sha256', 'password')),
-                    'department_id' => $dept('arts-humanities'),
-                    'is_active' => true,
-                    'email_verified_at' => now(),
-                ]
-            );
+            $upsert('arabic-student-2@example.com', [
+                'role_id' => $studentRole->id,
+                'first_name' => 'Student',
+                'last_name' => 'Naimah',
+                'name' => 'Student Naimah',
+                'institution_id' => 'STD-2026-302',
+                'password' => Hash::make(hash('sha256', 'password')),
+                'department_id' => $dept('arts-humanities'),
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
 
             // (Optional) keep the original student@example.com, but avoid reusing STD-2026-001
             // to prevent any future collisions; choose a new unique institution_id.
-            User::updateOrCreate(
-                ['email' => 'student@example.com'],
-                [
-                    'role_id' => $studentRole->id,
-                    'name' => 'Student Jane',
-                    'institution_id' => 'STD-2026-101',
-                    'password' => Hash::make(hash('sha256', 'password')),
-                    'department_id' => $dept('computing-it'),
-                    'is_active' => true,
-                    'email_verified_at' => now(),
-                ]
-            );
+            $upsert('student@example.com', [
+                'role_id' => $studentRole->id,
+                'first_name' => 'Student',
+                'last_name' => 'Jane',
+                'name' => 'Student Jane',
+                'institution_id' => 'STD-2026-101',
+                'password' => Hash::make(hash('sha256', 'password')),
+                'department_id' => $dept('computing-it'),
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
         }
 
         // 4. Complaint Officer
         if ($complaintOfficerRole) {
-            User::updateOrCreate(
-                ['email' => 'officer@example.com'],
-                [
-                    'role_id' => $complaintOfficerRole->id,
-                    'name' => 'Officer Aliyah',
-                    'institution_id' => 'STF-2026-002',
-                    'password' => Hash::make(hash('sha256', 'password')),
-                    'department_id' => $dept('student-affairs'),
-                    'is_active' => true,
-                    'email_verified_at' => now(),
-                ]
-            );
+            $upsert('officer@example.com', [
+                'role_id' => $complaintOfficerRole->id,
+                'first_name' => 'Officer',
+                'last_name' => 'Aliyah',
+                'name' => 'Officer Aliyah',
+                'institution_id' => 'STF-2026-002',
+                'password' => Hash::make(hash('sha256', 'password')),
+                'department_id' => $dept('student-affairs'),
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
 
-            User::updateOrCreate(
-                ['email' => 'officer2@example.com'],
-                [
-                    'role_id' => $complaintOfficerRole->id,
-                    'name' => 'Officer Yunus',
-                    'institution_id' => 'STF-2026-004',
-                    'password' => Hash::make(hash('sha256', 'password')),
-                    'department_id' => $dept('academic-registry'),
-                    'is_active' => true,
-                    'email_verified_at' => now(),
-                ]
-            );
+            $upsert('officer2@example.com', [
+                'role_id' => $complaintOfficerRole->id,
+                'first_name' => 'Officer',
+                'last_name' => 'Yunus',
+                'name' => 'Officer Yunus',
+                'institution_id' => 'STF-2026-004',
+                'password' => Hash::make(hash('sha256', 'password')),
+                'department_id' => $dept('academic-registry'),
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
         }
 
         // 5. Security Analyst
         if ($securityRole) {
-            User::updateOrCreate(
-                ['email' => 'security@example.com'],
-                [
-                    'role_id' => $securityRole->id,
-                    'name' => 'Security Danjuma',
-                    'institution_id' => 'STF-2026-003',
-                    'password' => Hash::make(hash('sha256', 'password')),
-                    'department_id' => $dept('security-unit'),
-                    'is_active' => true,
-                    'email_verified_at' => now(),
-                ]
-            );
+            $upsert('security@example.com', [
+                'role_id' => $securityRole->id,
+                'first_name' => 'Security',
+                'last_name' => 'Danjuma',
+                'name' => 'Security Danjuma',
+                'institution_id' => 'STF-2026-003',
+                'password' => Hash::make(hash('sha256', 'password')),
+                'department_id' => $dept('security-unit'),
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
         }
     }
 }

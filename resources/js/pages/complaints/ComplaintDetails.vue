@@ -108,11 +108,11 @@
                                 :class="msg.user_id === authStore.user?.id ? 'flex-row-reverse' : 'flex-row'">
                                 <div
                                     class="w-9 h-9 rounded-full bg-sage-50 border border-sage-100 flex items-center justify-center text-sage-700 font-bold text-xs shrink-0">
-                                    {{ msg.user?.name?.charAt(0)?.toUpperCase() || '?' }}
+                                    {{ msg.user?.initials || '?' }}
                                 </div>
                                 <div class="flex flex-col gap-1 max-w-[78%]"
                                     :class="msg.user_id === authStore.user?.id ? 'items-end' : 'items-start'">
-                                    <span class="text-xs text-slate-500 font-medium">{{ msg.user?.name }} • {{ new
+                                    <span class="text-xs text-slate-500 font-medium">{{ msg.user?.full_name_with_title || msg.user?.full_name }} • {{ new
                                         Date(msg.created_at).toLocaleTimeString([], {
                                             hour: '2-digit', minute: '2-digit'
                                         }) }}</span>
@@ -205,7 +205,8 @@
                         <div class="space-y-3">
                             <p v-if="complaint.currentAssignment" class="text-xs text-slate-500">
                                 Currently assigned to:
-                                <strong class="text-charcoal">{{ complaint.currentAssignment?.assigned_to?.name
+                                <strong class="text-charcoal">{{ complaint.currentAssignment?.assigned_to?.full_name_with_title
+                                || complaint.currentAssignment?.assigned_to?.full_name
                                 }}</strong>
                             </p>
                             <div v-if="currentAssignment?.assignment_note"
@@ -215,10 +216,10 @@
                                 <p class="text-sm leading-6 text-slate-700 whitespace-pre-wrap">{{
                                     currentAssignment.assignment_note }}</p>
                             </div>
-                            <Select v-model="assignTo" :options="staffList" optionLabel="name" optionValue="id" placeholder="Select an officer" class="w-full">
+                            <Select v-model="assignTo" :options="staffList" optionLabel="full_name" optionValue="id" placeholder="Select an officer" class="w-full">
                                 <template #option="slotProps">
                                     <div class="flex items-center gap-2">
-                                        <span class="font-medium text-charcoal">{{ slotProps.option.name }}</span>
+                                        <span class="font-medium text-charcoal">{{ slotProps.option.full_name_with_title || slotProps.option.full_name }}</span>
                                         <span class="text-slate-400 text-xs">({{ slotProps.option.department?.name ||
                                             slotProps.option.department || 'N/A'
 
@@ -245,7 +246,7 @@
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between gap-4">
                                 <span class="text-slate-500">Complainant</span>
-                                <span class="font-semibold text-charcoal text-right">{{ complaint.complainant?.name ||
+                                <span class="font-semibold text-charcoal text-right">{{ complaint.complainant?.full_name ||
                                     'N/A' }}</span>
                             </div>
                             <div class="flex justify-between gap-4">

@@ -157,7 +157,7 @@ const handleLogin = async () => {
     
     const success = await authStore.login(form);
     if (success) {
-        const redirect = route.query.redirect || getDashboardRoute(authStore.role, authStore.user);
+        const redirect = route.query.redirect || getDashboardRoute(authStore.role);
         router.push(redirect);
     }
 };
@@ -166,7 +166,7 @@ const handleRegistrationSuccess = ({ email, institution_id }) => {
     router.push({ path: '/email-verification', query: { email, institution_id, registered: '1' } });
 };
 
-const getDashboardRoute = (roleSlug, user) => {
+const getDashboardRoute = (roleSlug) => {
     switch(roleSlug) {
         case 'admin':
         case 'sub_admin':

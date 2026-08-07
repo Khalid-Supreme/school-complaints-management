@@ -36,8 +36,8 @@ class ComplaintAssignmentController extends Controller
             'message' => 'Complaint assigned successfully',
             'assignment' => [
                 'id' => $assignment->id,
-                'assigned_to' => $assignment->assignedTo->name,
-                'assigned_by' => $assignment->assignedBy->name,
+                'assigned_to' => $assignment->assignedTo->full_name,
+                'assigned_by' => $assignment->assignedBy->full_name,
                 'assigned_at' => $assignment->assigned_at,
             ],
         ]);
@@ -69,10 +69,10 @@ class ComplaintAssignmentController extends Controller
      */
     public function staffList(): JsonResponse
     {
-        $staff = User::with('department')
+        $staff = User::with('department', 'role')
             ->whereHas('role', fn($q) => $q->where('slug', 'complaint_officer'))
             ->where('is_active', true)
-            ->get(['id', 'institution_id', 'name', 'email', 'department_id']);
+            ->get(['id', 'institution_id', 'name', 'first_name', 'last_name', 'title', 'role_id', 'email', 'department_id']);
 
         return response()->json(['data' => $staff]);
     }

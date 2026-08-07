@@ -81,7 +81,7 @@ class ComplaintService
         if ($complaint->complainant) {
             $complainantDetails = [
             'institution_id' => $complaint->complainant->institution_id,
-            'name' => $complaint->complainant->name,
+            'full_name' => $complaint->complainant->full_name,
             'email' => $complaint->complainant->email,
             'department' => $complaint->complainant->department?->name,
             ];

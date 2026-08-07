@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,8 @@ use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
     'role_id',
+    'first_name',
+    'last_name',
     'name',
     'title',
     'gender',
@@ -29,6 +32,7 @@ use Laravel\Sanctum\HasApiTokens;
     'email_verified_at'
 ])]
 #[Hidden(['password', 'remember_token'])]
+#[Appends(['full_name', 'full_name_with_title', 'initials', 'display_name'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -75,9 +79,83 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
+    /**
+     * Compose a display name from first and last names.
+     * Single source of truth for name formatting so controllers never
+     * duplicate this logic.
+     */
+    public static function composeName(?string $first, ?string $last): string
+    {
+        return trim(trim((string) $first) . ' ' . trim((string) $last));
+    }
+
+    /**
+     * Get the user's full name.
+     * Concatenates first_name and last_name, falls back to name column.
+     */
+    public function getFullNameAttribute(): string
+    {
+        $first = $this->first_name ?? '';
+        $last = $this->last_name ?? '';
+        $combined = trim("$first $last");
+
+        return $combined !== '' ? $combined : $this->name ?? '';
+    }
+
+    /**
+     * Get the user's full name including their title, e.g. "Dr. John Doe".
+     * Students never have titles, so they always return the plain full name.
+     */
+    public function getFullNameWithTitleAttribute(): string
+    {
+        if ($this->isStudent() || blank($this->title)) {
+            return $this->full_name;
+        }
+
+        $title = rtrim(trim((string) $this->title), '.') . '.';
+
+        return trim("$title {$this->full_name}");
+    }
+
+    /**
+     * Get the user's initials, e.g. "JD" for "John Doe", "J" for "John".
+     */
+    public function getInitialsAttribute(): string
+    {
+        $first = $this->first_name ?? '';
+        $last = $this->last_name ?? '';
+
+        $initials = strtoupper(mb_substr($first, 0, 1) . mb_substr($last, 0, 1));
+
+        if ($initials !== '') {
+            return $initials;
+        }
+
+        $words = preg_split('/\s+/', trim((string) $this->name)) ?: [];
+
+        return strtoupper(mb_substr($words[0] ?? '', 0, 1));
+    }
+
+    /**
+     * The name to display for the user. Exists so future formatting
+     * changes happen in a single place.
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->full_name;
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    /**
+     * Check if the user is a student.
+     */
+    public function isStudent(): bool
+    {
+        return $this->role?->slug === 'student';
     }
 
     /**
