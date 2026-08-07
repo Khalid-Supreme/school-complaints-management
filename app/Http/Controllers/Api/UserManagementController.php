@@ -33,6 +33,8 @@ class UserManagementController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
+                  ->orWhere('first_name', 'ilike', "%{$search}%")
+                  ->orWhere('last_name', 'ilike', "%{$search}%")
                   ->orWhere('email', 'ilike', "%{$search}%")
                   ->orWhere('institution_id', 'ilike', "%{$search}%");
             });
@@ -86,6 +88,8 @@ class UserManagementController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
+                  ->orWhere('first_name', 'ilike', "%{$search}%")
+                  ->orWhere('last_name', 'ilike', "%{$search}%")
                   ->orWhere('email', 'ilike', "%{$search}%")
                   ->orWhere('institution_id', 'ilike', "%{$search}%");
             });
@@ -126,7 +130,8 @@ class UserManagementController extends Controller
 
         $rules = [
             'role' => ['required', 'string', 'in:student,staff,complaint_officer'],
-            'full_name' => ['required', 'string', 'max:150'],
+            'first_name' => ['required', 'string', 'max:150'],
+            'last_name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'string', 'email', 'max:150', 'unique:users,email'],
             'gender' => ['required', 'string', 'in:male,female'],
             'department' => ['required', 'integer', 'exists:departments,id'],
@@ -150,9 +155,15 @@ class UserManagementController extends Controller
 
         $institutionId = $this->userRepository->generateInstitutionId($prefix);
 
+        $firstName = $request->first_name;
+        $lastName = $request->last_name;
+        $fullName = User::composeName($firstName, $lastName);
+
         $user = User::create([
             'role_id' => $role->id,
-            'name' => $request->full_name,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'name' => $fullName,
             'email' => $request->email,
             'institution_id' => $institutionId,
             'password' => $request->filled('password')
@@ -185,7 +196,8 @@ class UserManagementController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'full_name' => ['sometimes', 'string', 'max:150'],
+            'first_name' => ['sometimes', 'string', 'max:150'],
+            'last_name' => ['sometimes', 'string', 'max:150'],
             'email' => ['sometimes', 'string', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id)],
             'gender' => ['sometimes', 'string', 'in:male,female'],
             'title' => ['sometimes', 'string', 'in:Mr.,Mrs.,Miss,Dr.,Prof.'],
@@ -199,9 +211,14 @@ class UserManagementController extends Controller
 
         $data = [];
 
-        if ($request->has('full_name')) {
-            $data['name'] = $request->full_name;
+        if ($request->has('first_name') || $request->has('last_name')) {
+            $firstName = $request->filled('first_name') ? $request->first_name : $user->first_name;
+            $lastName = $request->filled('last_name') ? $request->last_name : $user->last_name;
+            $data['first_name'] = $firstName;
+            $data['last_name'] = $lastName;
+            $data['name'] = User::composeName($firstName, $lastName);
         }
+
         if ($request->has('email')) {
             $data['email'] = $request->email;
         }

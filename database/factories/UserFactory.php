@@ -25,9 +25,14 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $firstName = fake()->firstName();
+        $lastName = fake()->lastName();
+
         return [
             'role_id' => \App\Models\Role::factory(),
-            'name' => fake()->name(),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'name' => User::composeName($firstName, $lastName),
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
             'phone' => fake()->phoneNumber(),

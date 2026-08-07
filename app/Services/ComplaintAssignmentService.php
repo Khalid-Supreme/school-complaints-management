@@ -92,7 +92,7 @@ class ComplaintAssignmentService
             return [
                 'id' => $assignment->id,
                 'assigned_at' => $assignment->assigned_at,
-                'assigned_by' => $assignment->assignedBy?->name,
+                'assigned_by' => $assignment->assignedBy?->full_name,
                 'complaint' => $complaintArray,
             ];
         });
@@ -121,8 +121,8 @@ class ComplaintAssignmentService
         return $history->map(function (ComplaintAssignment $a) {
             return [
                 'id' => $a->id,
-                'assigned_to' => $a->assignedTo?->name,
-                'assigned_by' => $a->assignedBy?->name,
+                'assigned_to' => $a->assignedTo?->full_name,
+                'assigned_by' => $a->assignedBy?->full_name,
                 'assigned_at' => $a->assigned_at,
                 'released_at' => $a->released_at,
                 'assignment_note' => $a->assignment_note_encrypted ? $this->encryption->decrypt($a->assignment_note_encrypted) : null,

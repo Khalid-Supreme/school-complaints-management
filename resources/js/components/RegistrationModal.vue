@@ -11,10 +11,17 @@
         {{ errorMessage }}
       </Message>
 
-      <div>
-        <label class="block text-sm font-medium text-charcoal/80 mb-2">Full Name</label>
-        <InputText v-model="form.full_name" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.full_name || localErrors.full_name }" :disabled="loading" @update:model-value="clearError('full_name')" />
-        <small v-if="errors.full_name || localErrors.full_name" class="text-red-500 block mt-1.5 text-xs font-medium">{{ (errors.full_name && errors.full_name[0]) || localErrors.full_name }}</small>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-charcoal/80 mb-2">First Name</label>
+          <InputText v-model="form.first_name" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.first_name || localErrors.first_name }" :disabled="loading" @update:model-value="clearError('first_name')" />
+          <small v-if="errors.first_name || localErrors.first_name" class="text-red-500 block mt-1.5 text-xs font-medium">{{ (errors.first_name && errors.first_name[0]) || localErrors.first_name }}</small>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-charcoal/80 mb-2">Last Name</label>
+          <InputText v-model="form.last_name" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.last_name || localErrors.last_name }" :disabled="loading" @update:model-value="clearError('last_name')" />
+          <small v-if="errors.last_name || localErrors.last_name" class="text-red-500 block mt-1.5 text-xs font-medium">{{ (errors.last_name && errors.last_name[0]) || localErrors.last_name }}</small>
+        </div>
       </div>
 
       <div>
@@ -164,7 +171,8 @@ const strengthTextClass = computed(() => {
 
 const initialForm = () => ({
   account_type: 'student',
-  full_name: '',
+  first_name: '',
+  last_name: '',
   email: '',
   gender: null,
   title: null,
@@ -220,14 +228,14 @@ const clearError = (field) => {
 
 const validateLocal = () => {
   const errs = {};
-  if (!form.full_name.trim()) errs.full_name = 'Full name is required';
+  if (!form.first_name.trim()) errs.first_name = 'First name is required';
+  if (!form.last_name.trim()) errs.last_name = 'Last name is required';
   if (!form.email.trim()) errs.email = 'Email address is required';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errs.email = errs.email || 'Enter a valid email address';
   if (!form.gender) errs.gender = 'Please select your gender';
   if (form.account_type === 'staff' && !form.title) errs.title = 'Please select your title';
   if (!form.department) errs.department = 'Please select a department';
   if (!form.password) errs.password = 'Password is required';
-  else if (form.password.length < 8) errs.password = 'Password must be at least 8 characters';
   else if (form.password.length < 8) errs.password = 'Password must be at least 8 characters';
   if (!form.confirm_password) errs.confirm_password = 'Please confirm your password';
   else if (form.password !== form.confirm_password) errs.confirm_password = 'Passwords do not match';
@@ -244,7 +252,8 @@ const submitRegistration = async () => {
 
   try {
     const payload = {
-      full_name: form.full_name.trim(),
+      first_name: form.first_name.trim(),
+      last_name: form.last_name.trim(),
       email: form.email.trim(),
       gender: form.gender,
       department: form.department,

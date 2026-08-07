@@ -94,12 +94,13 @@
                 <div class="field">
                     <label for="assignTo" class="block font-medium text-charcoal mb-2">Assign To</label>
                     <Dropdown id="assignTo" v-model="assignForm.assigned_to" :options="store.staffList"
-                        optionLabel="name" optionValue="id" placeholder="Select Staff Member" class="w-full"
+                        optionLabel="full_name" optionValue="id" placeholder="Select Staff Member" class="w-full"
                         inputClass="!py-2.5 !px-4 !rounded-lg" panelClass="!rounded-lg">
                         <template #option="slotProps">
                             <div class="flex items-center gap-2">
                                 <i class="pi pi-user text-slate-400"></i>
-                                <span class="font-medium text-charcoal">{{ slotProps.option.name }}</span>
+                                <span class="font-medium text-charcoal">{{ slotProps.option.full_name_with_title ||
+                                    slotProps.option.full_name }}</span>
                                 <span class="text-slate-400 text-sm ml-auto">({{ slotProps.option.department?.name ||
                                     slotProps.option.department || 'N/A'
                                     }})</span>

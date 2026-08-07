@@ -65,7 +65,7 @@ class SecurityDashboardController extends Controller
     public function loginAudit(): JsonResponse
     {
         return response()->json([
-            'data' => LoginAttempt::with('user:id,name,email,institution_id')
+            'data' => LoginAttempt::with(['user:id,name,first_name,last_name,title,email,institution_id,role_id', 'user.role:id,slug'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(50)
         ]);
