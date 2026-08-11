@@ -22,7 +22,7 @@ class UpdateUserRequest extends FormRequest
      */
     public function rules(): array
     {
-        $ignoreId = $this->route('user');
+        $ignoreId = $this->route('user')?->getKey();
 
         return [
             'first_name' => ValidationRules::optionalFirstName(),
