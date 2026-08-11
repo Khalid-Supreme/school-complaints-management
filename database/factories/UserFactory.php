@@ -33,7 +33,6 @@ class UserFactory extends Factory
             'role_id' => Role::factory(),
             'first_name' => $firstName,
             'last_name' => $lastName,
-            'name' => User::composeName($firstName, $lastName),
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
             'phone' => fake()->phoneNumber(),
