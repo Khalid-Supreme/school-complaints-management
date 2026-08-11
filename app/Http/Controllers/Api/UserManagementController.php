@@ -2,41 +2,51 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\AuditAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\IndexStaffRequest;
+use App\Http\Requests\User\IndexStudentsRequest;
+use App\Http\Requests\User\ResetUserPasswordRequest;
+use App\Http\Requests\User\StoreUserRequest;
+use App\Http\Requests\User\UpdateUserRequest;
+use App\Http\Requests\User\UpdateUserRoleRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Repositories\UserRepository;
+use App\Services\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class UserManagementController extends Controller
 {
     protected UserRepository $userRepository;
 
-    public function __construct(UserRepository $userRepository)
+    protected AuditLogger $auditLogger;
+
+    public function __construct(UserRepository $userRepository, AuditLogger $auditLogger)
     {
         $this->userRepository = $userRepository;
+        $this->auditLogger = $auditLogger;
     }
 
-    public function students(Request $request): JsonResponse
+    public function students(IndexStudentsRequest $request): JsonResponse
     {
-        $search = $request->get('search');
+        $search = $request->validated('search');
         $departmentId = $request->get('department_id');
         $gender = $request->get('gender');
         $status = $request->get('status');
 
         $query = User::with('role', 'department')
-            ->whereHas('role', fn($q) => $q->where('slug', 'student'));
+            ->whereHas('role', fn ($q) => $q->where('slug', 'student'));
 
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('first_name', 'ilike', "%{$search}%")
-                  ->orWhere('last_name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%")
-                  ->orWhere('institution_id', 'ilike', "%{$search}%");
+                    ->orWhere('first_name', 'ilike', "%{$search}%")
+                    ->orWhere('last_name', 'ilike', "%{$search}%")
+                    ->orWhere('email', 'ilike', "%{$search}%")
+                    ->orWhere('institution_id', 'ilike', "%{$search}%");
             });
         }
 
@@ -67,9 +77,9 @@ class UserManagementController extends Controller
         ]);
     }
 
-    public function staff(Request $request): JsonResponse
+    public function staff(IndexStaffRequest $request): JsonResponse
     {
-        $search = $request->get('search');
+        $search = $request->validated('search');
         $departmentId = $request->get('department_id');
         $roleSlug = $request->get('role');
         $status = $request->get('status');
@@ -88,10 +98,10 @@ class UserManagementController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('first_name', 'ilike', "%{$search}%")
-                  ->orWhere('last_name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%")
-                  ->orWhere('institution_id', 'ilike', "%{$search}%");
+                    ->orWhere('first_name', 'ilike', "%{$search}%")
+                    ->orWhere('last_name', 'ilike', "%{$search}%")
+                    ->orWhere('email', 'ilike', "%{$search}%")
+                    ->orWhere('institution_id', 'ilike', "%{$search}%");
             });
         }
 
@@ -100,7 +110,7 @@ class UserManagementController extends Controller
         }
 
         if ($roleSlug) {
-            $query->whereHas('role', fn($q) => $q->where('slug', $roleSlug));
+            $query->whereHas('role', fn ($q) => $q->where('slug', $roleSlug));
         }
 
         if ($status === 'active') {
@@ -122,55 +132,43 @@ class UserManagementController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreUserRequest $request): JsonResponse
     {
-        if (!$request->user()->canManageUsers()) {
+        if (! $request->user()->canManageUsers()) {
             return response()->json(['message' => 'You are not authorized to create users.'], 403);
         }
 
-        $rules = [
-            'role' => ['required', 'string', 'in:student,staff,complaint_officer'],
-            'first_name' => ['required', 'string', 'max:150'],
-            'last_name' => ['required', 'string', 'max:150'],
-            'email' => ['required', 'string', 'email', 'max:150', 'unique:users,email'],
-            'gender' => ['required', 'string', 'in:male,female'],
-            'department' => ['required', 'integer', 'exists:departments,id'],
-            'password' => ['sometimes', 'string', 'min:8'],
-        ];
+        $validated = $request->validated();
 
-        if ($request->role === 'staff' || $request->role === 'complaint_officer') {
-            $rules['title'] = ['required', 'string', 'in:Mr.,Mrs.,Miss,Dr.,Prof.'];
-        }
+        $role = Role::where('slug', $validated['role'])->firstOrFail();
+        $prefix = ($validated['role'] === 'student') ? 'STD' : 'STF';
 
-        $validator = Validator::make($request->all(), $rules);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $role = Role::where('slug', $request->role)->firstOrFail();
-        $prefix = ($request->role === 'student') ? 'STD' : 'STF';
-
-        $title = $request->title ?? ($request->gender === 'male' ? 'Mr.' : 'Miss');
+        $title = $validated['title'] ?? ($validated['gender'] === 'male' ? 'Mr.' : 'Miss');
 
         $institutionId = $this->userRepository->generateInstitutionId($prefix);
 
-        $firstName = $request->first_name;
-        $lastName = $request->last_name;
+        $firstName = $validated['first_name'];
+        $lastName = $validated['last_name'];
         $fullName = User::composeName($firstName, $lastName);
+
+        // Use the provided password, or generate a strong temporary one.
+        $temporaryPassword = null;
+        $password = $validated['password'] ?? null;
+        if (! is_string($password) || strlen($password) < 8) {
+            $temporaryPassword = Str::random(16);
+            $password = $temporaryPassword;
+        }
 
         $user = User::create([
             'role_id' => $role->id,
             'first_name' => $firstName,
             'last_name' => $lastName,
             'name' => $fullName,
-            'email' => $request->email,
+            'email' => $validated['email'],
             'institution_id' => $institutionId,
-            'password' => $request->filled('password')
-                ? $request->password
-                : hash('sha256', $institutionId),
-            'department_id' => $request->department,
-            'gender' => $request->gender,
+            'password' => $password, // 'hashed' cast bcrypts the value on save
+            'department_id' => $validated['department'],
+            'gender' => $validated['gender'],
             'title' => $title,
             'is_active' => true,
             'email_verified_at' => now(),
@@ -178,58 +176,55 @@ class UserManagementController extends Controller
 
         $user->load('role', 'department');
 
+        $this->auditLogger->log(AuditAction::UserCreated, $request->user(), $user, 'User created by administrator', [
+            'role' => $role->slug,
+        ]);
+
         return response()->json([
             'message' => 'User created successfully.',
             'user' => $user,
+            'temporary_password' => $temporaryPassword,
         ], 201);
     }
 
-    public function show(User $user): JsonResponse
+    public function show(Request $request, User $user): JsonResponse
     {
+        if (! $request->user()->canManageRole($user->role?->slug ?? '')) {
+            return response()->json(['message' => 'You are not authorized to view this user.'], 403);
+        }
+
         return response()->json($user->load('role', 'department'));
     }
 
-    public function update(Request $request, User $user): JsonResponse
+    public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
-        if (!$request->user()->canManageUsers()) {
+        if (! $request->user()->canManageUsers()) {
             return response()->json(['message' => 'You are not authorized to update users.'], 403);
         }
 
-        $validator = Validator::make($request->all(), [
-            'first_name' => ['sometimes', 'string', 'max:150'],
-            'last_name' => ['sometimes', 'string', 'max:150'],
-            'email' => ['sometimes', 'string', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id)],
-            'gender' => ['sometimes', 'string', 'in:male,female'],
-            'title' => ['sometimes', 'string', 'in:Mr.,Mrs.,Miss,Dr.,Prof.'],
-            'department' => ['sometimes', 'integer', 'exists:departments,id'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        $validated = $request->validated();
 
         $data = [];
 
         if ($request->has('first_name') || $request->has('last_name')) {
-            $firstName = $request->filled('first_name') ? $request->first_name : $user->first_name;
-            $lastName = $request->filled('last_name') ? $request->last_name : $user->last_name;
+            $firstName = $request->filled('first_name') ? $validated['first_name'] : $user->first_name;
+            $lastName = $request->filled('last_name') ? $validated['last_name'] : $user->last_name;
             $data['first_name'] = $firstName;
             $data['last_name'] = $lastName;
             $data['name'] = User::composeName($firstName, $lastName);
         }
 
         if ($request->has('email')) {
-            $data['email'] = $request->email;
+            $data['email'] = $validated['email'];
         }
         if ($request->has('gender')) {
-            $data['gender'] = $request->gender;
+            $data['gender'] = $validated['gender'];
         }
         if ($request->has('title')) {
-            $data['title'] = $request->title;
+            $data['title'] = $validated['title'];
         }
         if ($request->has('department')) {
-            $data['department_id'] = $request->department;
+            $data['department_id'] = $validated['department'];
         }
         if ($request->has('is_active')) {
             $data['is_active'] = $request->boolean('is_active');
@@ -237,6 +232,10 @@ class UserManagementController extends Controller
 
         $user->update($data);
         $user->load('role', 'department');
+
+        $this->auditLogger->log(AuditAction::UserUpdated, $request->user(), $user, 'User updated by administrator', [
+            'changed_fields' => array_keys($data),
+        ]);
 
         return response()->json([
             'message' => 'User updated successfully.',
@@ -246,30 +245,35 @@ class UserManagementController extends Controller
 
     public function destroy(Request $request, User $user): JsonResponse
     {
-        if (!$request->user()->canManageUsers()) {
+        if (! $request->user()->canManageUsers()) {
             return response()->json(['message' => 'You are not authorized to delete users.'], 403);
         }
 
+        if ((int) $user->id === (int) $request->user()->id) {
+            return response()->json(['message' => 'You cannot delete your own account.'], 403);
+        }
+
+        if ($user->role?->slug === 'admin' && User::where('role_id', $user->role_id)->count() <= 1) {
+            return response()->json(['message' => 'You cannot delete the last administrator account.'], 403);
+        }
+
         $user->delete();
+
+        $this->auditLogger->log(AuditAction::UserDeleted, $request->user(), $user, 'User deleted by administrator', [
+            'role' => $user->role?->slug,
+            'full_name' => $user->full_name,
+        ]);
 
         return response()->json([
             'message' => 'User deleted successfully.',
         ]);
     }
 
-    public function updateRole(Request $request, User $user): JsonResponse
+    public function updateRole(UpdateUserRoleRequest $request, User $user): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'role' => ['required', 'string', 'max:50'],
-        ]);
+        $roleSlug = $request->validated('role');
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $roleSlug = $request->role;
-
-        if (!$request->user()->canAssignRole($roleSlug)) {
+        if (! $request->user()->canAssignRole($roleSlug)) {
             return response()->json(['message' => 'You are not authorized to assign this role.'], 403);
         }
 
@@ -278,9 +282,16 @@ class UserManagementController extends Controller
         }
 
         $role = Role::where('slug', $roleSlug)->firstOrFail();
+        $oldRoleId = (int) $user->role_id;
         $user->role_id = $role->id;
         $user->save();
         $user->load('role', 'department');
+
+        $this->auditLogger->log(AuditAction::RoleChanged, $request->user(), $user, 'User role changed', [
+            'old_role_id' => $oldRoleId,
+            'new_role_id' => (int) $user->role_id,
+            'new_role' => $roleSlug,
+        ]);
 
         return response()->json([
             'message' => 'Role updated successfully.',
@@ -288,30 +299,30 @@ class UserManagementController extends Controller
         ]);
     }
 
-    public function resetPassword(Request $request, User $user): JsonResponse
+    public function resetPassword(ResetUserPasswordRequest $request, User $user): JsonResponse
     {
-        if (!$request->user()->canManageUsers()) {
+        if (! $request->user()->canManageUsers()) {
             return response()->json(['message' => 'You are not authorized to reset passwords.'], 403);
         }
 
-        if (!$user->institution_id) {
-            return response()->json(['message' => 'This user has no registration number to use as a default password.'], 422);
-        }
-
-        // Default password is the user's registration number. The client sends the
-        // SHA-256 digest (matching the login/register pattern); fall back to hashing
-        // server-side if it is missing. The 'hashed' cast bcrypts the value on save.
+        // Use a supplied strong password, otherwise generate a strong
+        // temporary one. The 'hashed' cast bcrypts the value on save.
         $password = $request->input('password');
-        if (!is_string($password) || strlen($password) < 8) {
-            $password = hash('sha256', $user->institution_id);
+        $temporaryPassword = null;
+
+        if (! is_string($password) || strlen($password) < 8) {
+            $temporaryPassword = Str::random(16);
+            $password = $temporaryPassword;
         }
 
         $user->password = $password;
         $user->save();
 
+        $this->auditLogger->log(AuditAction::PasswordChange, $request->user(), $user, 'Password reset by administrator');
+
         return response()->json([
             'message' => 'Password has been reset successfully.',
-            'default_password' => $user->institution_id,
+            'temporary_password' => $temporaryPassword,
         ]);
     }
 }

@@ -2,36 +2,43 @@
 
 namespace App\Services;
 
+use App\Enums\AuditAction;
 use App\Models\Complaint;
 use App\Models\ComplaintAssignment;
 use App\Models\User;
 use App\Repositories\ComplaintAssignmentRepository;
+use App\Support\InputSanitizer;
 use Illuminate\Validation\ValidationException;
 
 class ComplaintAssignmentService
 {
     protected ComplaintAssignmentRepository $repository;
+
     protected ComplaintWorkflowService $workflow;
+
     protected AesEncryptionService $encryption;
+
+    protected AuditLogger $auditLogger;
 
     public function __construct(
         ComplaintAssignmentRepository $repository,
         ComplaintWorkflowService $workflow,
-        AesEncryptionService $encryption
+        AesEncryptionService $encryption,
+        AuditLogger $auditLogger
     ) {
         $this->repository = $repository;
         $this->workflow = $workflow;
         $this->encryption = $encryption;
+        $this->auditLogger = $auditLogger;
     }
 
     /**
      * Assign a complaint to a staff member.
      *
-     * @param Complaint $complaint
-     * @param int $assignedToId  The staff user ID to assign to
-     * @param int $assignedById  The admin user ID making the assignment
-     * @param string|null $note  Optional assignment note
-     * @return ComplaintAssignment
+     * @param  int  $assignedToId  The staff user ID to assign to
+     * @param  int  $assignedById  The admin user ID making the assignment
+     * @param  string|null  $note  Optional assignment note
+     *
      * @throws ValidationException
      */
     public function assign(
@@ -43,13 +50,13 @@ class ComplaintAssignmentService
         // Validate staff user exists and has staff role
         $staffUser = User::with('role')->find($assignedToId);
 
-        if (!$staffUser) {
+        if (! $staffUser) {
             throw ValidationException::withMessages([
                 'assigned_to' => 'The selected staff member does not exist.',
             ]);
         }
 
-        if (!in_array($staffUser->role->slug, ['complaint_officer'], true)) {
+        if (! in_array($staffUser->role->slug, ['complaint_officer'], true)) {
             throw ValidationException::withMessages([
                 'assigned_to' => 'Complaints can only be assigned to complaint officers.',
             ]);
@@ -63,22 +70,33 @@ class ComplaintAssignmentService
             'complaint_id' => $complaint->id,
             'assigned_to' => $assignedToId,
             'assigned_by' => $assignedById,
-            'assignment_note_encrypted' => $note ? $this->encryption->encrypt($note) : null,
+            'assignment_note_encrypted' => $note ? $this->encryption->encrypt(InputSanitizer::clean($note)) : null,
             'is_current' => true,
             'assigned_at' => now(),
         ]);
 
-        // Transition complaint status to 'assigned'
-        $this->workflow->transitionStatus($complaint, 'assigned');
+        // Transition complaint status to 'assigned' (suppress the generic
+        // status audit record: the dedicated 'complaint.assigned' event below
+        // is the authoritative log entry for this action).
+        $this->workflow->transitionStatus($complaint, 'assigned', audit: false);
+
+        $this->auditLogger->log(
+            AuditAction::ComplaintAssigned,
+            auth()->user(),
+            $complaint,
+            null,
+            [
+                'complaint_reference' => $complaint->reference_no,
+                'assigned_to_user_id' => $assignedToId,
+                'assigned_by' => $assignment->assignedBy?->name,
+            ]
+        );
 
         return $assignment->load(['assignedTo', 'assignedBy']);
     }
 
     /**
      * Get all assigned complaints for a staff member (with decrypted complaint fields).
-     *
-     * @param int $staffUserId
-     * @return array
      */
     public function getStaffAssignments(int $staffUserId): array
     {
@@ -89,6 +107,7 @@ class ComplaintAssignmentService
             $complaintArray['title'] = $this->encryption->decrypt($assignment->complaint->title_encrypted);
             $complaintArray['description'] = $this->encryption->decrypt($assignment->complaint->description_encrypted);
             unset($complaintArray['title_encrypted'], $complaintArray['description_encrypted']);
+
             return [
                 'id' => $assignment->id,
                 'assigned_at' => $assignment->assigned_at,
@@ -110,9 +129,6 @@ class ComplaintAssignmentService
 
     /**
      * Get assignment history for a complaint.
-     *
-     * @param Complaint $complaint
-     * @return array
      */
     public function getComplaintAssignmentHistory(Complaint $complaint): array
     {

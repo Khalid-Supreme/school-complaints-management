@@ -114,6 +114,13 @@ onMounted(() => {
 const sideNav = computed(() => {
   switch (role.value) {
     case 'admin':
+      return [
+        { to: '/admin', icon: 'pi pi-sliders-h', label: 'System Metrics' },
+        { to: '/admin/complaints', icon: 'pi pi-bars', label: 'All Complaints' },
+        { to: '/security', icon: 'pi pi-exclamation-triangle', label: 'Security (IPS)' },
+        { to: '/admin/audit', icon: 'pi pi-history', label: 'Audit Logs' },
+        { to: '/admin/users', icon: 'pi pi-users', label: 'User Management' },
+      ];
     case 'sub_admin':
       return [
         { to: '/admin', icon: 'pi pi-sliders-h', label: 'System Metrics' },

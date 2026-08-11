@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\ComplaintMessage;
 use App\Models\Complaint;
-use Illuminate\Support\Facades\Auth;
+use App\Models\ComplaintMessage;
+use App\Support\InputSanitizer;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class ChatService
 {
@@ -17,7 +18,7 @@ class ChatService
         return ComplaintMessage::create([
             'complaint_id' => $complaintId,
             'user_id' => Auth::id(),
-            'message' => $message,
+            'message' => InputSanitizer::clean($message),
         ]);
     }
 

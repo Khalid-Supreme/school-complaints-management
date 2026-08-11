@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LoginRequest extends FormRequest
@@ -17,14 +18,25 @@ class LoginRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * "username" is an email address or institution ID; max is aligned with the
+     * login_attempts.email column width. encoding rejects invalid UTF-8.
+     *
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'username' => ['required', 'string'],
-            'password' => ['required', 'string'],
-            'password_raw' => ['sometimes', 'string'],
+            'username' => ['required', 'string', 'encoding:UTF-8', 'max:150'],
+            'password' => ['required', 'string', 'encoding:UTF-8', 'max:255'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'username.required' => 'Please enter your email address or institution ID.',
+            'username.encoding' => 'The username contains characters that are not valid UTF-8.',
+            'username.max' => 'The username cannot be longer than 150 characters.',
         ];
     }
 }

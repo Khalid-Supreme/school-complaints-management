@@ -2,16 +2,47 @@
 
 namespace App\Services;
 
-use App\Models\ComplaintAttachment;
 use App\Models\Complaint;
+use App\Models\ComplaintAttachment;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AttachmentService
 {
-    protected string $disk = 'local';
+    /**
+     * Disk used to persist complaint attachments. Set in config/uploads.php.
+     * Must never resolve to a webroot-mounted disk.
+     */
+    protected string $disk;
+
+    /**
+     * Length limit of the original_filename column (string, 255 chars).
+     */
+    protected const MAX_FILENAME_LENGTH = 255;
+
+    /**
+     * Map of detected MIME type to the extension used on disk. The stored name
+     * derives its extension from the file's detected MIME, never from the
+     * client-supplied filename.
+     */
+    protected const MIME_EXTENSIONS = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/gif' => 'gif',
+        'image/webp' => 'webp',
+        'application/pdf' => 'pdf',
+        'application/msword' => 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+        'text/plain' => 'txt',
+    ];
+
+    public function __construct()
+    {
+        $this->disk = (string) config('uploads.attachments.disk', 'local');
+    }
 
     /**
      * Store a file attachment for a complaint.
@@ -19,24 +50,51 @@ class AttachmentService
     public function uploadAttachment(Complaint $complaint, Request $request): ComplaintAttachment
     {
         $file = $request->file('attachment');
-        
-        // Generate a secure unique path
-        $path = $file->store("complaints/{$complaint->id}/attachments", $this->disk);
-        
+
+        $path = $file->storeAs(
+            "complaints/{$complaint->id}/attachments",
+            $this->randomStoredName($file->getMimeType()),
+            $this->disk
+        );
+
         return ComplaintAttachment::create([
             'complaint_id' => $complaint->id,
             'user_id' => Auth::id(),
             'file_path' => $path,
-            'original_filename' => $file->getClientOriginalName(),
+            'original_filename' => $this->sanitizeFilename($file->getClientOriginalName()),
             'mime_type' => $file->getMimeType(),
             'file_size' => $file->getSize(),
         ]);
     }
 
     /**
+     * Build a cryptographically random stored filename. The extension comes
+     * from the detected MIME type (the original client filename is trusted only
+     * for display, never for the storage path).
+     */
+    protected function randomStoredName(?string $mimeType): string
+    {
+        $extension = self::MIME_EXTENSIONS[$mimeType] ?? 'bin';
+
+        return Str::random(40).'.'.$extension;
+    }
+
+    /**
+     * Strip control characters from a client-supplied filename and cap its
+     * length so a hostile original name can never overflow the column or
+     * smuggle header-injection characters into downloads.
+     */
+    protected function sanitizeFilename(string $filename): string
+    {
+        $clean = preg_replace('/[\x00-\x1F\x7F]/u', '', $filename) ?? '';
+
+        return mb_substr($clean, 0, self::MAX_FILENAME_LENGTH);
+    }
+
+    /**
      * Get all attachments for a complaint.
      */
-    public function getAttachments(int $complaintId): \Illuminate\Database\Eloquent\Collection
+    public function getAttachments(int $complaintId): Collection
     {
         return ComplaintAttachment::where('complaint_id', $complaintId)
             ->with(['user:id,name,first_name,last_name,title,role_id', 'user.role:id,slug'])
@@ -50,7 +108,7 @@ class AttachmentService
     public function getFileUrl(ComplaintAttachment $attachment): string
     {
         return Storage::disk($this->disk)->temporaryUrl(
-            $attachment->file_path, 
+            $attachment->file_path,
             now()->addMinutes(15)
         );
     }
