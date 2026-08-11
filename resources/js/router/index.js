@@ -144,6 +144,12 @@ const routes = [
         component: () => import('../pages/admin/Settings.vue'),
         meta: { layout: AppLayout, requiresAuth: true, roles: ['admin', 'sub_admin'] }
     },
+    {
+        path: '/admin/audit',
+        name: 'AdminAuditLogs',
+        component: () => import('../pages/admin/AuditLogs.vue'),
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['admin'] }
+    },
 
     // Security Dashboard (Admin, Sub-Admin, or Security role)
     {

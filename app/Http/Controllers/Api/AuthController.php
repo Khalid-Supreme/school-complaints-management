@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\AuditAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Models\User;
+use App\Services\AuditLogger;
 use App\Services\AuthService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
@@ -17,9 +22,12 @@ class AuthController extends Controller
 {
     protected AuthService $authService;
 
-    public function __construct(AuthService $authService)
+    protected AuditLogger $auditLogger;
+
+    public function __construct(AuthService $authService, AuditLogger $auditLogger)
     {
         $this->authService = $authService;
+        $this->auditLogger = $auditLogger;
     }
 
     /**
@@ -61,12 +69,18 @@ class AuthController extends Controller
     /**
      * Send a password reset link to the given user.
      */
-    public function sendResetLinkEmail(Request $request): JsonResponse
+    public function sendResetLinkEmail(ForgotPasswordRequest $request): JsonResponse
     {
-        $request->validate(['email' => 'required|email']);
-
         $status = Password::sendResetLink(
             $request->only('email')
+        );
+
+        $user = User::where('email', $request->input('email'))->first();
+        $this->auditLogger->log(
+            AuditAction::PasswordResetLink,
+            $user,
+            null,
+            'Password reset link requested'
         );
 
         return response()->json([
@@ -77,14 +91,8 @@ class AuthController extends Controller
     /**
      * Reset the user's password.
      */
-    public function reset(Request $request): JsonResponse
+    public function reset(ResetPasswordRequest $request): JsonResponse
     {
-        $request->validate([
-            'token' => 'required|string',
-            'email' => 'required|email',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
@@ -99,6 +107,9 @@ class AuthController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
+            $user = User::where('email', $request->input('email'))->first();
+            $this->auditLogger->log(AuditAction::PasswordReset, $user, null, 'Password reset via reset link');
+
             return response()->json([
                 'message' => 'Password has been reset successfully.',
             ]);

@@ -2,14 +2,23 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\AuditAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\UpdateSettingsRequest;
 use App\Models\Setting;
+use App\Services\AuditLogger;
+use App\Support\InputSanitizer;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class SettingsController extends Controller
 {
+    protected AuditLogger $auditLogger;
+
+    public function __construct(AuditLogger $auditLogger)
+    {
+        $this->auditLogger = $auditLogger;
+    }
+
     /**
      * Get application settings.
      */
@@ -33,28 +42,8 @@ class SettingsController extends Controller
     /**
      * Update application settings.
      */
-    public function update(Request $request): JsonResponse
+    public function update(UpdateSettingsRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'app_name' => 'sometimes|string|max:255',
-            'contact_email' => 'sometimes|nullable|email|max:255',
-            'contact_phone' => 'sometimes|nullable|string|max:50',
-            'address' => 'sometimes|nullable|string|max:500',
-            'social_links' => 'sometimes|nullable|array',
-            'social_links.twitter' => 'nullable|string|max:255',
-            'social_links.facebook' => 'nullable|string|max:255',
-            'social_links.linkedin' => 'nullable|string|max:255',
-            'meta' => 'sometimes|nullable|array',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed.',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
         $settings = Setting::getSettings();
 
         $data = $request->only([
@@ -66,7 +55,30 @@ class SettingsController extends Controller
             'meta',
         ]);
 
+        // Sanitize stored text values against active content. Keys explicitly
+        // presented as null (empty -> null normalization) are preserved so
+        // optional fields can be cleared.
+        foreach (['app_name', 'address', 'contact_phone'] as $field) {
+            if (array_key_exists($field, $data) && is_string($data[$field])) {
+                $data[$field] = InputSanitizer::clean($data[$field]);
+            }
+        }
+        if (isset($data['social_links']) && is_array($data['social_links'])) {
+            $data['social_links'] = array_map(fn ($value) => InputSanitizer::clean($value), $data['social_links']);
+        }
+        if (isset($data['meta']) && is_array($data['meta'])) {
+            $data['meta'] = array_map(fn ($value) => InputSanitizer::clean($value), $data['meta']);
+        }
+
         $settings->updateSettings($data);
+
+        $this->auditLogger->log(
+            AuditAction::SettingsUpdated,
+            $request->user(),
+            $settings,
+            'Application settings updated',
+            ['changed_fields' => array_keys($data)]
+        );
 
         return response()->json([
             'success' => true,

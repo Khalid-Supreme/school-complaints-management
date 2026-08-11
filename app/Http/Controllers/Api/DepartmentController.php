@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Department\IndexDepartmentsRequest;
 use App\Models\Department;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(IndexDepartmentsRequest $request): JsonResponse
     {
         $query = Department::query();
 

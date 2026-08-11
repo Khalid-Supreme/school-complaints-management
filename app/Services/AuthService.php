@@ -2,20 +2,26 @@
 
 namespace App\Services;
 
+use App\Enums\AuditAction;
 use App\Models\LoginAttempt;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\TransientToken;
 
 class AuthService
 {
     protected UserRepository $userRepository;
 
-    public function __construct(UserRepository $userRepository)
+    protected AuditLogger $auditLogger;
+
+    public function __construct(UserRepository $userRepository, AuditLogger $auditLogger)
     {
         $this->userRepository = $userRepository;
+        $this->auditLogger = $auditLogger;
     }
 
     /**
@@ -32,6 +38,9 @@ class AuthService
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             $this->recordLoginAttempt($username, $request, false, 'Invalid credentials');
+            $this->auditLogger->log(AuditAction::LoginFailed, null, null, 'Failed login attempt', [
+                'username' => Str::limit($username, 150, ''),
+            ]);
 
             throw ValidationException::withMessages([
                 'username' => __('auth.failed'),
@@ -40,6 +49,7 @@ class AuthService
 
         if (! $user->is_active) {
             $this->recordLoginAttempt($username, $request, false, 'Account inactive');
+            $this->auditLogger->log(AuditAction::LoginFailed, $user, null, 'Login attempt on inactive account');
 
             throw ValidationException::withMessages([
                 'username' => __('Account is inactive.'),
@@ -48,6 +58,7 @@ class AuthService
 
         if (is_null($user->email_verified_at)) {
             $this->recordLoginAttempt($username, $request, false, 'Email not verified');
+            $this->auditLogger->log(AuditAction::LoginFailed, $user, null, 'Login attempt on unverified account');
 
             throw ValidationException::withMessages([
                 'username' => __('Please verify your email address :email before logging in.', [
@@ -58,6 +69,7 @@ class AuthService
 
         $this->recordLoginAttempt($username, $request, true);
         $this->userRepository->updateLastLogin($user);
+        $this->auditLogger->log(AuditAction::Login, $user, null, 'User logged in');
 
         // For SPA using Sanctum, token might not be needed if session-based,
         // but returning standard structure if using tokens.
@@ -95,8 +107,14 @@ class AuthService
         // $request->session()->regenerateToken();
 
         // If using token:
-        if ($request->user()) {
-            $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        if ($user) {
+            $this->auditLogger->log(AuditAction::Logout, $user, null, 'User logged out');
+
+            $token = $user->currentAccessToken();
+            if ($token && ! $token instanceof TransientToken) {
+                $token->delete();
+            }
         }
     }
 
@@ -110,7 +128,8 @@ class AuthService
         $user = User::where('email', $username)->orWhere('institution_id', $username)->first();
         LoginAttempt::create([
             'user_id' => $user?->id,
-            'email' => $user?->email ?? $username,
+            // Align the unknown-username value with the login_attempts.email column (150).
+            'email' => $user?->email ?? Str::limit($username, 150, ''),
             'ip_address' => $request->ip() ?? '0.0.0.0',
             'user_agent' => $request->userAgent(),
             'successful' => $successful,

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Department;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -29,14 +30,17 @@ class UserFactory extends Factory
         $lastName = fake()->lastName();
 
         return [
-            'role_id' => \App\Models\Role::factory(),
+            'role_id' => Role::factory(),
             'first_name' => $firstName,
             'last_name' => $lastName,
             'name' => User::composeName($firstName, $lastName),
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
             'phone' => fake()->phoneNumber(),
-            'department_id' => Department::inRandomOrder()->first()?->id ?? 1,
+            'department_id' => Department::firstOrCreate(
+                ['slug' => 'general'],
+                ['name' => 'General', 'type' => 'academic'],
+            )->id,
             'is_active' => true,
             'last_login_at' => null,
             'email_verified_at' => now(),

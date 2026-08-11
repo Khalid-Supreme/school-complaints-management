@@ -3,16 +3,17 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Notifications\ResetPasswordNotification;
+use App\Services\PermissionService;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Notifications\ResetPasswordNotification;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
@@ -28,8 +29,7 @@ use Laravel\Sanctum\HasApiTokens;
     'phone',
     'department_id',
     'is_active',
-    'last_login_at',
-    'email_verified_at'
+    'email_verified_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
 #[Appends(['full_name', 'full_name_with_title', 'initials', 'display_name'])]
@@ -71,7 +71,7 @@ class User extends Authenticatable
 
     public function hasVerifiedEmail(): bool
     {
-        return !is_null($this->email_verified_at);
+        return ! is_null($this->email_verified_at);
     }
 
     public function department(): BelongsTo
@@ -86,7 +86,12 @@ class User extends Authenticatable
      */
     public static function composeName(?string $first, ?string $last): string
     {
-        return trim(trim((string) $first) . ' ' . trim((string) $last));
+        $name = trim(trim((string) $first).' '.trim((string) $last));
+
+        // Guard against overflowing the users.name column (150 chars) when
+        // combined first+last names exceed the column width. Only pathological
+        // input is affected; regular names are returned unchanged.
+        return mb_strlen($name) > 150 ? mb_substr($name, 0, 150) : $name;
     }
 
     /**
@@ -112,7 +117,7 @@ class User extends Authenticatable
             return $this->full_name;
         }
 
-        $title = rtrim(trim((string) $this->title), '.') . '.';
+        $title = rtrim(trim((string) $this->title), '.').'.';
 
         return trim("$title {$this->full_name}");
     }
@@ -125,7 +130,7 @@ class User extends Authenticatable
         $first = $this->first_name ?? '';
         $last = $this->last_name ?? '';
 
-        $initials = strtoupper(mb_substr($first, 0, 1) . mb_substr($last, 0, 1));
+        $initials = strtoupper(mb_substr($first, 0, 1).mb_substr($last, 0, 1));
 
         if ($initials !== '') {
             return $initials;
@@ -163,7 +168,7 @@ class User extends Authenticatable
      */
     public function isAdministrator(): bool
     {
-        return app(\App\Services\PermissionService::class)->isAdministrator($this);
+        return app(PermissionService::class)->isAdministrator($this);
     }
 
     /**
@@ -171,7 +176,7 @@ class User extends Authenticatable
      */
     public function isSuperAdmin(): bool
     {
-        return app(\App\Services\PermissionService::class)->isSuperAdmin($this);
+        return app(PermissionService::class)->isSuperAdmin($this);
     }
 
     /**
@@ -179,7 +184,7 @@ class User extends Authenticatable
      */
     public function isSubAdmin(): bool
     {
-        return app(\App\Services\PermissionService::class)->isSubAdmin($this);
+        return app(PermissionService::class)->isSubAdmin($this);
     }
 
     /**
@@ -187,7 +192,7 @@ class User extends Authenticatable
      */
     public function canManageUsers(): bool
     {
-        return app(\App\Services\PermissionService::class)->canManageUsers($this);
+        return app(PermissionService::class)->canManageUsers($this);
     }
 
     /**
@@ -195,7 +200,7 @@ class User extends Authenticatable
      */
     public function canManageComplaints(): bool
     {
-        return app(\App\Services\PermissionService::class)->canManageComplaints($this);
+        return app(PermissionService::class)->canManageComplaints($this);
     }
 
     /**
@@ -203,7 +208,7 @@ class User extends Authenticatable
      */
     public function canManageStaff(): bool
     {
-        return app(\App\Services\PermissionService::class)->canManageStaff($this);
+        return app(PermissionService::class)->canManageStaff($this);
     }
 
     /**
@@ -211,7 +216,7 @@ class User extends Authenticatable
      */
     public function canAssignRoles(): bool
     {
-        return app(\App\Services\PermissionService::class)->canAssignRoles($this);
+        return app(PermissionService::class)->canAssignRoles($this);
     }
 
     /**
@@ -219,7 +224,7 @@ class User extends Authenticatable
      */
     public function canManageSettings(): bool
     {
-        return app(\App\Services\PermissionService::class)->canManageSettings($this);
+        return app(PermissionService::class)->canManageSettings($this);
     }
 
     /**
@@ -227,7 +232,7 @@ class User extends Authenticatable
      */
     public function canAccessAdminDashboard(): bool
     {
-        return app(\App\Services\PermissionService::class)->canAccessAdminDashboard($this);
+        return app(PermissionService::class)->canAccessAdminDashboard($this);
     }
 
     /**
@@ -235,7 +240,7 @@ class User extends Authenticatable
      */
     public function canAccessSecurityDashboard(): bool
     {
-        return app(\App\Services\PermissionService::class)->canAccessSecurityDashboard($this);
+        return app(PermissionService::class)->canAccessSecurityDashboard($this);
     }
 
     /**
@@ -243,7 +248,7 @@ class User extends Authenticatable
      */
     public function canViewAllUsers(): bool
     {
-        return app(\App\Services\PermissionService::class)->canViewAllUsers($this);
+        return app(PermissionService::class)->canViewAllUsers($this);
     }
 
     /**
@@ -251,7 +256,7 @@ class User extends Authenticatable
      */
     public function canCreateStaff(): bool
     {
-        return app(\App\Services\PermissionService::class)->canCreateStaff($this);
+        return app(PermissionService::class)->canCreateStaff($this);
     }
 
     /**
@@ -259,7 +264,7 @@ class User extends Authenticatable
      */
     public function canPromoteToSubAdmin(): bool
     {
-        return app(\App\Services\PermissionService::class)->canPromoteToSubAdmin($this);
+        return app(PermissionService::class)->canPromoteToSubAdmin($this);
     }
 
     /**
@@ -267,7 +272,7 @@ class User extends Authenticatable
      */
     public function canDemoteSubAdmin(): bool
     {
-        return app(\App\Services\PermissionService::class)->canDemoteSubAdmin($this);
+        return app(PermissionService::class)->canDemoteSubAdmin($this);
     }
 
     /**
@@ -275,7 +280,7 @@ class User extends Authenticatable
      */
     public function getAssignableRoles(): array
     {
-        return app(\App\Services\PermissionService::class)->getAssignableRoles($this);
+        return app(PermissionService::class)->getAssignableRoles($this);
     }
 
     /**
@@ -283,7 +288,7 @@ class User extends Authenticatable
      */
     public function getManageableRoles(): array
     {
-        return app(\App\Services\PermissionService::class)->getManageableRoles($this);
+        return app(PermissionService::class)->getManageableRoles($this);
     }
 
     /**
@@ -291,7 +296,7 @@ class User extends Authenticatable
      */
     public function canAssignRole(string $roleSlug): bool
     {
-        return app(\App\Services\PermissionService::class)->canAssignRole($this, $roleSlug);
+        return app(PermissionService::class)->canAssignRole($this, $roleSlug);
     }
 
     /**
@@ -299,6 +304,6 @@ class User extends Authenticatable
      */
     public function canManageRole(string $roleSlug): bool
     {
-        return app(\App\Services\PermissionService::class)->canManageRole($this, $roleSlug);
+        return app(PermissionService::class)->canManageRole($this, $roleSlug);
     }
 }

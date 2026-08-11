@@ -2,25 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AuditAction;
+use App\Http\Requests\Auth\ResendVerificationRequest;
 use App\Http\Requests\RegisterStaffRequest;
 use App\Http\Requests\RegisterStudentRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Repositories\UserRepository;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
-use App\Repositories\UserRepository;
-
 class RegisterController extends Controller
 {
     protected UserRepository $userRepository;
 
-    public function __construct(UserRepository $userRepository)
+    protected AuditLogger $auditLogger;
+
+    public function __construct(UserRepository $userRepository, AuditLogger $auditLogger)
     {
         $this->userRepository = $userRepository;
+        $this->auditLogger = $auditLogger;
     }
+
     public function registerStudent(RegisterStudentRequest $request)
     {
         return $this->registerUser($request, 'student', 'STD');
@@ -42,25 +48,25 @@ class RegisterController extends Controller
                 'email_verified_at' => now(),
                 'is_active' => true,
             ])->save();
+
+            $this->auditLogger->log(AuditAction::EmailVerified, $user, $user, 'Email address verified');
         }
 
-        return redirect('/login?verified=1&institution_id=' . $user->institution_id);
+        return redirect('/login?verified=1&institution_id='.$user->institution_id);
     }
 
-    public function resend(Request $request)
+    public function resend(ResendVerificationRequest $request)
     {
-        $request->validate([
-            'email' => ['required', 'email', 'exists:users,email'],
-        ]);
+        $user = User::where('email', $request->email)->first();
 
-        $user = User::where('email', $request->email)->firstOrFail();
-
-        if (is_null($user->email_verified_at)) {
+        // Uniform response regardless of whether the account exists, so the
+        // endpoint cannot be used to enumerate registered email addresses.
+        if ($user && is_null($user->email_verified_at)) {
             $this->sendVerificationMail($user);
         }
 
         return response()->json([
-            'message' => 'Verification email sent successfully.',
+            'message' => 'If the account exists and is unverified, a verification email has been sent.',
         ]);
     }
 
@@ -94,6 +100,10 @@ class RegisterController extends Controller
         }
 
         $user = User::create($data);
+
+        $this->auditLogger->log(AuditAction::UserRegistered, $user, $user, 'User registered via public form', [
+            'role' => $roleSlug,
+        ]);
 
         $this->sendVerificationMail($user);
 

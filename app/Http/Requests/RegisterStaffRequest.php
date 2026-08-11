@@ -2,26 +2,22 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Support\ValidationRules;
 
-class RegisterStaffRequest extends FormRequest
+class RegisterStaffRequest extends RegisterUserRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     public function rules(): array
     {
-        return [
-            'first_name' => ['required', 'string', 'max:150'],
-            'last_name' => ['required', 'string', 'max:150'],
-            'email' => ['required', 'string', 'email', 'max:150', 'unique:users,email'],
-            'department' => ['required', 'integer', 'exists:departments,id'],
-            'title' => ['required', 'string', 'in:Mr.,Mrs.,Miss,Dr.,Prof.'],
-            'gender' => ['required', 'string', 'in:male,female'],
-            'password' => ['required', 'string', 'min:8'],
-            'confirm_password' => ['required', 'same:password'],
+        return parent::rules() + [
+            'title' => ValidationRules::title(),
+        ];
+    }
+
+    public function messages(): array
+    {
+        return parent::messages() + [
+            'title.required' => 'Please select your title.',
+            'title.in' => 'The selected title is invalid.',
         ];
     }
 }

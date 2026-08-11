@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AttachmentController;
+use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ComplaintAssignmentController;
@@ -13,30 +14,37 @@ use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\RegisterController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail']);
-Route::post('/reset-password', [AuthController::class, 'reset']);
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware(['audit.context', 'ips', 'throttle:login']);
+Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])
+    ->middleware(['audit.context', 'ips', 'throttle:password-reset']);
+Route::post('/reset-password', [AuthController::class, 'reset'])
+    ->middleware(['audit.context', 'ips', 'throttle:password-reset']);
 Route::get('/departments', [DepartmentController::class, 'index']);
-Route::post('/register/student', [RegisterController::class, 'registerStudent']);
-Route::post('/register/staff', [RegisterController::class, 'registerStaff']);
+Route::post('/register/student', [RegisterController::class, 'registerStudent'])
+    ->middleware(['audit.context', 'ips', 'throttle:register']);
+Route::post('/register/staff', [RegisterController::class, 'registerStaff'])
+    ->middleware(['audit.context', 'ips', 'throttle:register']);
 Route::get('/register/verify/{user}/{hash}', [RegisterController::class, 'verify'])
     ->name('verification.verify')
-    ->middleware('signed');
-Route::post('/register/resend', [RegisterController::class, 'resend']);
+    ->middleware(['signed', 'audit.context']);
+Route::post('/register/resend', [RegisterController::class, 'resend'])
+    ->middleware(['audit.context', 'ips', 'throttle:register']);
 
 // Public settings (readable without auth for landing/login pages)
 Route::get('/settings', [SettingsController::class, 'index']);
 
-Route::middleware(['auth:sanctum', 'ips'])->group(function () {
+Route::middleware(['auth:sanctum', 'audit.context', 'ips'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
     // Complaints
     Route::get('/categories', [ComplaintController::class, 'categories']);
 
-    // Status updates: complaint_officer (admins/sub_admins also allowed)
+    // Status updates: complaint_officer (admins/sub_admins also allowed).
+    // Scoped to the officer assigned to the complaint via complaint.access.
     Route::patch('/complaints/{complaint}/status', [ComplaintController::class, 'updateStatus'])
-        ->middleware('role:admin,complaint_officer');
+        ->middleware(['role:admin,complaint_officer', 'complaint.access']);
 
     // Show / store / index
     Route::get('/complaints/{complaint}', [ComplaintController::class, 'show'])
@@ -63,7 +71,7 @@ Route::middleware(['auth:sanctum', 'ips'])->group(function () {
     Route::post('/complaints/{complaint}/assign', [ComplaintAssignmentController::class, 'assign'])
         ->middleware('role:admin');
     Route::get('/complaints/{complaint}/assignments', [ComplaintAssignmentController::class, 'history'])
-        ->middleware('role:admin,complaint_officer');
+        ->middleware(['role:admin,complaint_officer', 'complaint.access']);
     Route::get('/staff/assignments', [ComplaintAssignmentController::class, 'myAssignments'])
         ->middleware('role:complaint_officer');
     Route::get('/staff/list', [ComplaintAssignmentController::class, 'staffList'])
@@ -73,12 +81,17 @@ Route::middleware(['auth:sanctum', 'ips'])->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
         ->middleware('role:admin,sub_admin');
 
-    // User Management (admin or sub_admin; create/edit/delete/role are guarded in the controller)
+    // User Management
+    // Read-only list/show: admin or sub_admin.
     Route::middleware('role:admin,sub_admin')->prefix('/admin/users')->group(function () {
         Route::get('/students', [UserManagementController::class, 'students']);
         Route::get('/staff', [UserManagementController::class, 'staff']);
-        Route::post('/', [UserManagementController::class, 'store']);
         Route::get('/{user}', [UserManagementController::class, 'show']);
+    });
+
+    // Mutations (create/update/delete/role/password): admin only.
+    Route::middleware('role:admin')->prefix('/admin/users')->group(function () {
+        Route::post('/', [UserManagementController::class, 'store']);
         Route::put('/{user}', [UserManagementController::class, 'update']);
         Route::delete('/{user}', [UserManagementController::class, 'destroy']);
         Route::patch('/{user}/role', [UserManagementController::class, 'updateRole']);
@@ -90,6 +103,10 @@ Route::middleware(['auth:sanctum', 'ips'])->group(function () {
         Route::get('/security/dashboard', [SecurityDashboardController::class, 'index']);
         Route::get('/security/audit/logins', [SecurityDashboardController::class, 'loginAudit']);
     });
+
+    // Audit log (super admin only)
+    Route::get('/admin/audit/logs', [AuditLogController::class, 'index'])
+        ->middleware('role:admin');
 
     Route::middleware('role:admin,sub_admin')->prefix('/settings')->group(function () {
         Route::put('/', [SettingsController::class, 'update']);

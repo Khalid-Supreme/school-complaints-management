@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Complaint\StoreComplaintRequest;
+use App\Http\Requests\Complaint\UpdateComplaintStatusRequest;
 use App\Models\Complaint;
 use App\Models\ComplaintCategory;
+use App\Services\ComplaintAssignmentService;
 use App\Services\ComplaintService;
+use App\Services\ComplaintWorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -35,6 +38,7 @@ class ComplaintController extends Controller
         // Students / Staff complainants see only their own complaints
         if (in_array($slug, ['student', 'staff'], true)) {
             $complaints = $this->complaintService->getComplainantComplaints($user->id);
+
             return response()->json($complaints);
         }
 
@@ -55,13 +59,14 @@ class ComplaintController extends Controller
                     'last_page' => $paginator->lastPage(),
                     'per_page' => $paginator->perPage(),
                     'total' => $paginator->total(),
-                ]
+                ],
             ]);
         }
 
         // Complaint officers see their assigned complaints
         if ($slug === 'complaint_officer') {
-            $assignments = app(\App\Services\ComplaintAssignmentService::class)->getStaffAssignments($user->id);
+            $assignments = app(ComplaintAssignmentService::class)->getStaffAssignments($user->id);
+
             return response()->json($assignments);
         }
 
@@ -76,7 +81,7 @@ class ComplaintController extends Controller
         Gate::authorize('create', Complaint::class);
 
         $complaint = $this->complaintService->submitComplaint(
-            $request->validated(), 
+            $request->validated(),
             $request->user()->id
         );
 
@@ -86,7 +91,7 @@ class ComplaintController extends Controller
                 'id' => $complaint->id,
                 'reference_no' => $complaint->reference_no,
                 'status' => $complaint->status,
-            ]
+            ],
         ], 201);
     }
 
@@ -98,7 +103,7 @@ class ComplaintController extends Controller
         Gate::authorize('view', $complaint);
 
         return response()->json([
-            'data' => $this->complaintService->decryptComplaint($complaint)
+            'data' => $this->complaintService->decryptComplaint($complaint),
         ]);
     }
 
@@ -108,21 +113,21 @@ class ComplaintController extends Controller
     public function categories(): JsonResponse
     {
         $categories = ComplaintCategory::where('is_active', true)->get();
+
         return response()->json(['data' => $categories]);
     }
 
     /**
      * Update the status of a complaint.
-     * Authorization is enforced by route middleware (role:complaint_officer).
+     * Authorization is enforced by route middleware (role + complaint.access)
+     * and by the ComplaintPolicy::update ability.
      */
-    public function updateStatus(Request $request, Complaint $complaint): JsonResponse
+    public function updateStatus(UpdateComplaintStatusRequest $request, Complaint $complaint): JsonResponse
     {
-        $request->validate([
-            'status' => 'required|string|in:submitted,under_review,assigned,in_progress,resolved,closed,rejected',
-        ]);
+        Gate::authorize('update', $complaint);
 
-        $workflow = app(\App\Services\ComplaintWorkflowService::class);
-        $workflow->transitionStatus($complaint, $request->status);
+        $workflow = app(ComplaintWorkflowService::class);
+        $workflow->transitionStatus($complaint, $request->validated('status'));
 
         return response()->json([
             'message' => 'Complaint status updated successfully',
