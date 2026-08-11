@@ -77,13 +77,11 @@ class RegisterController extends Controller
 
         $firstName = $request->first_name;
         $lastName = $request->last_name;
-        $fullName = User::composeName($firstName, $lastName);
 
         $data = [
             'role_id' => $role->id,
             'first_name' => $firstName,
             'last_name' => $lastName,
-            'name' => $fullName,
             'email' => $request->email,
             'institution_id' => $institutionId,
             'password' => Hash::make($request->password),

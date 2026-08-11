@@ -88,7 +88,7 @@ class ComplaintAssignmentService
             [
                 'complaint_reference' => $complaint->reference_no,
                 'assigned_to_user_id' => $assignedToId,
-                'assigned_by' => $assignment->assignedBy?->name,
+                'assigned_by' => $assignment->assignedBy?->full_name,
             ]
         );
 

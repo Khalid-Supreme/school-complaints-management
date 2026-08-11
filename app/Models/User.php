@@ -20,7 +20,6 @@ use Laravel\Sanctum\HasApiTokens;
     'role_id',
     'first_name',
     'last_name',
-    'name',
     'title',
     'gender',
     'email',
@@ -86,25 +85,19 @@ class User extends Authenticatable
      */
     public static function composeName(?string $first, ?string $last): string
     {
-        $name = trim(trim((string) $first).' '.trim((string) $last));
-
-        // Guard against overflowing the users.name column (150 chars) when
-        // combined first+last names exceed the column width. Only pathological
-        // input is affected; regular names are returned unchanged.
-        return mb_strlen($name) > 150 ? mb_substr($name, 0, 150) : $name;
+        return trim(trim((string) $first).' '.trim((string) $last));
     }
 
     /**
      * Get the user's full name.
-     * Concatenates first_name and last_name, falls back to name column.
+     * Concatenates first_name and last_name.
      */
     public function getFullNameAttribute(): string
     {
         $first = $this->first_name ?? '';
         $last = $this->last_name ?? '';
-        $combined = trim("$first $last");
 
-        return $combined !== '' ? $combined : $this->name ?? '';
+        return trim("$first $last");
     }
 
     /**
@@ -132,13 +125,7 @@ class User extends Authenticatable
 
         $initials = strtoupper(mb_substr($first, 0, 1).mb_substr($last, 0, 1));
 
-        if ($initials !== '') {
-            return $initials;
-        }
-
-        $words = preg_split('/\s+/', trim((string) $this->name)) ?: [];
-
-        return strtoupper(mb_substr($words[0] ?? '', 0, 1));
+        return $initials !== '' ? $initials : strtoupper(mb_substr($first, 0, 1));
     }
 
     /**

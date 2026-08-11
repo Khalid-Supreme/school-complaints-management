@@ -42,8 +42,7 @@ class UserManagementController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                    ->orWhere('first_name', 'ilike', "%{$search}%")
+                $q->where('first_name', 'ilike', "%{$search}%")
                     ->orWhere('last_name', 'ilike', "%{$search}%")
                     ->orWhere('email', 'ilike', "%{$search}%")
                     ->orWhere('institution_id', 'ilike', "%{$search}%");
@@ -97,8 +96,7 @@ class UserManagementController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                    ->orWhere('first_name', 'ilike', "%{$search}%")
+                $q->where('first_name', 'ilike', "%{$search}%")
                     ->orWhere('last_name', 'ilike', "%{$search}%")
                     ->orWhere('email', 'ilike', "%{$search}%")
                     ->orWhere('institution_id', 'ilike', "%{$search}%");
@@ -149,7 +147,6 @@ class UserManagementController extends Controller
 
         $firstName = $validated['first_name'];
         $lastName = $validated['last_name'];
-        $fullName = User::composeName($firstName, $lastName);
 
         // Use the provided password, or generate a strong temporary one.
         $temporaryPassword = null;
@@ -163,7 +160,6 @@ class UserManagementController extends Controller
             'role_id' => $role->id,
             'first_name' => $firstName,
             'last_name' => $lastName,
-            'name' => $fullName,
             'email' => $validated['email'],
             'institution_id' => $institutionId,
             'password' => $password, // 'hashed' cast bcrypts the value on save
@@ -211,7 +207,6 @@ class UserManagementController extends Controller
             $lastName = $request->filled('last_name') ? $validated['last_name'] : $user->last_name;
             $data['first_name'] = $firstName;
             $data['last_name'] = $lastName;
-            $data['name'] = User::composeName($firstName, $lastName);
         }
 
         if ($request->has('email')) {
