@@ -3,6 +3,7 @@
 use App\Http\Middleware\AuditContext;
 use App\Http\Middleware\EnsureComplaintAccess;
 use App\Http\Middleware\EnsureEmailVerified;
+use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\IpsMiddleware;
 use Illuminate\Foundation\Application;
@@ -37,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureRole::class,
             'complaint.access' => EnsureComplaintAccess::class,
             'email.verified' => EnsureEmailVerified::class,
+            'password.changed' => EnsurePasswordChanged::class,
             'audit.context' => AuditContext::class,
         ]);
     })

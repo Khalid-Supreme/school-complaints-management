@@ -129,11 +129,11 @@ const isPostRegistrationFlow = computed(() =>
 
 const loginIdLabel = computed(() => {
     if (!isPostRegistrationFlow.value) {
-        return 'Staff No. or Matric No.';
+        return 'Staff ID/Student ID';
     }
 
     const id = String(form.username || route.query.institution_id || '').toUpperCase();
-    return id.startsWith('STF') ? 'Staff No.' : 'Matric No.';
+    return id.startsWith('STF') ? 'Staff ID' : 'Student ID';
 });
 
 const validate = () => {
@@ -157,6 +157,10 @@ const handleLogin = async () => {
     
     const success = await authStore.login(form);
     if (success) {
+        if (authStore.mustChangePassword) {
+            router.push('/change-password');
+            return;
+        }
         const redirect = route.query.redirect || getDashboardRoute(authStore.role);
         router.push(redirect);
     }

@@ -54,6 +54,11 @@
                     <div class="overflow-x-auto">
                     <DataTable :value="events" :loading="loading" responsiveLayout="scroll" class="p-datatable-sm"
                         :rows="8">
+                        <Column header="#" style="width: 50px">
+                            <template #body="slotProps">
+                                <span class="text-xs text-slate-500">{{ slotProps.index + 1 }}</span>
+                            </template>
+                        </Column>
                         <Column field="type" header="Attack Type" style="width: 140px">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-2">

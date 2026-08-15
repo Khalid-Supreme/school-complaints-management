@@ -14,9 +14,11 @@ use App\Models\Role;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Services\AuditLogger;
+use App\Services\PasswordResetService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserManagementController extends Controller
 {
@@ -24,10 +26,16 @@ class UserManagementController extends Controller
 
     protected AuditLogger $auditLogger;
 
-    public function __construct(UserRepository $userRepository, AuditLogger $auditLogger)
-    {
+    protected PasswordResetService $passwordResetService;
+
+    public function __construct(
+        UserRepository $userRepository,
+        AuditLogger $auditLogger,
+        PasswordResetService $passwordResetService,
+    ) {
         $this->userRepository = $userRepository;
         $this->auditLogger = $auditLogger;
+        $this->passwordResetService = $passwordResetService;
     }
 
     public function students(IndexStudentsRequest $request): JsonResponse
@@ -148,27 +156,33 @@ class UserManagementController extends Controller
         $firstName = $validated['first_name'];
         $lastName = $validated['last_name'];
 
-        // Use the provided password, or generate a strong temporary one.
-        $temporaryPassword = null;
-        $password = $validated['password'] ?? null;
-        if (! is_string($password) || strlen($password) < 8) {
-            $temporaryPassword = Str::random(16);
-            $password = $temporaryPassword;
-        }
+        // The account is created with a random temporary password that is
+        // emailed to the owner and must be changed on first login. The
+        // plaintext is never stored or returned in the API response.
+        $temporaryPassword = $this->passwordResetService->generateTemporaryPassword();
 
-        $user = User::create([
-            'role_id' => $role->id,
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'email' => $validated['email'],
-            'institution_id' => $institutionId,
-            'password' => $password, // 'hashed' cast bcrypts the value on save
-            'department_id' => $validated['department'],
-            'gender' => $validated['gender'],
-            'title' => $title,
-            'is_active' => true,
-            'email_verified_at' => now(),
-        ]);
+        // All database changes for the new account are committed atomically:
+        // either the user (with their generated institution ID and hashed
+        // temporary password) is fully created, or nothing is written. No
+        // partial rows are left behind if any part fails.
+        $user = DB::transaction(function () use ($role, $firstName, $lastName, $validated, $institutionId, $title, $temporaryPassword) {
+            return User::create([
+                'role_id' => $role->id,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $validated['email'],
+                'institution_id' => $institutionId,
+                // Stored as bcrypt(sha256(temp)) so the client-side SHA-256 login
+                // flow verifies against the plaintext the user types.
+                'password' => Hash::make(hash('sha256', $temporaryPassword)),
+                'department_id' => $validated['department'],
+                'gender' => $validated['gender'],
+                'title' => $title,
+                'is_active' => true,
+                'must_change_password' => true,
+                'email_verified_at' => now(),
+            ]);
+        });
 
         $user->load('role', 'department');
 
@@ -176,10 +190,19 @@ class UserManagementController extends Controller
             'role' => $role->slug,
         ]);
 
+        // Email dispatch is fail-open by design: the account is committed and
+        // audited before delivery is attempted, so a transport failure can
+        // never turn into a half-created account. If delivery fails the
+        // administrator is told and can use Reset Password to re-issue the
+        // credentials, which never duplicates the account.
+        $delivered = $this->passwordResetService->sendTemporaryPassword($user, $temporaryPassword);
+
         return response()->json([
-            'message' => 'User created successfully.',
+            'message' => $delivered
+                ? 'User created successfully. A temporary password has been sent to the user\'s email.'
+                : 'User account created successfully, but the temporary password email could not be sent. You can reset the password to resend it.',
             'user' => $user,
-            'temporary_password' => $temporaryPassword,
+            'credentials_delivered' => $delivered,
         ], 201);
     }
 
@@ -300,24 +323,35 @@ class UserManagementController extends Controller
             return response()->json(['message' => 'You are not authorized to reset passwords.'], 403);
         }
 
-        // Use a supplied strong password, otherwise generate a strong
-        // temporary one. The 'hashed' cast bcrypts the value on save.
-        $password = $request->input('password');
-        $temporaryPassword = null;
+        // Generate a random temporary password (never derivable from the
+        // institution ID), force a change on next login, invalidate any
+        // existing verification challenges and revoke all active
+        // sessions/tokens so a compromised account cannot remain
+        // authenticated. The password, challenge deletion and token
+        // revocation are committed atomically.
+        $temporaryPassword = DB::transaction(function () use ($user) {
+            $plaintext = $this->passwordResetService->applyTemporaryPassword($user);
 
-        if (! is_string($password) || strlen($password) < 8) {
-            $temporaryPassword = Str::random(16);
-            $password = $temporaryPassword;
-        }
+            $user->passwordChangeVerifications()->delete();
+            $user->tokens()->delete();
 
-        $user->password = $password;
-        $user->save();
+            return $plaintext;
+        });
 
-        $this->auditLogger->log(AuditAction::PasswordChange, $request->user(), $user, 'Password reset by administrator');
+        // Fail-open email dispatch: the reset state is already committed, so a
+        // delivery failure must not surface as an error — the administrator can
+        // retry via this same endpoint without side effects.
+        $delivered = $this->passwordResetService->sendTemporaryPassword($user, $temporaryPassword);
+
+        $this->auditLogger->log(AuditAction::AdminPasswordReset, $request->user(), $user, 'Password reset by administrator', [
+            'tokens_revoked' => true,
+        ]);
 
         return response()->json([
-            'message' => 'Password has been reset successfully.',
-            'temporary_password' => $temporaryPassword,
+            'message' => $delivered
+                ? 'A temporary password has been sent to the user\'s email.'
+                : 'The password has been reset, but the temporary password email could not be sent. Please try again.',
+            'credentials_delivered' => $delivered,
         ]);
     }
 }

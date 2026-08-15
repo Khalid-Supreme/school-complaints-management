@@ -18,6 +18,11 @@
                 @page="onPage"
                 responsiveLayout="scroll"
             >
+                <Column header="#">
+                    <template #body="slotProps">
+                        {{ ((store.meta?.current_page || 1) - 1) * (store.meta?.per_page || 15) + slotProps.index + 1 }}
+                    </template>
+                </Column>
                 <Column field="reference_no" header="Reference No"></Column>
                 <Column field="category.name" header="Category"></Column>
                 <Column field="title" header="Title"></Column>

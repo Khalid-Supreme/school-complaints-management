@@ -11,7 +11,6 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Services\AuditLogger;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
@@ -84,7 +83,10 @@ class RegisterController extends Controller
             'last_name' => $lastName,
             'email' => $request->email,
             'institution_id' => $institutionId,
-            'password' => Hash::make($request->password),
+            // The client sends the plaintext password (server-side validation
+            // requires the raw value). Pre-hash with SHA-256 to match the
+            // login flow, then bcrypt via the 'hashed' User cast.
+            'password' => hash('sha256', $request->password),
             'department_id' => $request->department,
             'gender' => $request->gender,
             'is_active' => true,

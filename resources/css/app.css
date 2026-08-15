@@ -479,6 +479,69 @@
         .complaint-assign-dialog .p-select .p-select-label {
             color: var(--color-charcoal) !important;
         }
+.p-toast-message {
+            border-radius: 10px;
+            border-left: 4px solid;
+            box-shadow: 0 10px 30px rgba(26, 37, 44, 0.14);
+        }
+
+        .p-toast-message-success {
+            background: #2f855a !important;
+            border-color: #2f855a !important;
+            color: #ffffff !important;
+        }
+        .p-toast-message-success .p-toast-icon,
+        .p-toast-message-success .p-toast-summary,
+        .p-toast-message-success .p-toast-detail,
+        .p-toast-message-success .p-toast-close-icon {
+            color: #ffffff !important;
+        }
+        .p-toast-message-success .p-toast-message-icon {
+            color: #ffffff !important;
+        }
+        .p-toast-message-success .p-toast-close-icon {
+            color: #ffffff !important;
+        }
+
+        .p-toast-message-error {
+            background: #c53030 !important;
+            border-color: #c53030 !important;
+            color: #ffffff !important;
+        }
+        .p-toast-message-error .p-toast-icon,
+        .p-toast-message-error .p-toast-summary,
+        .p-toast-message-error .p-toast-detail,
+        .p-toast-message-error .p-toast-close-icon,
+        .p-toast-message-error .p-toast-message-icon {
+            color: #ffffff !important;
+        }
+
+        .p-toast-message-warn {
+            background: #b7791f !important;
+            border-color: #b7791f !important;
+            color: #ffffff !important;
+        }
+        .p-toast-message-warn .p-toast-icon,
+        .p-toast-message-warn .p-toast-summary,
+        .p-toast-message-warn .p-toast-detail,
+        .p-toast-message-warn .p-toast-close-icon,
+        .p-toast-message-warn .p-toast-message-icon {
+            color: #ffffff !important;
+        }
+
+        .p-toast-message-info {
+            background: #2b6cb0 !important;
+            border-color: #2b6cb0 !important;
+            color: #ffffff !important;
+        }
+        .p-toast-message-info .p-toast-icon,
+        .p-toast-message-info .p-toast-summary,
+        .p-toast-message-info .p-toast-detail,
+        .p-toast-message-info .p-toast-close-icon,
+        .p-toast-message-info .p-toast-message-icon {
+            color: #ffffff !important;
+        }
+
 /* Responsive Toast Styles */
 .p-toast {
     width: min(24rem, calc(100vw - 2rem));

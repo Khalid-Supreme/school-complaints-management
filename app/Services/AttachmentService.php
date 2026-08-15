@@ -97,7 +97,7 @@ class AttachmentService
     public function getAttachments(int $complaintId): Collection
     {
         return ComplaintAttachment::where('complaint_id', $complaintId)
-            ->with(['user:id,name,first_name,last_name,title,role_id', 'user.role:id,slug'])
+            ->with(['user:id,first_name,last_name,title,role_id', 'user.role:id,slug'])
             ->orderBy('created_at', 'desc')
             ->get();
     }

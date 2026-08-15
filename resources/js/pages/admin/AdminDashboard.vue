@@ -66,6 +66,11 @@
                     <div class="overflow-x-auto">
                     <DataTable :value="recentComplaints" :loading="loading" responsiveLayout="scroll"
                         class="p-datatable-sm" :rows="5">
+                        <Column header="#" style="width: 50px">
+                            <template #body="slotProps">
+                                <span class="text-slate-500">{{ slotProps.index + 1 }}</span>
+                            </template>
+                        </Column>
                         <Column field="reference_no" header="Ref No" style="width: 130px">
                             <template #body="slotProps">
                                 <span

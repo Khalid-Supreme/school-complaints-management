@@ -35,6 +35,18 @@ const routes = [
         meta: { layout: AuthLayout, guest: true }
     },
     {
+        path: '/change-password',
+        name: 'ChangePassword',
+        component: () => import('../pages/auth/ChangePasswordPage.vue'),
+        meta: { layout: AuthLayout, requiresAuth: true, mustChangePassword: true }
+    },
+    {
+        path: '/verify-password-change',
+        name: 'VerifyPasswordChange',
+        component: () => import('../pages/auth/VerifyPasswordChangePage.vue'),
+        meta: { layout: AuthLayout, requiresAuth: true, passwordChangePending: true }
+    },
+    {
         path: '/forgot-password',
         name: 'ForgotPassword',
         component: () => import('../pages/auth/ForgotPasswordPage.vue'),
@@ -205,6 +217,20 @@ router.beforeEach(async (to, from, next) => {
     // 1. Guard for requiresAuth
     if (to.meta.requiresAuth && !isAuthenticated) {
         return next('/login');
+    }
+
+    // 1b. Force password change before accessing anything else
+    if (isAuthenticated && authStore.mustChangePassword && to.name !== 'ChangePassword') {
+        return next({ name: 'ChangePassword' });
+    }
+
+    // 1c. Force password-change verification before accessing anything else
+    if (
+        isAuthenticated
+        && authStore.passwordChangePendingVerification
+        && to.name !== 'VerifyPasswordChange'
+    ) {
+        return next({ name: 'VerifyPasswordChange' });
     }
 
     // 2. Guard for guests-only (like login screen)

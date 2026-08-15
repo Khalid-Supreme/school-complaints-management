@@ -30,9 +30,6 @@ class ResetPasswordRequest extends FormRequest
             'email.email' => 'Please enter a valid email address.',
             'email.max' => 'The email address cannot exceed 255 characters.',
             'password.required' => 'Please enter a new password.',
-            'password.min' => 'The password must be at least 8 characters.',
-            'password.letters' => 'The password must contain at least one letter.',
-            'password.numbers' => 'The password must contain at least one number.',
             'password.confirmed' => 'The password confirmation does not match.',
             'password_confirmation.required' => 'Please confirm your new password.',
         ];

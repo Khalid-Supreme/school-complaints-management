@@ -28,8 +28,9 @@
                     <InputText id="password" v-model="form.password" type="password"
                         placeholder="••••••••" required autocomplete="new-password"
                         class="w-full !pl-11 !pr-3 sm:!pr-4 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
-                        :class="{ 'p-invalid': errors.password }" />
+                        :class="{ 'p-invalid': errors.password }" @input="clearFieldError('password')" />
                 </div>
+                <PasswordRequirements v-if="form.password.length > 0" :password="form.password" />
                 <small v-if="errors.password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.password }}</small>
             </div>
 
@@ -45,12 +46,13 @@
                     <InputText id="confirm_password" v-model="form.confirm_password" type="password"
                         placeholder="••••••••" required autocomplete="new-password"
                         class="w-full !pl-11 !pr-3 sm:!pr-4 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
-                        :class="{ 'p-invalid': errors.confirm_password }" />
+                        :class="{ 'p-invalid': errors.confirm_password || confirmationMismatch }" @input="clearFieldError('confirm_password')" />
                 </div>
-                <small v-if="errors.confirm_password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.confirm_password }}</small>
+                <small v-if="confirmationMismatch" class="text-red-500 block mt-1.5 text-xs font-medium">Passwords do not match</small>
+                <small v-else-if="errors.confirm_password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.confirm_password }}</small>
             </div>
 
-            <Button type="submit" label="Reset Password" icon="pi pi-check-circle" :loading="loading"
+            <Button type="submit" label="Reset Password" icon="pi pi-check-circle" :loading="loading" :disabled="loading || !canSubmit"
                 class="w-full !mt-7 !py-2 sm:!py-3 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.85rem] sm:!text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[1px]"
                 :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
         </form>
@@ -73,10 +75,11 @@
 </template>
 
 <script setup>
-    import { reactive, ref, onMounted } from 'vue';
+    import { computed, reactive, ref, onMounted } from 'vue';
     import { useRouter, useRoute } from 'vue-router';
     import { useAuthStore } from '../../stores/auth';
-    import { hashPassword } from '../../utils/crypto';
+    import PasswordRequirements from '../../components/PasswordRequirements.vue';
+    import { validatePassword } from '../../utils/passwordPolicy';
     import InputText from 'primevue/inputtext';
     import Button from 'primevue/button';
     import Message from 'primevue/message';
@@ -98,6 +101,14 @@
         confirm_password: ''
     });
 
+    const passwordChecks = computed(() => validatePassword(form.password));
+    const confirmationMismatch = computed(() => form.confirm_password.length > 0 && form.password !== form.confirm_password);
+    const canSubmit = computed(() => passwordChecks.value.isValid && form.password === form.confirm_password);
+
+    const clearFieldError = (field) => {
+        errors[field] = '';
+    };
+
     const validate = () => {
         let valid = true;
         errors.password = '';
@@ -106,8 +117,8 @@
         if (!form.password) {
             errors.password = 'Password is required';
             valid = false;
-        } else if (form.password.length < 8) {
-            errors.password = 'Password must be at least 8 characters';
+        } else if (!passwordChecks.value.isValid) {
+            errors.password = 'Password does not meet all requirements';
             valid = false;
         }
 
@@ -136,14 +147,11 @@
                 throw new Error('Invalid or expired reset link. Please request a new one.');
             }
 
-            // Hash password client-side before sending (matching login flow)
-            const hashedPassword = await hashPassword(form.password);
-
             const message = await authStore.resetPassword({
                 token,
                 email,
-                password: hashedPassword,
-                password_confirmation: hashedPassword
+                password: form.password,
+                password_confirmation: form.confirm_password
             });
 
             if (message) {

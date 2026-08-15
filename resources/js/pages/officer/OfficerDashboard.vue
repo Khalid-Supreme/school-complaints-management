@@ -48,6 +48,11 @@
                 <div class="overflow-x-auto">
                 <DataTable :value="assignments" :loading="store.loading" responsiveLayout="scroll"
                     class="p-datatable-sm" dataKey="id" :rows="10">
+                    <Column header="#" style="width: 50px">
+                        <template #body="slotProps">
+                            <span class="text-slate-500">{{ slotProps.index + 1 }}</span>
+                        </template>
+                    </Column>
                     <Column field="complaint.reference_no" header="Ref No" style="width: 130px">
                         <template #body="slotProps">
                             <span class="font-mono text-xs font-medium text-slate-600 bg-sage-50 px-2 py-1 rounded-md">

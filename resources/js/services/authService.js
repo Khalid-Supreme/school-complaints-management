@@ -14,8 +14,8 @@ export default {
         await initializeCsrf();
         return api.post('/api/register/student', {
             ...payload,
-            password: await hashPassword(payload.password),
-            confirm_password: await hashPassword(payload.confirm_password),
+            password: payload.password,
+            confirm_password: payload.confirm_password,
         });
     },
 
@@ -23,8 +23,8 @@ export default {
         await initializeCsrf();
         return api.post('/api/register/staff', {
             ...payload,
-            password: await hashPassword(payload.password),
-            confirm_password: await hashPassword(payload.confirm_password),
+            password: payload.password,
+            confirm_password: payload.confirm_password,
         });
     },
 
@@ -41,6 +41,34 @@ export default {
     async resetPassword(payload) {
         await initializeCsrf();
         return api.post('/api/reset-password', payload);
+    },
+
+    async changePassword(payload) {
+        await initializeCsrf();
+        const body = {
+            password: payload.password,
+            password_confirmation: payload.password_confirmation,
+        };
+        // Forced change (must_change_password) does not re-collect the current
+        // password — the user already authenticated with it this session.
+        if (payload.current_password) {
+            body.current_password = payload.current_password;
+        }
+        return api.post('/api/change-password', body);
+    },
+
+    async verifyPasswordChange(code) {
+        await initializeCsrf();
+        return api.post('/api/password-change/verify', { code });
+    },
+
+    async resendPasswordChange() {
+        await initializeCsrf();
+        return api.post('/api/password-change/verify/resend');
+    },
+
+    async getPasswordChangeStatus() {
+        return api.get('/api/password-change/status');
     },
 
     async logout() {

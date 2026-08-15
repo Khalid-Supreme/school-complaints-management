@@ -68,7 +68,7 @@ const copied = ref(false);
 
 const targetEmail = ref(route.query.email || '');
 
-const idLabel = route.query.institution_id?.startsWith('STF') ? 'Staff No.' : 'Matric No.';
+const idLabel = route.query.institution_id?.startsWith('STF') ? 'Staff ID' : 'Student ID';
 
 const copyInstitutionId = async () => {
   try {

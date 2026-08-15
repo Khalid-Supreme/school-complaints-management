@@ -55,6 +55,22 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perHour(5)->by($identifier);
         });
 
+        // Throttle password-change code verification attempts per user + IP.
+        RateLimiter::for('password-change-verify', function (Request $request) {
+            $user = $request->user();
+            $identifier = 'pc-verify:'.($user?->id ?? 'guest').'|'.$request->ip();
+
+            return Limit::perMinute(10)->by($identifier);
+        });
+
+        // Throttle password-change code re-sends to 3 per 30 minutes per user + IP.
+        RateLimiter::for('password-change-resend', function (Request $request) {
+            $user = $request->user();
+            $identifier = 'pc-resend:'.($user?->id ?? 'guest').'|'.$request->ip();
+
+            return Limit::perMinutes(30, 3)->by($identifier);
+        });
+
         // Audit category/department mutations even when called outside an HTTP
         // request (the AuditContext middleware supplies network context there).
         ComplaintCategory::observe(ComplaintCategoryObserver::class);

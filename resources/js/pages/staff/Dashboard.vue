@@ -12,6 +12,11 @@
         <div class="bg-white rounded-xl p-6 shadow-xl ring-1 ring-slate-900/5">
             <h2 class="text-xl font-bold mb-4">My Assigned Complaints</h2>
             <DataTable :value="store.assignments" :loading="store.loading" responsiveLayout="scroll" :rows="5">
+                <Column header="#">
+                    <template #body="slotProps">
+                        {{ slotProps.index + 1 }}
+                    </template>
+                </Column>
                 <Column header="Reference No">
                     <template #body="slotProps">
                         {{ slotProps.data.complaint?.reference_no }}

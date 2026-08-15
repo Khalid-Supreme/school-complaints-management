@@ -365,7 +365,7 @@ const officerStatusOptions = [
 
 const submittedDate = computed(() => complaint.value?.submitted_at ? new Date(complaint.value.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
 const complainantIdLabel = computed(() =>
-    complaint.value?.complainant?.institution_id?.startsWith('STF') ? 'Staff No.' : 'Matric No.'
+    complaint.value?.complainant?.institution_id?.startsWith('STF') ? 'Staff ID' : 'Student ID'
 );
 const prioritySeverity = (p) => ({ high: 'danger', critical: 'danger', medium: 'warn', low: 'info' }[p] ?? 'secondary');
 const fileIcon = (mime) => mime?.startsWith('image/') ? 'pi-image' : mime === 'application/pdf' ? 'pi-file-pdf' : 'pi-file';

@@ -116,8 +116,8 @@ const sideNav = computed(() => {
     case 'admin':
       return [
         { to: '/admin', icon: 'pi pi-sliders-h', label: 'System Metrics' },
-        { to: '/admin/complaints', icon: 'pi pi-bars', label: 'All Complaints' },
-        { to: '/security', icon: 'pi pi-exclamation-triangle', label: 'Security (IPS)' },
+        { to: '/admin/complaints', icon: 'pi pi-ticket', label: 'All Complaints' },
+        { to: '/security', icon: 'pi pi-shield', label: 'Security (IPS)' },
         { to: '/admin/audit', icon: 'pi pi-history', label: 'Audit Logs' },
         { to: '/admin/users', icon: 'pi pi-users', label: 'User Management' },
       ];
@@ -173,20 +173,7 @@ const brand = computed(() => {
 });
 
 const headerText = computed(() => {
-  switch (role.value) {
-    case 'admin':
-    case 'sub_admin':
-    case 'security':
-      return 'Apex Firewall & IPS Protection Daemon Active';
-    case 'complaint_officer':
-      return 'Al-Hikmah University Security Shield Active';
-    case 'student':
-      return 'Secure Student Complaint Terminal Active';
-    case 'staff':
-      return 'Secure Staff Complaint Terminal Active';
-    default:
-      return 'Secure Connection Established';
-  }
+            return 'Apex Firewall & IPS Protection Active';
 });
 
 const badge = computed(() => {

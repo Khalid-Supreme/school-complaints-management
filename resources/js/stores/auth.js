@@ -18,6 +18,8 @@ export const useAuthStore = defineStore('auth', {
     
     getters: {
         isAuthenticated: (state) => !!state.user,
+        mustChangePassword: (state) => !!state.user?.must_change_password,
+        passwordChangePendingVerification: (state) => !!state.user?.password_change_pending_verification,
         role: (state) => state.user?.role?.slug ?? null,
         hasRole: (state) => (roleSlug) => state.user?.role?.slug === roleSlug,
         hasAnyRole: (state) => (roleSlugs = []) => {
@@ -122,6 +124,71 @@ export const useAuthStore = defineStore('auth', {
                 return false;
             } finally {
                 this.loading = false;
+            }
+        },
+
+        async changePassword(payload) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await authService.changePassword(payload);
+                if (this.user) {
+                    this.user.must_change_password = false;
+                    this.user.password_change_pending_verification = true;
+                }
+                return response.data.message;
+            } catch (err) {
+                this.error = err.response?.data?.errors?.current_password?.[0]
+                    || err.response?.data?.message
+                    || 'Failed to change password';
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async verifyPasswordChange(code) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await authService.verifyPasswordChange(code);
+                if (response.data.user) {
+                    this.user = response.data.user;
+                }
+                return response.data.message;
+            } catch (err) {
+                this.error = err.response?.data?.errors?.code?.[0]
+                    || err.response?.data?.message
+                    || 'Verification failed';
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async resendPasswordChange() {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await authService.resendPasswordChange();
+                return response.data.message;
+            } catch (err) {
+                this.error = err.response?.data?.errors?.code?.[0]
+                    || err.response?.data?.errors?.email?.[0]
+                    || err.response?.data?.message
+                    || 'Failed to resend verification code';
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async fetchPasswordChangeStatus() {
+            try {
+                const response = await authService.getPasswordChangeStatus();
+                return response.data;
+            } catch (err) {
+                return null;
             }
         },
 

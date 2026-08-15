@@ -28,7 +28,7 @@ class ChatService
     public function getMessages(int $complaintId, int $perPage = 20): LengthAwarePaginator
     {
         return ComplaintMessage::where('complaint_id', $complaintId)
-            ->with(['user:id,name,first_name,last_name,title,email,role_id', 'user.role:id,slug'])
+            ->with(['user:id,first_name,last_name,title,email,role_id', 'user.role:id,slug'])
             ->orderBy('created_at', 'asc')
             ->paginate($perPage);
     }
