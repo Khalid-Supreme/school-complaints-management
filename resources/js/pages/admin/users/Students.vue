@@ -34,7 +34,12 @@
 
             <div class="overflow-x-auto">
             <DataTable :value="students" :loading="loading" paginator lazy :rows="meta?.per_page || 15" :totalRecords="meta?.total || 0" @page="onPage" responsiveLayout="scroll" dataKey="id" class="p-datatable-sm">
-                    <Column field="institution_id" header="Matric No." style="width: 180px">
+                    <Column header="#" style="width: 50px">
+                        <template #body="slotProps">
+                            <span class="text-slate-500">{{ ((meta?.current_page || 1) - 1) * (meta?.per_page || 15) + slotProps.index + 1 }}</span>
+                        </template>
+                    </Column>
+                    <Column field="institution_id" header="Student ID" style="width: 180px">
    
                     <template #body="slotProps">
                             <div class="flex items-center gap-1.5">
@@ -45,7 +50,7 @@
    
                                 <Button icon="pi pi-copy" text rounded
                                     class="w-7 h-7 !text-slate-400 hover:!text-sage-600 hover:!bg-sage-50"
-                                    v-tooltip.bottom="'Copy Matric No.'"
+                                    v-tooltip.bottom="'Copy Student ID'"
                                     @click="copyToClipboard(slotProps.data.institution_id)" />
                             </div>
    
@@ -129,10 +134,9 @@
                     Reset the password for <span class="font-semibold text-charcoal">{{ userToReset?.full_name }}</span>?
                 </p>
                 <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-amber-700 mb-1">Default Password</p>
+                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-amber-700 mb-1">Temporary Password</p>
                     <p class="text-sm text-slate-700">
-                        The user's password will be reset to their Matric No.
-                        <span class="font-mono font-semibold text-charcoal">{{ userToReset?.institution_id }}</span>.
+                        A random temporary password will be emailed to the user, and all of their active sessions will be ended. They must choose a new password on their next login.
                     </p>
                 </div>
                 <Message v-if="resetError" severity="error" :closable="false" class="!text-sm">{{ resetError }}</Message>
@@ -170,7 +174,6 @@ import { useToast } from 'primevue/usetoast';
 import api from '../../../services/api';
 import userService from '../../../services/userService';
 import { useAuthStore } from '../../../stores/auth';
-import { hashPassword } from '../../../utils/crypto';
 
 const toast = useToast();
 const authStore = useAuthStore();
@@ -331,9 +334,9 @@ const handleSubmit = async () => {
                 department: form.department,
             });
             toast.add({
-                severity: 'success',
+                severity: res.data.credentials_delivered === false ? 'warn' : 'success',
                 summary: 'Created',
-                detail: `Student created successfully. Default password is their Matric No. (${res.data.user.institution_id}).`,
+                detail: res.data.message || `Student created successfully.`,
                 life: 5000,
             });
         }
@@ -389,12 +392,11 @@ const handleResetPassword = async () => {
     resetLoading.value = true;
     resetError.value = '';
     try {
-        const hashed = await hashPassword(userToReset.value.institution_id);
-        await userService.resetPassword(userToReset.value.id, hashed);
+        const res = await userService.resetPassword(userToReset.value.id);
         toast.add({
-            severity: 'success',
+            severity: res.data.credentials_delivered === false ? 'warn' : 'success',
             summary: 'Password Reset',
-            detail: `Password for ${userToReset.value.full_name} has been reset to their Matric No. (${userToReset.value.institution_id}).`,
+            detail: res.data.message || `Password reset for ${userToReset.value.full_name}.`,
             life: 5000,
         });
         resetDialogVisible.value = false;

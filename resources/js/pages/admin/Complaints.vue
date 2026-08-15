@@ -31,6 +31,11 @@
                 dataKey="id"
                 class="p-datatable-sm"
             >
+                <Column header="#" style="width: 50px">
+                    <template #body="slotProps">
+                        {{ ((store.meta?.current_page || 1) - 1) * (store.meta?.per_page || 15) + slotProps.index + 1 }}
+                    </template>
+                </Column>
                 <Column field="reference_no" header="Ref No" style="width: 130px">
                     <template #body="slotProps">
                         <span class="font-mono text-xs font-medium text-slate-600 bg-sage-50 px-2 py-1 rounded-md">{{

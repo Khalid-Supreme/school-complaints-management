@@ -15,6 +15,11 @@
                 @page="onPage"
                 responsiveLayout="scroll"
             >
+                <Column header="#">
+                    <template #body="slotProps">
+                        {{ ((store.assignmentMeta?.current_page || 1) - 1) * (store.assignmentMeta?.per_page || 15) + slotProps.index + 1 }}
+                    </template>
+                </Column>
                 <Column header="Reference No">
                     <template #body="slotProps">
                         {{ slotProps.data.complaint?.reference_no }}

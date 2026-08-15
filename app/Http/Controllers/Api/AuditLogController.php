@@ -17,7 +17,7 @@ class AuditLogController extends Controller
     public function index(IndexAuditLogsRequest $request): JsonResponse
     {
         $query = AuditLog::query()
-            ->with(['user:id,name,first_name,last_name,title,email,role_id', 'user.role:id,slug']);
+            ->with(['user:id,first_name,last_name,title,email,role_id', 'user.role:id,slug']);
 
         if ($request->filled('action')) {
             $query->where('action', $request->input('action'));

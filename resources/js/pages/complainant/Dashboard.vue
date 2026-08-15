@@ -16,6 +16,11 @@
         <div class="bg-surface-0 dark:bg-surface-800 p-6 rounded-lg shadow">
             <h2 class="text-xl font-bold mb-4">Recent Complaints</h2>
             <DataTable :value="store.complaints" :loading="store.loading" responsiveLayout="scroll" :rows="5">
+                <Column header="#">
+                    <template #body="slotProps">
+                        {{ slotProps.index + 1 }}
+                    </template>
+                </Column>
                 <Column field="reference_no" header="Reference No"></Column>
                 <Column field="category.name" header="Category"></Column>
                 <Column field="title" header="Title"></Column>

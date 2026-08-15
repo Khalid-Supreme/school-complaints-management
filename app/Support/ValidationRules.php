@@ -3,9 +3,9 @@
 namespace App\Support;
 
 use App\Rules\SafeImage;
+use App\Rules\StrongPassword;
 use App\Services\ComplaintWorkflowService;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\Rules\Unique;
 
 /**
@@ -227,9 +227,16 @@ class ValidationRules
         return $rules;
     }
 
+    /**
+     * The one global password policy. Every password-creation/change/reset
+     * endpoint in the application funnels through this single rule so the
+     * requirements can never drift between flows.
+     *
+     * @return array<int, object>
+     */
     protected static function password(): array
     {
-        return [Password::min(8)->letters()->numbers()];
+        return [new StrongPassword];
     }
 
     protected static function uniqueRule(int|string|null $ignoreId): Unique

@@ -29,7 +29,6 @@ class StoreUserRequest extends FormRequest
             'email' => ValidationRules::uniqueEmail(),
             'gender' => ValidationRules::gender(),
             'department' => ValidationRules::departmentId(),
-            'password' => ValidationRules::optionalPassword(),
         ];
 
         if (in_array($this->input('role'), ['staff', 'complaint_officer'], true)) {
@@ -57,9 +56,6 @@ class StoreUserRequest extends FormRequest
             'department.exists' => 'The selected department is invalid.',
             'title.required' => 'Please select a title.',
             'title.in' => 'The selected title is invalid.',
-            'password.min' => 'The password must be at least 8 characters.',
-            'password.letters' => 'The password must contain at least one letter.',
-            'password.numbers' => 'The password must contain at least one number.',
         ];
     }
 

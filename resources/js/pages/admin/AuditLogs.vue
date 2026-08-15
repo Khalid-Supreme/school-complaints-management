@@ -34,6 +34,11 @@
             <div class="overflow-x-auto">
                 <DataTable :value="logs" :loading="loading" paginator lazy :rows="meta?.per_page || 20" :totalRecords="meta?.total || 0" @page="onPage" responsiveLayout="scroll" dataKey="id" class="p-datatable-sm" v-model:expandedRows="expandedRows">
                     <Column :expander="true" headerStyle="width: 3rem" />
+                    <Column header="#" headerStyle="width: 3.5rem">
+                        <template #body="slotProps">
+                            <span class="text-xs text-slate-500">{{ ((meta?.current_page || 1) - 1) * (meta?.per_page || 20) + slotProps.index + 1 }}</span>
+                        </template>
+                    </Column>
                     <Column field="action" header="Action" style="min-width: 220px">
                         <template #body="slotProps">
                             <div class="flex items-center gap-2">
@@ -238,7 +243,7 @@ const metadataEntries = (metadata) => {
 const formatDate = (value) => {
     const date = new Date(value);
     return isNaN(date) ? value : date.toLocaleString(undefined, {
-        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true,
     });
 };
 

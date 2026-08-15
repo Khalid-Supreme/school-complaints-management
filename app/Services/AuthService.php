@@ -62,7 +62,7 @@ class AuthService
 
             throw ValidationException::withMessages([
                 'username' => __('Please verify your email address :email before logging in.', [
-                    'email' => $this->maskEmail($user->email),
+                    'email' => self::maskEmail($user->email),
                 ]),
             ]);
         }
@@ -70,6 +70,10 @@ class AuthService
         $this->recordLoginAttempt($username, $request, true);
         $this->userRepository->updateLastLogin($user);
         $this->auditLogger->log(AuditAction::Login, $user, null, 'User logged in');
+
+        if ($user->must_change_password) {
+            $this->auditLogger->log(AuditAction::PasswordChangeTemporaryLogin, $user, null, 'Temporary password used to log in');
+        }
 
         // For SPA using Sanctum, token might not be needed if session-based,
         // but returning standard structure if using tokens.
@@ -137,7 +141,13 @@ class AuthService
         ]);
     }
 
-    protected function maskEmail(string $email): string
+    /**
+     * Mask an email address for display (e.g. "ri********@gmail.com").
+     * Shared with the password-change verification flow so masking is
+     * consistent across auth surfaces. The local part keeps its first two
+     * characters; the domain is preserved for recognition.
+     */
+    public static function maskEmail(string $email): string
     {
         $parts = explode('@', $email);
         $name = $parts[0];

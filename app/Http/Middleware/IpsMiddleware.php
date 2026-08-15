@@ -74,7 +74,17 @@ class IpsMiddleware
             '/document\.cookie/i',
         ];
 
+        // Password inputs are deliberately excluded from signature scanning:
+        // they are free-form secrets whose symbols could legitimately match
+        // SQLi/XSS patterns (e.g. "--", "select ... from"), and they are also
+        // already excluded from the recorded security-event payload below.
+        $sensitiveFields = ['password', 'password_confirmation', 'confirm_password', 'current_password', 'new_password'];
+
         foreach ($inputs as $key => $value) {
+            if (in_array($key, $sensitiveFields, true)) {
+                continue;
+            }
+
             if (is_string($value)) {
                 // Check SQLi
                 foreach ($sqlPatterns as $pattern) {

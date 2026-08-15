@@ -50,25 +50,21 @@
 
       <div>
         <label class="block text-sm font-medium text-charcoal/80 mb-2">Password</label>
-        <InputText v-model="form.password" type="password" placeholder="Min. 8 characters" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.password || localErrors.password }" :disabled="loading" @update:model-value="clearError('password')" />
-        <div v-if="form.password.length > 0" class="mt-2">
-          <div class="h-1.5 rounded-full bg-sage-100 overflow-hidden">
-            <div class="h-full rounded-full transition-all duration-300" :class="strengthBarClass" :style="{ width: strengthPercent + '%' }"></div>
-          </div>
-          <p class="text-xs font-medium mt-1" :class="strengthTextClass">{{ strengthLabel }}</p>
-        </div>
+        <InputText v-model="form.password" type="password" placeholder="At least 8 characters with letters, numbers and a symbol" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.password || localErrors.password }" :disabled="loading" @update:model-value="clearError('password')" />
+        <PasswordRequirements v-if="form.password.length > 0" :password="form.password" />
         <small v-if="errors.password || localErrors.password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ (errors.password && errors.password[0]) || localErrors.password }}</small>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-charcoal/80 mb-2">Confirm Password</label>
-        <InputText v-model="form.confirm_password" type="password" placeholder="Re-enter your password" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.confirm_password || localErrors.confirm_password }" :disabled="loading" @update:model-value="clearError('confirm_password')" />
-        <small v-if="errors.confirm_password || localErrors.confirm_password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ (errors.confirm_password && errors.confirm_password[0]) || localErrors.confirm_password }}</small>
+        <InputText v-model="form.confirm_password" type="password" placeholder="Re-enter your password" class="w-full !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-3 !px-4 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300" :class="{ 'p-invalid': errors.confirm_password || localErrors.confirm_password || confirmationMismatch }" :disabled="loading" @update:model-value="clearError('confirm_password')" />
+        <small v-if="confirmationMismatch" class="text-red-500 block mt-1.5 text-xs font-medium">Passwords do not match</small>
+        <small v-else-if="errors.confirm_password || localErrors.confirm_password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ (errors.confirm_password && errors.confirm_password[0]) || localErrors.confirm_password }}</small>
       </div>
 
       <div class="flex justify-end gap-2 pt-2">
         <Button label="Cancel" severity="secondary" text :disabled="loading" @click="visibleProxy = false" />
-        <Button label="Register" :loading="loading" @click="submitRegistration" class="!py-2 sm:!py-2.5 !px-4 sm:!px-5 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.85rem] sm:!text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[0.5px]" :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
+        <Button label="Register" :loading="loading" :disabled="loading || !canSubmit" @click="submitRegistration" class="!py-2 sm:!py-2.5 !px-4 sm:!px-5 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.85rem] sm:!text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[0.5px]" :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
       </div>
     </div>
   </Dialog>
@@ -83,6 +79,8 @@ import Button from 'primevue/button';
 import Message from 'primevue/message';
 import api from '../services/api';
 import authService from '../services/authService';
+import PasswordRequirements from './PasswordRequirements.vue';
+import { validatePassword } from '../utils/passwordPolicy';
 
 const props = defineProps({
   visible: {
@@ -133,41 +131,9 @@ const deptPlaceholder = computed(() => {
   return form.account_type === 'student' ? 'Select academic department' : 'Select department or unit';
 });
 
-const strengthPercent = computed(() => {
-  const p = form.password;
-  if (!p) return 0;
-  let score = 0;
-  if (p.length >= 8) score += 25;
-  if (/[a-z]/.test(p)) score += 15;
-  if (/[A-Z]/.test(p)) score += 20;
-  if (/\d/.test(p)) score += 20;
-  if (/[^a-zA-Z0-9]/.test(p)) score += 20;
-  return Math.min(score, 100);
-});
-
-const strengthLabel = computed(() => {
-  const s = strengthPercent.value;
-  if (s < 25) return 'Weak';
-  if (s < 50) return 'Fair';
-  if (s < 75) return 'Good';
-  return 'Strong';
-});
-
-const strengthBarClass = computed(() => {
-  const s = strengthPercent.value;
-  if (s < 25) return 'bg-red-400';
-  if (s < 50) return 'bg-orange-400';
-  if (s < 75) return 'bg-yellow-500';
-  return 'bg-green-500';
-});
-
-const strengthTextClass = computed(() => {
-  const s = strengthPercent.value;
-  if (s < 25) return 'text-red-500';
-  if (s < 50) return 'text-orange-500';
-  if (s < 75) return 'text-yellow-600';
-  return 'text-green-600';
-});
+const passwordChecks = computed(() => validatePassword(form.password));
+const confirmationMismatch = computed(() => form.confirm_password.length > 0 && form.password !== form.confirm_password);
+const canSubmit = computed(() => passwordChecks.value.isValid && form.password === form.confirm_password);
 
 const initialForm = () => ({
   account_type: 'student',
@@ -236,7 +202,7 @@ const validateLocal = () => {
   if (form.account_type === 'staff' && !form.title) errs.title = 'Please select your title';
   if (!form.department) errs.department = 'Please select a department';
   if (!form.password) errs.password = 'Password is required';
-  else if (form.password.length < 8) errs.password = 'Password must be at least 8 characters';
+  else if (!passwordChecks.value.isValid) errs.password = 'Password does not meet all requirements';
   if (!form.confirm_password) errs.confirm_password = 'Please confirm your password';
   else if (form.password !== form.confirm_password) errs.confirm_password = 'Passwords do not match';
   localErrors.value = errs;

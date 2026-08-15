@@ -17,6 +17,13 @@ enum AuditAction: string
     case PasswordResetLink = 'password.reset.link';
     case PasswordReset = 'password.reset';
     case PasswordChange = 'password.change';
+    case PasswordChangeFailed = 'password.change.failed';
+    case AdminPasswordReset = 'admin.password.reset';
+    case PasswordChangeTemporaryLogin = 'password.change.temporary.login';
+    case PasswordChangeCodeSent = 'password.change.code.sent';
+    case PasswordChangeVerified = 'password.change.verified';
+    case PasswordChangeVerificationFailed = 'password.change.verification.failed';
+    case PasswordChangeVerificationExpired = 'password.change.verification.expired';
     case EmailVerified = 'email.verified';
     case UserRegistered = 'user.registered';
 
@@ -62,6 +69,13 @@ enum AuditAction: string
             self::PasswordResetLink => 'Password reset link requested',
             self::PasswordReset => 'Password reset',
             self::PasswordChange => 'Password changed',
+            self::PasswordChangeFailed => 'Password change failed',
+            self::AdminPasswordReset => 'Password reset by administrator',
+            self::PasswordChangeTemporaryLogin => 'Temporary password login',
+            self::PasswordChangeCodeSent => 'Password change verification code sent',
+            self::PasswordChangeVerified => 'Password change verified',
+            self::PasswordChangeVerificationFailed => 'Password change verification failed',
+            self::PasswordChangeVerificationExpired => 'Password change verification expired',
             self::EmailVerified => 'Email verified',
             self::UserRegistered => 'User registered',
             self::UserCreated => 'User created',

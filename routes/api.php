@@ -34,9 +34,15 @@ Route::post('/register/resend', [RegisterController::class, 'resend'])
 // Public settings (readable without auth for landing/login pages)
 Route::get('/settings', [SettingsController::class, 'index']);
 
-Route::middleware(['auth:sanctum', 'audit.context', 'ips'])->group(function () {
+Route::middleware(['auth:sanctum', 'audit.context', 'ips', 'password.changed'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
+    Route::get('/password-change/status', [AuthController::class, 'passwordChangeStatus']);
+    Route::post('/password-change/verify', [AuthController::class, 'verifyPasswordChange'])
+        ->middleware('throttle:password-change-verify');
+    Route::post('/password-change/verify/resend', [AuthController::class, 'resendPasswordChange'])
+        ->middleware('throttle:password-change-resend');
 
     // Complaints
     Route::get('/categories', [ComplaintController::class, 'categories']);

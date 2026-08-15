@@ -28,6 +28,8 @@ use Laravel\Sanctum\HasApiTokens;
     'phone',
     'department_id',
     'is_active',
+    'must_change_password',
+    'password_change_pending_verification',
     'email_verified_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
@@ -48,6 +50,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
+            'password_change_pending_verification' => 'boolean',
             'password' => 'hashed',
         ];
     }
@@ -66,6 +70,14 @@ class User extends Authenticatable
     public function loginAttempts(): HasMany
     {
         return $this->hasMany(LoginAttempt::class);
+    }
+
+    /**
+     * Get the password-change verification challenges for the user.
+     */
+    public function passwordChangeVerifications(): HasMany
+    {
+        return $this->hasMany(PasswordChangeVerification::class);
     }
 
     public function hasVerifiedEmail(): bool
