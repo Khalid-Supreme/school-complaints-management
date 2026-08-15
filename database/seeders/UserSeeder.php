@@ -90,15 +90,15 @@ class UserSeeder extends Seeder
         if ($studentRole) {
             $students = [
                 // [email, institution_id, first_name, last_name, gender, department_slug]
-                ['amina.adebayo@gmail.com', 'STD-2026-0201', 'Amina', 'Adebayo', 'female', 'engineering'],
-                ['chinedu.okeke@gmail.com', 'STD-2026-0202', 'Chinedu', 'Okeke', 'male', 'computing-it'],
-                ['fatima.bello@gmail.com', 'STD-2026-0203', 'Fatima', 'Bello', 'female', 'health-sciences'],
-                ['ibrahim.musa@gmail.com', 'STD-2026-0204', 'Ibrahim', 'Musa', 'male', 'sciences'],
-                ['ngozi.eze@gmail.com', 'STD-2026-0205', 'Ngozi', 'Eze', 'female', 'management-sciences'],
-                ['olawale.johnson@gmail.com', 'STD-2026-0206', 'Olawale', 'Johnson', 'male', 'education'],
-                ['sarah.adewale@gmail.com', 'STD-2026-0207', 'Sarah', 'Adewale', 'female', 'social-sciences'],
-                ['kwame.boateng@gmail.com', 'STD-2026-0208', 'Kwame', 'Boateng', 'male', 'law'],
-                ['chidinma.okafor@gmail.com', 'STD-2026-0209', 'Chidinma', 'Okafor', 'female', 'agriculture'],
+                ['amina.adebayo@example.com', 'STD-2026-0201', 'Amina', 'Adebayo', 'female', 'engineering'],
+                ['chinedu.okeke@example.com', 'STD-2026-0202', 'Chinedu', 'Okeke', 'male', 'computing-it'],
+                ['fatima.bello@example.com', 'STD-2026-0203', 'Fatima', 'Bello', 'female', 'health-sciences'],
+                ['ibrahim.musa@example.com', 'STD-2026-0204', 'Ibrahim', 'Musa', 'male', 'sciences'],
+                ['ngozi.eze@example.com', 'STD-2026-0205', 'Ngozi', 'Eze', 'female', 'management-sciences'],
+                ['olawale.johnson@example.com', 'STD-2026-0206', 'Olawale', 'Johnson', 'male', 'education'],
+                ['sarah.adewale@example.com', 'STD-2026-0207', 'Sarah', 'Adewale', 'female', 'social-sciences'],
+                ['kwame.boateng@example.com', 'STD-2026-0208', 'Kwame', 'Boateng', 'male', 'law'],
+                ['chidinma.okafor@example.com', 'STD-2026-0209', 'Chidinma', 'Okafor', 'female', 'agriculture'],
             ];
 
             foreach ($students as [$email, $institutionId, $firstName, $lastName, $gender, $deptSlug]) {
@@ -124,10 +124,10 @@ class UserSeeder extends Seeder
         if ($staffRole && $complaintOfficerRole && $subAdminRole) {
             $staff = [
                 // [email, institution_id, first_name, last_name, gender, title, role_id, department_slug]
-                ['halima.bello@gmail.com', 'STF-2026-0201', 'Halima', 'Bello', 'female', 'Dr.', $staffRole->id, 'it-directorate'],
-                ['musa.yakubu@gmail.com', 'STF-2026-0202', 'Musa', 'Yakubu', 'male', 'Mr.', $complaintOfficerRole->id, 'student-affairs'],
-                ['chioma.nwosu@gmail.com', 'STF-2026-0203', 'Chioma', 'Nwosu', 'female', 'Mrs.', $complaintOfficerRole->id, 'academic-registry'],
-                ['abdulrahman.kabir@gmail.com', 'STF-2026-0204', 'Abdulrahman', 'Kabir', 'male', 'Prof.', $subAdminRole->id, 'vc-office'],
+                ['halima.bello@example.com', 'STF-2026-0201', 'Halima', 'Bello', 'female', 'Dr.', $staffRole->id, 'it-directorate'],
+                ['musa.yakubu@example.com', 'STF-2026-0202', 'Musa', 'Yakubu', 'male', 'Mr.', $complaintOfficerRole->id, 'student-affairs'],
+                ['chioma.nwosu@example.com', 'STF-2026-0203', 'Chioma', 'Nwosu', 'female', 'Mrs.', $complaintOfficerRole->id, 'academic-registry'],
+                ['abdulrahman.kabir@example.com', 'STF-2026-0204', 'Abdulrahman', 'Kabir', 'male', 'Prof.', $subAdminRole->id, 'vc-office'],
             ];
 
             foreach ($staff as [$email, $institutionId, $firstName, $lastName, $gender, $title, $roleId, $deptSlug]) {
