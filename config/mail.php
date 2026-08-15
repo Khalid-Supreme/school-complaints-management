@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => 'mailtrap',
+    'default' => env('APP_ENV') === 'production' ? 'gmail' : 'mailtrap',
 
     /*
     |--------------------------------------------------------------------------
