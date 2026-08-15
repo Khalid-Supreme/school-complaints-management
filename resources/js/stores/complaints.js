@@ -14,6 +14,7 @@ export const useComplaintsStore = defineStore('complaints', {
         error: null,
         lastComplaintId: null,
         lastReferenceNo: null,
+        statusFilter: null,
     }),
     
     actions: {
@@ -30,7 +31,8 @@ export const useComplaintsStore = defineStore('complaints', {
             this.loading = true;
             this.error = null;
             try {
-                const response = await complaintService.getComplaints(page);
+                const params = this.statusFilter ? { status: this.statusFilter } : {};
+                const response = await complaintService.getComplaints(page, params);
                 this.complaints = response.data.data;
                 this.meta = response.data.meta;
             } catch (err) {

@@ -16,7 +16,11 @@
         <!-- Metrics Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div v-for="card in metricCards" :key="card.label"
-                class="bg-white rounded-xl p-4 sm:p-6 shadow-card transition-shadow hover:shadow-lg relative overflow-hidden flex flex-col justify-between"
+                :class="['bg-white rounded-xl p-4 sm:p-6 shadow-card transition-shadow hover:shadow-lg relative overflow-hidden flex flex-col justify-between', card.to ? 'cursor-pointer hover:ring-2 hover:ring-sage-400 group' : '']"
+                :role="card.to ? 'button' : undefined"
+                :tabindex="card.to ? 0 : undefined"
+                @click="card.to && router.push(card.to)"
+                @keydown.enter="card.to && router.push(card.to)"
                 style="border: 1px solid #E8EFE9;">
                 <div class="absolute -right-4 -bottom-4 text-[60px] sm:text-[90px] opacity-5 font-black z-0"
                     :style="`color: ${card.baseColor}40;`">
@@ -27,7 +31,11 @@
                 <div class="text-2xl sm:text-4xl font-semibold text-charcoal tracking-tight relative z-10">
                     {{ loading ? '—' : card.value }}
                 </div>
-                <p class="text-xs mt-3 font-medium relative z-10" :style="`color: ${card.baseColor}`">{{ card.sub }}</p>
+                <div class="flex items-center justify-between relative z-10">
+                    <p class="text-xs mt-3 font-medium" :style="`color: ${card.baseColor}`">{{ card.sub }}</p>
+                    <span v-if="card.to" class="mt-3 text-slate-300 group-hover:text-sage-600 transition-colors"><i
+                            class="pi pi-arrow-right text-xs"></i></span>
+                </div>
             </div>
         </div>
 
@@ -196,11 +204,12 @@ const recentComplaints = ref([]);
 
 const metricCards = computed(() => [
     { label: 'Total Users', value: metrics.value?.total_users ?? 0, icon: 'pi-users', baseColor: '#45693C', sub: 'Registered accounts' },
-    { label: 'Total Students', value: metrics.value?.total_students ?? 0, icon: 'pi-graduation-cap', baseColor: '#3B82F6', sub: 'Student accounts' },
-    { label: 'Total Staff', value: metrics.value?.total_staff ?? 0, icon: 'pi-briefcase', baseColor: '#8B5CF6', sub: 'Staff accounts' },
-    { label: 'Total Complaints', value: metrics.value?.total_complaints ?? 0, icon: 'pi-folder', baseColor: '#6A9C5E', sub: 'All complaint records' },
-    { label: 'Pending Complaints', value: metrics.value?.pending_complaints ?? 0, icon: 'pi-clock', baseColor: '#F59E0B', sub: 'Awaiting review' },
-    { label: 'Resolved Complaints', value: metrics.value?.resolved_complaints ?? 0, icon: 'pi-check-circle', baseColor: '#10B981', sub: 'Successfully resolved' },
+    { label: 'Total Students', value: metrics.value?.total_students ?? 0, icon: 'pi-graduation-cap', baseColor: '#3B82F6', sub: 'Student accounts', to: '/admin/users/students' },
+    { label: 'Total Staff', value: metrics.value?.total_staff ?? 0, icon: 'pi-briefcase', baseColor: '#8B5CF6', sub: 'Staff accounts', to: '/admin/users/staff' },
+    { label: 'Complaint Officers', value: metrics.value?.total_complaint_officers ?? 0, icon: 'pi-headset', baseColor: '#06B6D4', sub: 'Officer accounts', to: '/admin/users/staff?role=complaint_officer' },
+    { label: 'Total Complaints', value: metrics.value?.total_complaints ?? 0, icon: 'pi-folder', baseColor: '#6A9C5E', sub: 'All complaint records', to: '/admin/complaints' },
+    { label: 'Pending Complaints', value: metrics.value?.pending_complaints ?? 0, icon: 'pi-clock', baseColor: '#F59E0B', sub: 'Awaiting review', to: '/admin/complaints?status=submitted' },
+    { label: 'Resolved Complaints', value: metrics.value?.resolved_complaints ?? 0, icon: 'pi-check-circle', baseColor: '#10B981', sub: 'Successfully resolved', to: '/admin/complaints?status=resolved' },
 ]);
 
 const chartData = computed(() => {

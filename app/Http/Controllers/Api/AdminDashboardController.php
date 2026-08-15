@@ -25,7 +25,9 @@ class AdminDashboardController extends Controller
     {
         $totalUsers = User::count();
         $totalStudents = User::whereHas('role', fn($q) => $q->where('slug', 'student'))->count();
-        $totalStaff = User::whereHas('role', fn($q) => $q->where('slug', 'staff'))->count();
+        $totalStaff = User::whereHas('role', fn($q) => $q->whereIn('slug', ['staff', 'complaint_officer', 'sub_admin']))
+            ->count();
+        $totalComplaintOfficers = User::whereHas('role', fn($q) => $q->where('slug', 'complaint_officer'))->count();
         $totalComplaints = Complaint::count();
         $pendingComplaints = Complaint::where('status', 'submitted')->count();
         $resolvedComplaints = Complaint::where('status', 'resolved')->count();
@@ -65,6 +67,7 @@ class AdminDashboardController extends Controller
             'total_users' => $totalUsers,
             'total_students' => $totalStudents,
             'total_staff' => $totalStaff,
+            'total_complaint_officers' => $totalComplaintOfficers,
             'total_complaints' => $totalComplaints,
             'pending_complaints' => $pendingComplaints,
             'resolved_complaints' => $resolvedComplaints,

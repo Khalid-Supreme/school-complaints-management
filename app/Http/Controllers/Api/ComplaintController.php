@@ -44,9 +44,13 @@ class ComplaintController extends Controller
 
         // Admins and Sub-Admins see everything (paginated, decrypted)
         if (in_array($slug, ['admin', 'sub_admin'], true)) {
-            $paginator = Complaint::with(['complainant.role', 'category', 'currentAssignment.assignedTo.role'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(15);
+            $query = Complaint::with(['complainant.role', 'category', 'currentAssignment.assignedTo.role']);
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->input('status'));
+            }
+
+            $paginator = $query->orderBy('created_at', 'desc')->paginate(15);
 
             $decryptedItems = collect($paginator->items())->map(function ($complaint) {
                 return $this->complaintService->decryptComplaint($complaint);

@@ -133,8 +133,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, reactive, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useComplaintsStore } from '../../stores/complaints';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -147,6 +147,7 @@ import Message from 'primevue/message';
 import StatusBadge from '../../components/StatusBadge.vue';
 
 const router = useRouter();
+const route = useRoute();
 const store = useComplaintsStore();
 const selectedComplaint = ref(null);
 const assignDialogVisible = ref(false);
@@ -154,8 +155,14 @@ const complaintToAssign = ref(null);
 const assignForm = reactive({ assigned_to: null, note: '' });
 
 onMounted(() => {
+    store.statusFilter = route.query.status || null;
     store.fetchComplaints(1);
     store.fetchOfficersList();
+});
+
+watch(() => route.query.status, (status) => {
+    store.statusFilter = status || null;
+    store.fetchComplaints(1);
 });
 
 const onPage = (event) => {
