@@ -29,7 +29,7 @@ class AdminDashboardController extends Controller
             ->count();
         $totalComplaintOfficers = User::whereHas('role', fn($q) => $q->where('slug', 'complaint_officer'))->count();
         $totalComplaints = Complaint::count();
-        $pendingComplaints = Complaint::where('status', 'submitted')->count();
+        $pendingComplaints = Complaint::where('status', 'in_progress')->count();
         $resolvedComplaints = Complaint::where('status', 'resolved')->count();
         $securityEventsCount = Cache::get('security_event_count_sqli', 0) + 
                                Cache::get('security_event_count_xss', 0);
