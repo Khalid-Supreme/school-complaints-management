@@ -5,8 +5,8 @@ export default {
         return api.get('/api/categories');
     },
     
-    async getComplaints(page = 1) {
-        return api.get(`/api/complaints?page=${page}`);
+    async getComplaints(page = 1, params = {}) {
+        return api.get('/api/complaints', { params: { page, ...params } });
     },
 
     async getComplaint(id) {

@@ -207,12 +207,14 @@ import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
+import { useRoute } from 'vue-router';
 import api from '../../../services/api';
 import userService from '../../../services/userService';
 import { useAuthStore } from '../../../stores/auth';
 
 const toast = useToast();
 const authStore = useAuthStore();
+const route = useRoute();
 
 const staff = ref([]);
 const meta = ref(null);
@@ -271,6 +273,9 @@ let searchTimeout = null;
 
 onMounted(async () => {
     await fetchDepartments();
+    if (route.query.role) {
+        filters.role = route.query.role;
+    }
     await fetchStaff();
 });
 
