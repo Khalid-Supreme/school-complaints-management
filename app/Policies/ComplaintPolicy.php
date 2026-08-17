@@ -58,4 +58,13 @@ class ComplaintPolicy
 
         return false;
     }
+
+    /**
+     * Determine whether the user can upload attachments to a complaint.
+     * Only the complainant (the owner) may add evidence to their own complaint.
+     */
+    public function attach(User $user, Complaint $complaint): bool
+    {
+        return $user->id === $complaint->complainant_id;
+    }
 }

@@ -88,6 +88,35 @@
                                     @click="downloadAttachment(att)" />
                             </div>
                         </div>
+
+                        <div v-if="isComplainantOwner && extraAttachmentsLeft > 0"
+                            class="mt-4 pt-4 border-t border-sage-100">
+                            <p class="text-sm font-semibold text-charcoal mb-1">Add More Evidence</p>
+                            <p class="text-xs text-slate-500 mb-3">You can add {{ extraAttachmentsLeft }} more
+                                attachment{{ extraAttachmentsLeft === 1 ? '' : 's' }} after submission.</p>
+                            <div class="flex items-center gap-2">
+                                <label class="flex-1 cursor-pointer">
+                                    <input ref="extraFileInput" type="file" class="hidden" @change="onExtraFileChange"
+                                        accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.txt" />
+                                    <span
+                                        class="flex items-center gap-2 w-full border border-dashed border-sage-200 rounded-lg px-3 py-2.5 text-sm text-slate-500 hover:border-sage-400 hover:bg-sage-50 transition-colors truncate">
+                                        <i class="pi pi-cloud-upload shrink-0"></i>
+                                        <span class="truncate">{{ selectedFileName || 'Choose a file...' }}</span>
+                                    </span>
+                                </label>
+                                <Button label="Upload" icon="pi pi-upload" :loading="uploadingAttachment"
+                                    :disabled="!selectedFile"
+                                    class="!bg-sage-600 hover:!bg-sage-700 !border-none !text-white !font-semibold !shrink-0"
+                                    @click="uploadExtraAttachment" />
+                            </div>
+                            <p v-if="attachmentUploadError" class="text-xs text-red-500 mt-2">{{
+                                attachmentUploadError }}</p>
+                        </div>
+                        <div v-else-if="isComplainantOwner && extraAttachmentLimit > 0 && extraAttachmentsLeft === 0"
+                            class="mt-4 pt-4 border-t border-sage-100 text-sm text-slate-400">
+                            <i class="pi pi-check-circle mr-1 text-emerald-500"></i> You have used your
+                            {{ extraAttachmentLimit }} extra attachment{{ extraAttachmentLimit === 1 ? '' : 's' }}.
+                        </div>
                     </template>
                 </Card>
 
@@ -346,6 +375,16 @@ const sendingMessage = ref(false);
 const messagesContainer = ref(null);
 const downloadingId = ref(null);
 
+// Extra attachment upload (complainant only)
+const EXTRA_ATTACHMENT_LIMIT = 1;
+const EXTRA_ATTACHMENT_GRACE_MINUTES = 10;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const extraFileInput = ref(null);
+const selectedFile = ref(null);
+const selectedFileName = ref('');
+const uploadingAttachment = ref(false);
+const attachmentUploadError = ref('');
+
 // Officer actions
 const newStatus = ref(null);
 const resolutionNote = ref('');
@@ -370,6 +409,24 @@ const complainantIdLabel = computed(() =>
 const prioritySeverity = (p) => ({ high: 'danger', critical: 'danger', medium: 'warn', low: 'info' }[p] ?? 'secondary');
 const fileIcon = (mime) => mime?.startsWith('image/') ? 'pi-image' : mime === 'application/pdf' ? 'pi-file-pdf' : 'pi-file';
 const currentAssignment = computed(() => assignmentHistory.value.find((item) => item.is_current) || null);
+
+const isComplainantOwner = computed(() =>
+    authStore.isComplainant
+    && complaint.value
+    && complaint.value.complainant_id === authStore.user?.id
+);
+
+const extraAttachmentsUsed = computed(() => {
+    if (!complaint.value?.submitted_at) return 0;
+    const threshold = new Date(
+        new Date(complaint.value.submitted_at).getTime() + EXTRA_ATTACHMENT_GRACE_MINUTES * 60 * 1000
+    );
+    return attachments.value.filter((a) => new Date(a.created_at) > threshold).length;
+});
+
+const extraAttachmentsLeft = computed(() =>
+    Math.max(0, EXTRA_ATTACHMENT_LIMIT - extraAttachmentsUsed.value)
+);
 
 const downloadAttachment = async (att) => {
     downloadingId.value = att.id;
@@ -400,6 +457,49 @@ const downloadAttachment = async (att) => {
         });
     } finally {
         downloadingId.value = null;
+    }
+};
+
+const onExtraFileChange = (e) => {
+    const file = e.target.files[0] || null;
+    attachmentUploadError.value = '';
+    if (file && file.size > MAX_FILE_SIZE) {
+        attachmentUploadError.value = 'File must not be larger than 10 MB.';
+        e.target.value = '';
+        selectedFile.value = null;
+        selectedFileName.value = '';
+        return;
+    }
+    selectedFile.value = file;
+    selectedFileName.value = file ? file.name : '';
+};
+
+const uploadExtraAttachment = async () => {
+    if (!selectedFile.value) return;
+    uploadingAttachment.value = true;
+    attachmentUploadError.value = '';
+    try {
+        const formData = new FormData();
+        formData.append('attachment', selectedFile.value);
+        await api.post(`/api/complaints/${complaintId}/attachments`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        toast.add({
+            severity: 'success',
+            summary: 'Attachment Uploaded',
+            detail: 'Your additional evidence has been uploaded.',
+            life: 4000,
+        });
+        selectedFile.value = null;
+        selectedFileName.value = '';
+        if (extraFileInput.value) extraFileInput.value.value = '';
+        await loadAttachments();
+    } catch (e) {
+        attachmentUploadError.value = e.response?.data?.errors?.attachment?.[0]
+            || e.response?.data?.message
+            || 'Upload failed.';
+    } finally {
+        uploadingAttachment.value = false;
     }
 };
 
