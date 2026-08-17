@@ -39,7 +39,7 @@ class ComplaintService
     public function submitComplaint(array $data, int $complainantId): Complaint
     {
         // Enforce a maximum of two complaints per user per day.
-        $dailyLimit = (int) config('complaints.daily_limit', 2);
+        $dailyLimit = (int) config('complaints.daily_limit', 10);
         $todayCount = Complaint::where('complainant_id', $complainantId)
             ->whereDate('submitted_at', now()->toDateString())
             ->count();
