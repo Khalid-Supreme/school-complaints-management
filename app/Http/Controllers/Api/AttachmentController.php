@@ -26,7 +26,7 @@ class AttachmentController extends Controller
      */
     public function store(StoreAttachmentRequest $request, Complaint $complaint): JsonResponse
     {
-        Gate::authorize('view', $complaint);
+        Gate::authorize('attach', $complaint);
 
         $attachment = $this->attachmentService->uploadAttachment($complaint, $request);
 

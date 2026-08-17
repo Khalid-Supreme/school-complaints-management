@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\Auth;
 
 class ChatService
 {
+    protected AesEncryptionService $encryption;
+
+    public function __construct(AesEncryptionService $encryption)
+    {
+        $this->encryption = $encryption;
+    }
+
     /**
      * Send a message within a complaint conversation.
      */
@@ -18,7 +25,7 @@ class ChatService
         return ComplaintMessage::create([
             'complaint_id' => $complaintId,
             'user_id' => Auth::id(),
-            'message' => InputSanitizer::clean($message),
+            'message_encrypted' => $this->encryption->encrypt(InputSanitizer::clean($message)),
         ]);
     }
 
@@ -27,10 +34,19 @@ class ChatService
      */
     public function getMessages(int $complaintId, int $perPage = 20): LengthAwarePaginator
     {
-        return ComplaintMessage::where('complaint_id', $complaintId)
+        $paginator = ComplaintMessage::where('complaint_id', $complaintId)
             ->with(['user:id,first_name,last_name,title,email,role_id', 'user.role:id,slug'])
             ->orderBy('created_at', 'asc')
             ->paginate($perPage);
+
+        $paginator->getCollection()->transform(function (ComplaintMessage $message) {
+            $message->message = $this->encryption->decrypt((string) $message->message_encrypted) ?? '';
+            unset($message->message_encrypted);
+
+            return $message;
+        });
+
+        return $paginator;
     }
 
     /**

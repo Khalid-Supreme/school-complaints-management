@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AttachmentService
 {
@@ -49,6 +50,8 @@ class AttachmentService
      */
     public function uploadAttachment(Complaint $complaint, Request $request): ComplaintAttachment
     {
+        $this->assertWithinExtraAttachmentLimit($complaint);
+
         $file = $request->file('attachment');
 
         $path = $file->storeAs(
@@ -65,6 +68,33 @@ class AttachmentService
             'mime_type' => $file->getMimeType(),
             'file_size' => $file->getSize(),
         ]);
+    }
+
+    /**
+     * A complainant may upload only a limited number of attachments after a
+     * complaint has been submitted. The initial submission upload happens
+     * immediately after submission, some attachments created within the grace
+     * window of `submitted_at` are treated as part of the submission and do
+     * not count against the limit.
+     */
+    protected function assertWithinExtraAttachmentLimit(Complaint $complaint): void
+    {
+        $limit = (int) config('complaints.extra_attachment_limit', 10);
+
+        $graceMinutes = (int) config('complaints.extra_attachment_grace_minutes', 1);
+        $submittedAt = $complaint->submitted_at?->copy() ?? $complaint->created_at;
+
+        $extraCount = ComplaintAttachment::where('complaint_id', $complaint->id)
+            ->where('created_at', '>', $submittedAt->addMinutes($graceMinutes))
+            ->count();
+
+        if ($extraCount >= $limit) {
+            $label = $limit === 1 ? 'attachment' : 'attachments';
+
+            throw ValidationException::withMessages([
+                'attachment' => "You can upload only {$limit} additional {$label} after submission.",
+            ]);
+        }
     }
 
     /**

@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-#[Fillable(['complaint_id', 'user_id', 'message', 'is_read'])]
+#[Fillable(['complaint_id', 'user_id', 'message_encrypted', 'is_read'])]
 class ComplaintMessage extends Model
 {
     use HasFactory;
