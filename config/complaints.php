@@ -8,7 +8,7 @@ return [
     */
 
     // Maximum number of complaints a single user may submit per day.
-    'daily_limit' => (int) env('COMPLAINTS_DAILY_LIMIT', 2),
+    'daily_limit' => (int) env('COMPLAINTS_DAILY_LIMIT', 10),
 
     // Maximum number of additional attachments a complainant may upload after
     // a complaint has been submitted (on top of any uploaded at submission).
