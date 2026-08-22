@@ -34,8 +34,10 @@ class IpsMiddleware
         // NOTE: SQL injection / XSS protection still applies to them.
         $isSuperAdmin = $request->user()?->role?->slug === 'admin';
 
-        // Check if IP is already blocked
-        if (Cache::has($cacheKey)) {
+        // Check if IP is already blocked. Authenticated super-admins are exempt
+        // so a shared/spoofed IP can never lock the admin out of their own
+        // system; non-admin clients on that IP remain blocked.
+        if (Cache::has($cacheKey) && ! $isSuperAdmin) {
             return response()->json([
                 'error' => 'Your IP address has been temporarily blocked due to suspicious activity.',
                 'code' => 'IP_BLOCKED',
@@ -141,6 +143,8 @@ class IpsMiddleware
                     'ip' => $ip,
                     'reason' => $suspiciousReason,
                     'blocked_at' => now()->toIso8601String(),
+                    'user_id' => $request->user()?->id,
+                    'user_email' => $request->user()?->email,
                 ];
                 Cache::put('blocked_ips_list', $blockedIps, now()->addHours(24));
             }
@@ -200,6 +204,8 @@ class IpsMiddleware
                         'ip' => $ip,
                         'reason' => 'Rate limit exceeded ('.$attempts.' requests/hr)',
                         'blocked_at' => now()->toIso8601String(),
+                        'user_id' => $request->user()?->id,
+                        'user_email' => $request->user()?->email,
                     ];
                     Cache::put('blocked_ips_list', $blockedIps, now()->addHours(24));
                 }
@@ -227,19 +233,25 @@ class IpsMiddleware
 
     protected function recordSecurityEvent($type, $ip, Request $request, $reason)
     {
+        $payloadJson = json_encode(
+            $request->except(['password', 'password_confirmation', 'confirm_password', 'current_password', 'token']),
+            JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_SLASHES
+        );
+
         $events = Cache::get('security_events', []);
         $events[] = [
             'type' => $type, // 'sqli' or 'xss'
             'ip' => $ip,
+            'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
             'reason' => $reason,
             'url' => $request->fullUrl(),
             // Never store credential-related inputs. Invalid UTF-8 is substituted
             // so json_encode can never fail silently with boolean false.
-            'payload' => json_encode(
-                $request->except(['password', 'password_confirmation', 'confirm_password', 'current_password', 'token']),
-                JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_SLASHES
-            ),
+            'payload' => $payloadJson,
+            'payload_snippet' => mb_substr($payloadJson, 0, 220),
             'created_at' => now()->toIso8601String(),
+            'detected_at' => now()->toIso8601String(),
         ];
 
         // Keep last 500 events

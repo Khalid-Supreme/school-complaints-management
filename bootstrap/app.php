@@ -23,9 +23,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Trust the configured proxies so $request->ip() resolves the real
         // client address behind Heroku/nginx/Cloudflare load balancers.
-        // Restrict TRUSTED_PROXIES to known proxy IPs/CIDRs in production.
+        // IMPORTANT: do NOT use '*' — it trusts the X-Forwarded-For header  
+        // from ANY client, letting remote users spoof their IP (which also
+        // breaks the per-IP IPS block). Leave TRUSTED_PROXIES unset when the
+        // app is reached directly, and list only real proxy IPs/CIDRs when
+        // it is served behind nginx/Cloudflare.
         $middleware->trustProxies(
-            at: explode(',', (string) env('TRUSTED_PROXIES', '*')),
+            at: env('TRUSTED_PROXIES') ? explode(',', (string) env('TRUSTED_PROXIES')) : [],
             headers: Request::HEADER_X_FORWARDED_FOR
                 | Request::HEADER_X_FORWARDED_HOST
                 | Request::HEADER_X_FORWARDED_PORT
@@ -47,3 +51,4 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*'),
         );
     })->create();
+ 

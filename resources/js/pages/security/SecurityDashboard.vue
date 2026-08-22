@@ -77,18 +77,27 @@
                                         slotProps.data.ip }}</span>
                             </template>
                         </Column>
+                        <Column field="user_id" header="User" style="width: 140px">
+                            <template #body="slotProps">
+                                <div class="text-xs">
+                                    <span v-if="slotProps.data.user_id" class="font-mono font-medium text-slate-700">#{{ slotProps.data.user_id }}</span>
+                                    <span v-else class="text-slate-400 italic">Guest</span>
+                                    <div v-if="slotProps.data.user_email" class="text-[11px] text-slate-400 truncate max-w-[130px]">{{ slotProps.data.user_email }}</div>
+                                </div>
+                            </template>
+                        </Column>
                         <Column field="reason" header="Rule / Reason" />
                         <Column field="payload_snippet" header="Payload">
                             <template #body="slotProps">
                                 <code
                                     class="text-xs font-mono bg-slate-100 text-red-600 px-2 py-1 rounded max-w-40 inline-block truncate">{{
-                                        slotProps.data.payload_snippet }}</code>
+                                        slotProps.data.payload_snippet || (slotProps.data.payload ? String(slotProps.data.payload).slice(0, 220) : '—') }}</code>
                             </template>
                         </Column>
-                        <Column field="detected_at" header="Detected" style="width: 140px">
+                        <Column field="detected_at" header="Detected" style="width: 150px">
                             <template #body="slotProps">
-                                <span class="text-xs text-slate-500">{{ slotProps.data.detected_at ? new
-                                    Date(slotProps.data.detected_at).toLocaleString() : '—' }}</span>
+                                <span class="text-xs text-slate-500">{{ (slotProps.data.detected_at || slotProps.data.created_at) ? new
+                                    Date(slotProps.data.detected_at || slotProps.data.created_at).toLocaleString() : '—' }}</span>
                             </template>
                         </Column>
                         <template #empty>
@@ -121,10 +130,19 @@
                             <p class="text-sm font-medium text-emerald-700">No IPs blocked</p>
                         </div>
                         <div v-else class="space-y-2 max-h-64 overflow-y-auto">
-                            <div v-for="ip in blockedIps" :key="ip"
+                            <div v-for="item in blockedIps" :key="item.ip"
                                 class="flex items-center gap-3 p-3 bg-red-50 border border-red-100 rounded-lg">
                                 <i class="pi pi-ban text-red-500 text-sm"></i>
-                                <span class="font-mono text-sm font-medium text-red-700">{{ ip }}</span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-mono text-sm font-medium text-red-700">{{ item.ip }}</p>
+                                    <p class="text-xs text-slate-500 truncate">{{ item.reason || 'Suspicious activity' }}</p>
+                                    <p class="text-[11px] text-slate-400 truncate">
+                                        <span v-if="item.user_id">#{{ item.user_id }}<span v-if="item.user_email"> ({{ item.user_email }})</span> • </span>{{ item.blocked_at ? new Date(item.blocked_at).toLocaleString() : '' }}
+                                    </p>
+                                </div>
+                                <Button icon="pi pi-unlock" text rounded class="w-8 h-8 !text-red-500 hover:!bg-red-100"
+                                    :loading="unblockingIp === item.ip" v-tooltip.bottom="'Unblock this IP'"
+                                    @click="unblockIp(item.ip)" />
                             </div>
                         </div>
                     </template>
@@ -164,6 +182,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import api from '../../services/api';
+import { useToast } from 'primevue/usetoast';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import Badge from 'primevue/badge';
@@ -171,8 +190,10 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 
+const toast = useToast();
 const loading = ref(true);
 const data = ref(null);
+const unblockingIp = ref(null);
 
 const events = computed(() => data.value?.recent_events || []);
 const blockedIps = computed(() => data.value?.blocked_ips || []);
@@ -207,6 +228,19 @@ const loadData = async () => {
         console.warn('Security dashboard load failed', e);
     } finally {
         loading.value = false;
+    }
+};
+
+const unblockIp = async (ip) => {
+    unblockingIp.value = ip;
+    try {
+        await api.post('/api/security/ips/unblock', { ip });
+        toast.add({ severity: 'success', summary: 'Unblocked', detail: `IP ${ip} has been unblocked.`, life: 3000 });
+        await loadData();
+    } catch (e) {
+        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Failed to unblock IP.', life: 3000 });
+    } finally {
+        unblockingIp.value = null;
     }
 };
 
