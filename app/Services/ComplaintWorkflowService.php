@@ -39,6 +39,11 @@ class ComplaintWorkflowService
         }
 
         $oldStatus = $complaint->status;
+
+        if ($oldStatus === $newStatus) {
+            return false;
+        }
+
         $complaint->status = $newStatus;
 
         if ($newStatus === 'closed') {

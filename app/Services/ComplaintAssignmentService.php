@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Enums\AuditAction;
+use App\Events\ComplaintAssigned;
 use App\Models\Complaint;
 use App\Models\ComplaintAssignment;
 use App\Models\User;
 use App\Repositories\ComplaintAssignmentRepository;
 use App\Support\InputSanitizer;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ComplaintAssignmentService
@@ -62,37 +64,55 @@ class ComplaintAssignmentService
             ]);
         }
 
-        // Release the existing current assignment if any
-        $this->repository->releaseCurrentAssignment($complaint->id);
+        // Idempotency: if the complaint is already assigned to the same
+        // officer and that assignment is current, return it without
+        // creating a duplicate row or sending another notification.
+        $current = $complaint->currentAssignment;
+        if ($current && (int) $current->assigned_to === (int) $assignedToId && $current->is_current) {
+            return $current->load(['assignedTo', 'assignedBy']);
+        }
 
-        // Create the new assignment
-        $assignment = $this->repository->create([
-            'complaint_id' => $complaint->id,
-            'assigned_to' => $assignedToId,
-            'assigned_by' => $assignedById,
-            'assignment_note_encrypted' => $note ? $this->encryption->encrypt(InputSanitizer::clean($note)) : null,
-            'is_current' => true,
-            'assigned_at' => now(),
-        ]);
+        $assignment = DB::transaction(function () use ($complaint, $assignedToId, $assignedById, $note) {
+            // Release the existing current assignment if any
+            $this->repository->releaseCurrentAssignment($complaint->id);
 
-        // Transition complaint status to 'assigned' (suppress the generic
-        // status audit record: the dedicated 'complaint.assigned' event below
-        // is the authoritative log entry for this action).
-        $this->workflow->transitionStatus($complaint, 'assigned', audit: false);
+            // Create the new assignment
+            $record = $this->repository->create([
+                'complaint_id' => $complaint->id,
+                'assigned_to' => $assignedToId,
+                'assigned_by' => $assignedById,
+                'assignment_note_encrypted' => $note ? $this->encryption->encrypt(InputSanitizer::clean($note)) : null,
+                'is_current' => true,
+                'assigned_at' => now(),
+            ]);
 
-        $this->auditLogger->log(
-            AuditAction::ComplaintAssigned,
-            auth()->user(),
-            $complaint,
-            null,
-            [
-                'complaint_reference' => $complaint->reference_no,
-                'assigned_to_user_id' => $assignedToId,
-                'assigned_by' => $assignment->assignedBy?->full_name,
-            ]
-        );
+            // Transition complaint status to 'assigned' (suppress the generic
+            // status audit record: the dedicated 'complaint.assigned' event below
+            // is the authoritative log entry for this action).
+            $this->workflow->transitionStatus($complaint, 'assigned', audit: false);
 
-        return $assignment->load(['assignedTo', 'assignedBy']);
+            $this->auditLogger->log(
+                AuditAction::ComplaintAssigned,
+                User::find($assignedById),
+                $complaint,
+                null,
+                [
+                    'complaint_reference' => $complaint->reference_no,
+                    'assigned_to_user_id' => $assignedToId,
+                    'assigned_by' => $record->assignedBy?->full_name,
+                ]
+            );
+
+            return $record;
+        });
+
+        $freshAssignment = $assignment->load(['assignedTo', 'assignedBy']);
+        $freshComplaint = $complaint->fresh();
+
+        // Dispatch only after commit — if the transaction rolls back, no email.
+        ComplaintAssigned::dispatch($freshComplaint, $freshAssignment);
+
+        return $freshAssignment;
     }
 
     /**

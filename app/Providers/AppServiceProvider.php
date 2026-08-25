@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Events\ComplaintAssigned;
+use App\Events\ComplaintCreated;
+use App\Events\ComplaintStatusChanged;
+use App\Listeners\SendComplaintAssignedNotification;
+use App\Listeners\SendComplaintStatusChangedNotification;
+use App\Listeners\SendNewComplaintAdminNotification;
 use App\Models\ComplaintCategory;
 use App\Models\Department;
 use App\Models\User;
@@ -10,6 +16,7 @@ use App\Observers\DepartmentObserver;
 use App\Support\AuditContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -75,5 +82,11 @@ class AppServiceProvider extends ServiceProvider
         // request (the AuditContext middleware supplies network context there).
         ComplaintCategory::observe(ComplaintCategoryObserver::class);
         Department::observe(DepartmentObserver::class);
+
+        // Complaint lifecycle email notifications — event-driven, fail-open,
+        // dispatched only after the surrounding DB transaction commits.
+        Event::listen(ComplaintCreated::class, SendNewComplaintAdminNotification::class);
+        Event::listen(ComplaintAssigned::class, SendComplaintAssignedNotification::class);
+        Event::listen(ComplaintStatusChanged::class, SendComplaintStatusChangedNotification::class);
     }
 }
