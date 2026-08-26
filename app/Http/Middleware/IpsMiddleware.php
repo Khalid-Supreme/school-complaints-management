@@ -34,6 +34,15 @@ class IpsMiddleware
         // NOTE: SQL injection / XSS protection still applies to them.
         $isSuperAdmin = $request->user()?->role?->slug === 'admin';
 
+        // Hybrid check: user block first (LAN-safe), then IP block.
+        // Super admins are exempt from both so they can always recover.
+        if ($request->user() && Cache::has('user_blocked_'.$request->user()->id) && ! $isSuperAdmin) {
+            return response()->json([
+                'error' => 'Your account has been temporarily blocked due to suspicious activity.',
+                'code' => 'USER_BLOCKED',
+            ], 403);
+        }
+
         // Check if IP is already blocked. Authenticated super-admins are exempt
         // so a shared/spoofed IP can never lock the admin out of their own
         // system; non-admin clients on that IP remain blocked.
@@ -126,39 +135,113 @@ class IpsMiddleware
                 ]
             );
 
-            // Block IP immediately
-            Cache::put($cacheKey, true, now()->addHours(24));
+            // Hybrid block: authenticated -> user (24h) + soft IP (1h), guest -> hard IP (24h).
+            // Super admin is never cached-blocked; they still get 403 for this request only.
+            if (! $isSuperAdmin) {
+                if ($request->user()) {
+                    $user = $request->user();
+                    $userBlockKey = 'user_blocked_'.$user->id;
+                    Cache::put($userBlockKey, true, now()->addHours(24));
 
-            // Log to blocked IP list in Cache
-            $blockedIps = Cache::get('blocked_ips_list', []);
-            $exists = false;
-            foreach ($blockedIps as $item) {
-                if ($item['ip'] === $ip) {
-                    $exists = true;
-                    break;
+                    $blockedUsers = Cache::get('blocked_users_list', []);
+                    $existsUser = false;
+                    foreach ($blockedUsers as $item) {
+                        if (($item['user_id'] ?? null) == $user->id) {
+                            $existsUser = true;
+                            break;
+                        }
+                    }
+                    if (! $existsUser) {
+                        $blockedUsers[] = [
+                            'user_id' => $user->id,
+                            'email' => $user->email,
+                            'institution_id' => $user->institution_id ?? null,
+                            'ip' => $ip,
+                            'reason' => $suspiciousReason,
+                            'blocked_at' => now()->toIso8601String(),
+                        ];
+                        Cache::put('blocked_users_list', $blockedUsers, now()->addHours(24));
+                    }
+
+                    $this->auditLogger->log(
+                        AuditAction::UserBlocked,
+                        $user,
+                        null,
+                        'User account blocked after intrusion attempt',
+                        [
+                            'reason' => $suspiciousReason,
+                            'detected_type' => $detectedType,
+                            'ip' => $ip,
+                        ]
+                    );
+
+                    // Soft IP block 1h to deter rapid account-hopping without killing LAN
+                    Cache::put($cacheKey, true, now()->addHour());
+
+                    $blockedIps = Cache::get('blocked_ips_list', []);
+                    $existsIp = false;
+                    foreach ($blockedIps as $item) {
+                        if ($item['ip'] === $ip) {
+                            $existsIp = true;
+                            break;
+                        }
+                    }
+                    if (! $existsIp) {
+                        $blockedIps[] = [
+                            'ip' => $ip,
+                            'reason' => $suspiciousReason.' (soft 1h, user #'.$user->id.')',
+                            'blocked_at' => now()->toIso8601String(),
+                            'user_id' => $user->id,
+                            'user_email' => $user->email,
+                        ];
+                        Cache::put('blocked_ips_list', $blockedIps, now()->addHours(24));
+                    }
+
+                    $this->auditLogger->log(
+                        AuditAction::IpBlocked,
+                        $user,
+                        null,
+                        'IP soft-blocked (1h) after authenticated intrusion',
+                        [
+                            'reason' => $suspiciousReason,
+                            'detected_type' => $detectedType,
+                        ]
+                    );
+                } else {
+                    // Guest -> hard IP block 24h
+                    Cache::put($cacheKey, true, now()->addHours(24));
+
+                    $blockedIps = Cache::get('blocked_ips_list', []);
+                    $exists = false;
+                    foreach ($blockedIps as $item) {
+                        if ($item['ip'] === $ip) {
+                            $exists = true;
+                            break;
+                        }
+                    }
+                    if (! $exists) {
+                        $blockedIps[] = [
+                            'ip' => $ip,
+                            'reason' => $suspiciousReason,
+                            'blocked_at' => now()->toIso8601String(),
+                            'user_id' => $request->user()?->id,
+                            'user_email' => $request->user()?->email,
+                        ];
+                        Cache::put('blocked_ips_list', $blockedIps, now()->addHours(24));
+                    }
+
+                    $this->auditLogger->log(
+                        AuditAction::IpBlocked,
+                        $request->user(),
+                        null,
+                        'IP address blocked after intrusion attempt',
+                        [
+                            'reason' => $suspiciousReason,
+                            'detected_type' => $detectedType,
+                        ]
+                    );
                 }
             }
-            if (! $exists) {
-                $blockedIps[] = [
-                    'ip' => $ip,
-                    'reason' => $suspiciousReason,
-                    'blocked_at' => now()->toIso8601String(),
-                    'user_id' => $request->user()?->id,
-                    'user_email' => $request->user()?->email,
-                ];
-                Cache::put('blocked_ips_list', $blockedIps, now()->addHours(24));
-            }
-
-            $this->auditLogger->log(
-                AuditAction::IpBlocked,
-                $request->user(),
-                null,
-                'IP address blocked after intrusion attempt',
-                [
-                    'reason' => $suspiciousReason,
-                    'detected_type' => $detectedType,
-                ]
-            );
 
             return response()->json([
                 'error' => 'Security policy violation. Suspicious activity has been detected and logged.',
@@ -168,63 +251,120 @@ class IpsMiddleware
 
         // Rate limiting — Super Admins are exempt so they aren't locked out while
         // doing heavy setup/configuration work. Everyone else is still rate limited.
+        // Hybrid: per-user if authenticated, per-IP if guest (LAN-safe).
         if (! $isSuperAdmin) {
-            // Log the rate limit attempt
-            $attempts = Cache::get($attemptKey, 0);
-            Cache::put($attemptKey, $attempts + 1, now()->addHours(1));
+            $threshold = 100; // Max requests per hour
 
-            // Define thresholds for blocking
-            $threshold = 100; // Max requests per hour per IP
+            if ($request->user()) {
+                $userRateKey = 'rate_user_'.$request->user()->id;
+                $attempts = Cache::get($userRateKey, 0);
+                Cache::put($userRateKey, $attempts + 1, now()->addHours(1));
 
-            if ($attempts >= $threshold) {
-                Cache::put($cacheKey, true, now()->addHours(24)); // Block for 24 hours
+                if ($attempts >= $threshold) {
+                    $user = $request->user();
+                    Cache::put('user_blocked_'.$user->id, true, now()->addHours(24));
 
-                $this->auditLogger->log(
-                    AuditAction::RateLimitExceeded,
-                    $request->user(),
-                    null,
-                    'IP rate limit exceeded',
-                    [
-                        'attempts' => $attempts,
-                        'threshold' => $threshold,
-                    ]
-                );
+                    $this->auditLogger->log(
+                        AuditAction::RateLimitExceeded,
+                        $user,
+                        null,
+                        'User rate limit exceeded',
+                        [
+                            'attempts' => $attempts,
+                            'threshold' => $threshold,
+                        ]
+                    );
 
-                // Log rate limit block
-                $blockedIps = Cache::get('blocked_ips_list', []);
-                $exists = false;
-                foreach ($blockedIps as $item) {
-                    if ($item['ip'] === $ip) {
-                        $exists = true;
-                        break;
+                    $blockedUsers = Cache::get('blocked_users_list', []);
+                    $exists = false;
+                    foreach ($blockedUsers as $item) {
+                        if (($item['user_id'] ?? null) == $user->id) {
+                            $exists = true;
+                            break;
+                        }
                     }
-                }
-                if (! $exists) {
-                    $blockedIps[] = [
-                        'ip' => $ip,
-                        'reason' => 'Rate limit exceeded ('.$attempts.' requests/hr)',
-                        'blocked_at' => now()->toIso8601String(),
-                        'user_id' => $request->user()?->id,
-                        'user_email' => $request->user()?->email,
-                    ];
-                    Cache::put('blocked_ips_list', $blockedIps, now()->addHours(24));
-                }
+                    if (! $exists) {
+                        $blockedUsers[] = [
+                            'user_id' => $user->id,
+                            'email' => $user->email,
+                            'institution_id' => $user->institution_id ?? null,
+                            'ip' => $ip,
+                            'reason' => 'Rate limit exceeded ('.$attempts.' requests/hr)',
+                            'blocked_at' => now()->toIso8601String(),
+                        ];
+                        Cache::put('blocked_users_list', $blockedUsers, now()->addHours(24));
+                    }
 
-                $this->auditLogger->log(
-                    AuditAction::IpBlocked,
-                    $request->user(),
-                    null,
-                    'IP address blocked after exceeding rate limit',
-                    [
-                        'attempts' => $attempts,
-                        'threshold' => $threshold,
-                    ]
-                );
+                    $this->auditLogger->log(
+                        AuditAction::UserBlocked,
+                        $user,
+                        null,
+                        'User account blocked after exceeding rate limit',
+                        [
+                            'attempts' => $attempts,
+                            'threshold' => $threshold,
+                        ]
+                    );
 
-                return response()->json([
-                    'error' => 'Too many requests. Your IP has been blocked.',
-                    'code' => 'IP_BLOCKED',
-                ], 429);
+                    return response()->json([
+                        'error' => 'Too many requests. Your account has been blocked.',
+                        'code' => 'USER_BLOCKED',
+                    ], 429);
+                }
+            } else {
+                $attempts = Cache::get($attemptKey, 0);
+                Cache::put($attemptKey, $attempts + 1, now()->addHours(1));
+
+                if ($attempts >= $threshold) {
+                    Cache::put($cacheKey, true, now()->addHours(24)); // Block for 24 hours
+
+                    $this->auditLogger->log(
+                        AuditAction::RateLimitExceeded,
+                        $request->user(),
+                        null,
+                        'IP rate limit exceeded',
+                        [
+                            'attempts' => $attempts,
+                            'threshold' => $threshold,
+                        ]
+                    );
+
+                    // Log rate limit block
+                    $blockedIps = Cache::get('blocked_ips_list', []);
+                    $exists = false;
+                    foreach ($blockedIps as $item) {
+                        if ($item['ip'] === $ip) {
+                            $exists = true;
+                            break;
+                        }
+                    }
+                    if (! $exists) {
+                        $blockedIps[] = [
+                            'ip' => $ip,
+                            'reason' => 'Rate limit exceeded ('.$attempts.' requests/hr)',
+                            'blocked_at' => now()->toIso8601String(),
+                            'user_id' => $request->user()?->id,
+                            'user_email' => $request->user()?->email,
+                        ];
+                        Cache::put('blocked_ips_list', $blockedIps, now()->addHours(24));
+                    }
+
+                    $this->auditLogger->log(
+                        AuditAction::IpBlocked,
+                        $request->user(),
+                        null,
+                        'IP address blocked after exceeding rate limit',
+                        [
+                            'attempts' => $attempts,
+                            'threshold' => $threshold,
+                        ]
+                    );
+
+                    return response()->json([
+                        'error' => 'Too many requests. Your IP has been blocked.',
+                        'code' => 'IP_BLOCKED',
+                    ], 429);
+                }
             }
         }
 

@@ -107,8 +107,11 @@ Route::middleware(['auth:sanctum', 'audit.context', 'ips', 'password.changed'])-
     // Security Dashboard (Admin, Sub-Admin, or Security role)
     Route::middleware(['role:admin,security'])->group(function () {
         Route::get('/security/dashboard', [SecurityDashboardController::class, 'index']);
+        Route::get('/security/blocked-ips', [SecurityDashboardController::class, 'blockedIps']);
+        Route::get('/security/blocked-users', [SecurityDashboardController::class, 'blockedUsers']);
         Route::get('/security/audit/logins', [SecurityDashboardController::class, 'loginAudit']);
         Route::post('/security/ips/unblock', [SecurityDashboardController::class, 'unblockIp']);
+        Route::post('/security/users/unblock', [SecurityDashboardController::class, 'unblockUser']);
     });
 
     // Audit log (super admin only)

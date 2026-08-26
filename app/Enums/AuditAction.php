@@ -54,8 +54,10 @@ enum AuditAction: string
     case IntrusionSqli = 'intrusion.sqli';
     case IntrusionXss = 'intrusion.xss';
     case IpBlocked = 'ip.blocked';
+    case UserBlocked = 'user.blocked';
     case RateLimitExceeded = 'rate.limit.exceeded';
     case IpUnblocked = 'ip.unblocked';
+    case UserUnblocked = 'user.unblocked';
 
     /**
      * Human-readable label for display and filtering.
@@ -98,8 +100,10 @@ enum AuditAction: string
             self::IntrusionSqli => 'SQL injection attempt detected',
             self::IntrusionXss => 'Cross-site scripting attempt detected',
             self::IpBlocked => 'IP address blocked',
+            self::UserBlocked => 'User account blocked',
             self::RateLimitExceeded => 'Rate limit exceeded',
             self::IpUnblocked => 'IP address unblocked',
+            self::UserUnblocked => 'User account unblocked',
         };
     }
 }

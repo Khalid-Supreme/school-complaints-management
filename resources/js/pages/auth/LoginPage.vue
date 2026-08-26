@@ -56,10 +56,15 @@
                         class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 transition-colors duration-200">
                         <i class="pi pi-key text-sm"></i>
                     </span>
-                    <InputText id="password" v-model="form.password" type="password" required
+                    <InputText id="password" v-model="form.password" :type="showPassword ? 'text' : 'password'" required
                         @focus="passwordFocused = true" @blur="passwordFocused = false"
-                        class="w-full !pl-11 !pr-3 sm:!pr-4 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
+                        class="w-full !pl-11 !pr-11 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
                         :class="{ 'p-invalid': errors.password }" />
+                    <button type="button" @click="showPassword = !showPassword" tabindex="-1"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sage-600 transition-colors w-8 h-8 flex items-center justify-center rounded-md hover:bg-sage-50"
+                        :aria-label="showPassword ? 'Hide password' : 'Show password'">
+                        <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm"></i>
+                    </button>
                 </div>
                 <small v-if="errors.password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.password
                     }}</small>
@@ -110,6 +115,7 @@ const route = useRoute();
 const authStore = useAuthStore();
 const toast = useToast();
 const showRegister = ref(false);
+const showPassword = ref(false);
 const usernameFocused = ref(false);
 const passwordFocused = ref(false);
 

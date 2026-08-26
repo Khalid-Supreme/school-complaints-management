@@ -25,10 +25,15 @@
                         class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 group-focus-within:text-sage-500 transition-colors duration-200">
                         <i class="pi pi-lock text-sm"></i>
                     </span>
-                    <InputText id="password" v-model="form.password" type="password"
+                    <InputText id="password" v-model="form.password" :type="showPassword ? 'text' : 'password'"
                         placeholder="••••••••" required autocomplete="new-password"
-                        class="w-full !pl-11 !pr-3 sm:!pr-4 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
+                        class="w-full !pl-11 !pr-11 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
                         :class="{ 'p-invalid': errors.password }" @input="clearFieldError('password')" />
+                    <button type="button" @click="showPassword = !showPassword" tabindex="-1"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sage-600 transition-colors w-8 h-8 flex items-center justify-center rounded-md hover:bg-sage-50"
+                        :aria-label="showPassword ? 'Hide password' : 'Show password'">
+                        <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm"></i>
+                    </button>
                 </div>
                 <PasswordRequirements v-if="form.password.length > 0" :password="form.password" />
                 <small v-if="errors.password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.password }}</small>
@@ -43,10 +48,15 @@
                         class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-400 group-focus-within:text-sage-500 transition-colors duration-200">
                         <i class="pi pi-lock text-sm"></i>
                     </span>
-                    <InputText id="confirm_password" v-model="form.confirm_password" type="password"
+                    <InputText id="confirm_password" v-model="form.confirm_password" :type="showConfirmPassword ? 'text' : 'password'"
                         placeholder="••••••••" required autocomplete="new-password"
-                        class="w-full !pl-11 !pr-3 sm:!pr-4 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
+                        class="w-full !pl-11 !pr-11 !bg-white !border-sage-200/60 !text-charcoal !text-[0.85rem] sm:!text-[0.92rem] !rounded-lg !py-2.5 sm:!py-3 transition-all duration-200 focus:!border-sage-400 focus:!ring-2 focus:!ring-sage-100 hover:!border-sage-300"
                         :class="{ 'p-invalid': errors.confirm_password || confirmationMismatch }" @input="clearFieldError('confirm_password')" />
+                    <button type="button" @click="showConfirmPassword = !showConfirmPassword" tabindex="-1"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sage-600 transition-colors w-8 h-8 flex items-center justify-center rounded-md hover:bg-sage-50"
+                        :aria-label="showConfirmPassword ? 'Hide password' : 'Show password'">
+                        <i :class="showConfirmPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm"></i>
+                    </button>
                 </div>
                 <small v-if="confirmationMismatch" class="text-red-500 block mt-1.5 text-xs font-medium">Passwords do not match</small>
                 <small v-else-if="errors.confirm_password" class="text-red-500 block mt-1.5 text-xs font-medium">{{ errors.confirm_password }}</small>
@@ -90,6 +100,8 @@
 
     const loading = ref(false);
     const error = ref('');
+    const showPassword = ref(false);
+    const showConfirmPassword = ref(false);
 
     const form = reactive({
         password: '',
