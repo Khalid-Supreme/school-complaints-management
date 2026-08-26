@@ -40,17 +40,21 @@ class IpsMiddleware
             return response()->json([
                 'error' => 'Your account has been temporarily blocked due to suspicious activity.',
                 'code' => 'USER_BLOCKED',
-            ], 403);
+                'retry_after' => 86400,
+            ], 403)->header('Retry-After', '86400');
         }
 
         // Check if IP is already blocked. Authenticated super-admins are exempt
         // so a shared/spoofed IP can never lock the admin out of their own
         // system; non-admin clients on that IP remain blocked.
         if (Cache::has($cacheKey) && ! $isSuperAdmin) {
+            $retry = $request->user() ? 3600 : 86400;
+
             return response()->json([
                 'error' => 'Your IP address has been temporarily blocked due to suspicious activity.',
                 'code' => 'IP_BLOCKED',
-            ], 429);
+                'retry_after' => $retry,
+            ], 429)->header('Retry-After', (string) $retry);
         }
 
         // Perform intrusion detection scan (SQLi and XSS)
@@ -175,38 +179,50 @@ class IpsMiddleware
                         ]
                     );
 
-                    // Soft IP block 1h to deter rapid account-hopping without killing LAN
-                    Cache::put($cacheKey, true, now()->addHour());
+                    // Soft IP block only after N distinct users from same IP
+                    // have been blocked (LAN-safe: single attacker doesn't kill
+                    // the whole hostel IP, hopping across 5 accounts does).
+                    $softThreshold = (int) env('IPS_SOFT_IP_THRESHOLD', 5);
+                    $blockedUsersForIp = collect(Cache::get('blocked_users_list', []))
+                        ->where('ip', $ip)
+                        ->pluck('user_id')
+                        ->unique()
+                        ->count();
 
-                    $blockedIps = Cache::get('blocked_ips_list', []);
-                    $existsIp = false;
-                    foreach ($blockedIps as $item) {
-                        if ($item['ip'] === $ip) {
-                            $existsIp = true;
-                            break;
+                    if ($blockedUsersForIp >= $softThreshold && ! Cache::has($cacheKey)) {
+                        Cache::put($cacheKey, true, now()->addHour());
+
+                        $blockedIps = Cache::get('blocked_ips_list', []);
+                        $existsIp = false;
+                        foreach ($blockedIps as $item) {
+                            if ($item['ip'] === $ip) {
+                                $existsIp = true;
+                                break;
+                            }
                         }
-                    }
-                    if (! $existsIp) {
-                        $blockedIps[] = [
-                            'ip' => $ip,
-                            'reason' => $suspiciousReason.' (soft 1h, user #'.$user->id.')',
-                            'blocked_at' => now()->toIso8601String(),
-                            'user_id' => $user->id,
-                            'user_email' => $user->email,
-                        ];
-                        Cache::put('blocked_ips_list', $blockedIps, now()->addHours(24));
-                    }
+                        if (! $existsIp) {
+                            $blockedIps[] = [
+                                'ip' => $ip,
+                                'reason' => $suspiciousReason.' (soft 1h, '.$blockedUsersForIp.' users from IP)',
+                                'blocked_at' => now()->toIso8601String(),
+                                'user_id' => $user->id,
+                                'user_email' => $user->email,
+                            ];
+                            Cache::put('blocked_ips_list', $blockedIps, now()->addHours(24));
+                        }
 
-                    $this->auditLogger->log(
-                        AuditAction::IpBlocked,
-                        $user,
-                        null,
-                        'IP soft-blocked (1h) after authenticated intrusion',
-                        [
-                            'reason' => $suspiciousReason,
-                            'detected_type' => $detectedType,
-                        ]
-                    );
+                        $this->auditLogger->log(
+                            AuditAction::IpBlocked,
+                            $user,
+                            null,
+                            'IP soft-blocked (1h) after '.$blockedUsersForIp.' users from same IP',
+                            [
+                                'reason' => $suspiciousReason,
+                                'detected_type' => $detectedType,
+                                'ip' => $ip,
+                            ]
+                        );
+                    }
                 } else {
                     // Guest -> hard IP block 24h
                     Cache::put($cacheKey, true, now()->addHours(24));
@@ -246,7 +262,8 @@ class IpsMiddleware
             return response()->json([
                 'error' => 'Security policy violation. Suspicious activity has been detected and logged.',
                 'code' => 'INTRUSION_DETECTED',
-            ], 403);
+                'retry_after' => $request->user() ? 86400 : 86400,
+            ], 403)->header('Retry-After', '86400');
         }
 
         // Rate limiting — Super Admins are exempt so they aren't locked out while
@@ -309,7 +326,8 @@ class IpsMiddleware
                     return response()->json([
                         'error' => 'Too many requests. Your account has been blocked.',
                         'code' => 'USER_BLOCKED',
-                    ], 429);
+                        'retry_after' => 86400,
+                    ], 429)->header('Retry-After', '86400');
                 }
             } else {
                 $attempts = Cache::get($attemptKey, 0);
@@ -363,7 +381,8 @@ class IpsMiddleware
                     return response()->json([
                         'error' => 'Too many requests. Your IP has been blocked.',
                         'code' => 'IP_BLOCKED',
-                    ], 429);
+                        'retry_after' => 86400,
+                    ], 429)->header('Retry-After', '86400');
                 }
             }
         }

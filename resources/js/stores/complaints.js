@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import complaintService from '../services/complaintService';
 import api from '../services/api';
+import { getSecurityMessage, getThrottleMessage } from '../utils/securityMessages';
 
 export const useComplaintsStore = defineStore('complaints', {
     state: () => ({
@@ -53,9 +54,17 @@ export const useComplaintsStore = defineStore('complaints', {
                 this.lastReferenceNo = response.data.complaint?.reference_no;
                 return true;
             } catch (err) {
-                this.error = err.response?.data?.message
-                    || Object.values(err.response?.data?.errors || {}).flat()[0]
-                    || 'Failed to submit complaint';
+                const code = err.response?.data?.code;
+                const retry = err.response?.headers?.['retry-after'] || err.response?.data?.retry_after;
+                if (err.__isSecurityBlock) {
+                    const mapped = (code ? getSecurityMessage(code, retry) : null) || getThrottleMessage(retry);
+                    this.error = mapped ? mapped.detail : (err.response?.data?.error || err.response?.data?.message || 'Failed to submit complaint');
+                } else {
+                    this.error = err.response?.data?.message
+                        || err.response?.data?.error
+                        || Object.values(err.response?.data?.errors || {}).flat()[0]
+                        || 'Failed to submit complaint';
+                }
                 return false;
             } finally {
                 this.loading = false;
