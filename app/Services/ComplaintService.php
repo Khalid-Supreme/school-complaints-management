@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Enums\AuditAction;
+use App\Events\ComplaintCreated;
 use App\Models\Complaint;
 use App\Models\ComplaintCategory;
 use App\Models\User;
 use App\Repositories\ComplaintRepository;
 use App\Support\InputSanitizer;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -52,8 +54,16 @@ class ComplaintService
 
         $category = ComplaintCategory::find($data['category_id']);
 
-        // Generate a unique reference number
-        $referenceNo = strtoupper(Str::random(10));
+        // Generate a unique reference number with collision retry
+        $referenceNo = null;
+        for ($i = 0; $i < 5; $i++) {
+            $candidate = strtoupper(Str::random(10));
+            if (! Complaint::where('reference_no', $candidate)->exists()) {
+                $referenceNo = $candidate;
+                break;
+            }
+        }
+        $referenceNo ??= strtoupper(Str::random(10));
 
         $complaintData = [
             'reference_no' => $referenceNo,
@@ -67,20 +77,28 @@ class ComplaintService
             'submitted_at' => now(),
         ];
 
-        $complaint = $this->repository->create($complaintData);
+        $complaint = DB::transaction(function () use ($complaintData, $referenceNo, $complainantId) {
+            $record = $this->repository->create($complaintData);
 
-        $this->auditLogger->log(
-            AuditAction::ComplaintCreated,
-            auth()->user() ?? User::find($complainantId),
-            $complaint->fresh(),
-            null,
-            [
-                'complaint_reference' => $referenceNo,
-                'category_id' => $complaintData['category_id'],
-                'priority' => $complaintData['priority'],
-                'source' => $complaintData['source'],
-            ]
-        );
+            $this->auditLogger->log(
+                AuditAction::ComplaintCreated,
+                auth()->user() ?? User::find($complainantId),
+                $record->fresh(),
+                null,
+                [
+                    'complaint_reference' => $referenceNo,
+                    'category_id' => $complaintData['category_id'],
+                    'priority' => $complaintData['priority'],
+                    'source' => $complaintData['source'],
+                ]
+            );
+
+            return $record;
+        });
+
+        // Dispatch only after the transaction has committed — if creation
+        // or audit fails and the transaction rolls back, no email is sent.
+        ComplaintCreated::dispatch($complaint->fresh());
 
         return $complaint;
     }

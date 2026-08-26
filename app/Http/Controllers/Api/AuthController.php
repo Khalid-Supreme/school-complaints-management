@@ -10,6 +10,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\PasswordChangeVerifyRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Models\User;
+use App\Notifications\PasswordResetSuccessNotification;
 use App\Services\AuditLogger;
 use App\Services\AuthService;
 use App\Services\PasswordChangeService;
@@ -256,8 +257,21 @@ class AuthController extends Controller
             $user = User::where('email', $request->input('email'))->first();
             $this->auditLogger->log(AuditAction::PasswordReset, $user, null, 'Password reset via reset link');
 
+            // Send confirmation email (fail-open: email failure must not break the reset response)
+            if ($user) {
+                try {
+                    $user->notify(new PasswordResetSuccessNotification());
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to send password-reset success email.', [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             return response()->json([
-                'message' => 'Password has been reset successfully.',
+                'message' => 'Password has been reset successfully. A confirmation email has been sent.',
             ]);
         }
 

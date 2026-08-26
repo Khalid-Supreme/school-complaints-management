@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\ComplaintStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Complaint\StoreComplaintRequest;
 use App\Http\Requests\Complaint\UpdateComplaintStatusRequest;
@@ -130,12 +131,19 @@ class ComplaintController extends Controller
     {
         Gate::authorize('update', $complaint);
 
+        $oldStatus = $complaint->status;
+        $newStatus = $request->validated('status');
+
         $workflow = app(ComplaintWorkflowService::class);
-        $workflow->transitionStatus($complaint, $request->validated('status'));
+        $changed = $workflow->transitionStatus($complaint, $newStatus);
+
+        if ($changed) {
+            ComplaintStatusChanged::dispatch($complaint->fresh(), $oldStatus, $newStatus, $request->user());
+        }
 
         return response()->json([
             'message' => 'Complaint status updated successfully',
-            'status' => $complaint->status,
+            'status' => $complaint->fresh()->status,
         ]);
     }
 }

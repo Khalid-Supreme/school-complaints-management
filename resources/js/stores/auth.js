@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import authService from '../services/authService';
 import axios from '../bootstrap';
+import { getSecurityMessage, getThrottleMessage } from '../utils/securityMessages';
 
 // Attach token to all axios requests if present
 const token = localStorage.getItem('auth_token');
@@ -60,9 +61,20 @@ export const useAuthStore = defineStore('auth', {
                 this.initialized = true;
                 return true;
             } catch (err) {
-                this.error = err.response?.data?.errors?.username?.[0] 
-                    || err.response?.data?.message 
-                    || 'Login failed';
+                const code = err.response?.data?.code;
+                const retry = err.response?.headers?.['retry-after'] || err.response?.data?.retry_after;
+                if (err.__isSecurityBlock && code) {
+                    const mapped = getSecurityMessage(code, retry) || getThrottleMessage(retry);
+                    this.error = mapped ? mapped.detail : (err.response?.data?.error || err.response?.data?.message || 'Login failed');
+                } else if (err.__isSecurityBlock) {
+                    const mapped = getThrottleMessage(retry);
+                    this.error = mapped.detail;
+                } else {
+                    this.error = err.response?.data?.errors?.username?.[0] 
+                        || err.response?.data?.message 
+                        || err.response?.data?.error
+                        || 'Login failed';
+                }
                 return false;
             } finally {
                 this.loading = false;
@@ -104,7 +116,14 @@ export const useAuthStore = defineStore('auth', {
                 const response = await authService.forgotPassword(email);
                 return response.data.message;
             } catch (err) {
-                this.error = err.response?.data?.message || 'Failed to send reset link';
+                const code = err.response?.data?.code;
+                const retry = err.response?.headers?.['retry-after'] || err.response?.data?.retry_after;
+                if (err.__isSecurityBlock) {
+                    const mapped = (code ? getSecurityMessage(code, retry) : null) || getThrottleMessage(retry);
+                    this.error = mapped ? mapped.detail : (err.response?.data?.error || err.response?.data?.message || 'Failed to send reset link');
+                } else {
+                    this.error = err.response?.data?.message || err.response?.data?.error || 'Failed to send reset link';
+                }
                 return false;
             } finally {
                 this.loading = false;
@@ -118,9 +137,17 @@ export const useAuthStore = defineStore('auth', {
                 const response = await authService.resetPassword(payload);
                 return response.data.message;
             } catch (err) {
-                this.error = err.response?.data?.errors?.email?.[0] 
-                    || err.response?.data?.message 
-                    || 'Failed to reset password';
+                const code = err.response?.data?.code;
+                const retry = err.response?.headers?.['retry-after'] || err.response?.data?.retry_after;
+                if (err.__isSecurityBlock) {
+                    const mapped = (code ? getSecurityMessage(code, retry) : null) || getThrottleMessage(retry);
+                    this.error = mapped ? mapped.detail : (err.response?.data?.error || err.response?.data?.message || 'Failed to reset password');
+                } else {
+                    this.error = err.response?.data?.errors?.email?.[0] 
+                        || err.response?.data?.message 
+                        || err.response?.data?.error
+                        || 'Failed to reset password';
+                }
                 return false;
             } finally {
                 this.loading = false;
@@ -138,9 +165,17 @@ export const useAuthStore = defineStore('auth', {
                 }
                 return response.data.message;
             } catch (err) {
-                this.error = err.response?.data?.errors?.current_password?.[0]
-                    || err.response?.data?.message
-                    || 'Failed to change password';
+                const code = err.response?.data?.code;
+                const retry = err.response?.headers?.['retry-after'] || err.response?.data?.retry_after;
+                if (err.__isSecurityBlock) {
+                    const mapped = (code ? getSecurityMessage(code, retry) : null) || getThrottleMessage(retry);
+                    this.error = mapped ? mapped.detail : (err.response?.data?.error || err.response?.data?.message || 'Failed to change password');
+                } else {
+                    this.error = err.response?.data?.errors?.current_password?.[0]
+                        || err.response?.data?.message
+                        || err.response?.data?.error
+                        || 'Failed to change password';
+                }
                 return false;
             } finally {
                 this.loading = false;

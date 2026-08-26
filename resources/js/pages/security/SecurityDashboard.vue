@@ -122,6 +122,7 @@
                             <i class="pi pi-ban text-red-600"></i>
                             Blocked IPs (24h)
                             <Badge :value="blockedIps.length" severity="danger" class="text-xs font-bold ml-auto" />
+                            <Button label="View All" icon="pi pi-external-link" text size="small" class="!text-sage-600 hover:!bg-sage-50 !text-xs" @click="$router.push('/security/blocked-ips')" />
                         </div>
                     </template>
                     <template #content>
@@ -144,6 +145,47 @@
                                     :loading="unblockingIp === item.ip" v-tooltip.bottom="'Unblock this IP'"
                                     @click="unblockIp(item.ip)" />
                             </div>
+                        </div>
+                        <div v-if="blockedIps.length > 0" class="text-center mt-3">
+                            <Button label="View full paginated table with search" icon="pi pi-table" text size="small" class="!text-sage-600 hover:!bg-sage-50" @click="$router.push('/security/blocked-ips')" />
+                        </div>
+                    </template>
+                </Card>
+
+                <!-- Blocked Users (Hybrid) -->
+                <Card class="shadow-card">
+                    <template #title>
+                        <div class="flex items-center gap-2 text-base lg:text-lg font-semibold text-charcoal pb-4 mb-4"
+                            style="border-bottom: 1px solid var(--color-border);">
+                            <i class="pi pi-user text-red-600"></i>
+                            Blocked Users (24h)
+                            <Badge :value="blockedUsers.length" severity="danger" class="text-xs font-bold ml-auto" />
+                            <Button label="View All" icon="pi pi-external-link" text size="small" class="!text-sage-600 hover:!bg-sage-50 !text-xs" @click="$router.push('/security/blocked-users')" />
+                        </div>
+                    </template>
+                    <template #content>
+                        <div v-if="blockedUsers.length === 0" class="text-center py-6">
+                            <i class="pi pi-check-circle text-3xl text-emerald-500 block mb-2"></i>
+                            <p class="text-sm font-medium text-emerald-700">No users blocked</p>
+                        </div>
+                        <div v-else class="space-y-2 max-h-64 overflow-y-auto">
+                            <div v-for="item in blockedUsers" :key="item.user_id"
+                                class="flex items-center gap-3 p-3 bg-red-50 border border-red-100 rounded-lg">
+                                <i class="pi pi-user text-red-500 text-sm"></i>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-mono text-sm font-medium text-red-700">#{{ item.user_id }} <span v-if="item.email" class="font-normal text-xs">({{ item.email }})</span></p>
+                                    <p class="text-xs text-slate-500 truncate">{{ item.reason || 'Suspicious activity' }}</p>
+                                    <p class="text-[11px] text-slate-400 truncate">
+                                        <span v-if="item.institution_id">{{ item.institution_id }} • </span>{{ item.ip || '' }} • {{ item.blocked_at ? new Date(item.blocked_at).toLocaleString() : '' }}
+                                    </p>
+                                </div>
+                                <Button icon="pi pi-unlock" text rounded class="w-8 h-8 !text-red-500 hover:!bg-red-100"
+                                    :loading="unblockingUser === item.user_id" v-tooltip.bottom="'Unblock this user'"
+                                    @click="unblockUser(item.user_id)" />
+                            </div>
+                        </div>
+                        <div v-if="blockedUsers.length > 0" class="text-center mt-3">
+                            <Button label="View full paginated table with search" icon="pi pi-table" text size="small" class="!text-sage-600 hover:!bg-sage-50" @click="$router.push('/security/blocked-users')" />
                         </div>
                     </template>
                 </Card>
@@ -194,15 +236,18 @@ const toast = useToast();
 const loading = ref(true);
 const data = ref(null);
 const unblockingIp = ref(null);
+const unblockingUser = ref(null);
 
 const events = computed(() => data.value?.recent_events || []);
 const blockedIps = computed(() => data.value?.blocked_ips || []);
+const blockedUsers = computed(() => data.value?.blocked_users || []);
 
 const securityCards = computed(() => [
     { label: 'SQLi Detections', value: data.value?.sqli_count ?? 0, icon: 'pi-database', color: '#ef4444', sub: 'SQL Injection attempts', danger: true },
     { label: 'XSS Detections', value: data.value?.xss_count ?? 0, icon: 'pi-code', color: '#f97316', sub: 'Cross-Site Scripting attempts', danger: true },
     { label: 'IPs Blocked', value: blockedIps.value.length, icon: 'pi-ban', color: '#dc2626', sub: 'Currently blocked (24h)', danger: true },
-    { label: 'Total Events', value: data.value?.total_events ?? 0, icon: 'pi-exclamation-circle', color: '#8b5cf6', sub: 'All security detections', danger: false },
+    { label: 'Users Blocked', value: blockedUsers.value.length, icon: 'pi-user', color: '#991b1b', sub: 'Accounts blocked (24h)', danger: true },
+    { label: 'Total Events', value: data.value?.total_events ?? (data.value?.recent_events?.length ?? 0), icon: 'pi-exclamation-circle', color: '#8b5cf6', sub: 'All security detections', danger: false },
 ]);
 
 const securityFeatures = [
@@ -241,6 +286,19 @@ const unblockIp = async (ip) => {
         toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Failed to unblock IP.', life: 3000 });
     } finally {
         unblockingIp.value = null;
+    }
+};
+
+const unblockUser = async (userId) => {
+    unblockingUser.value = userId;
+    try {
+        await api.post('/api/security/users/unblock', { user_id: userId });
+        toast.add({ severity: 'success', summary: 'Unblocked', detail: `User #${userId} has been unblocked.`, life: 3000 });
+        await loadData();
+    } catch (e) {
+        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Failed to unblock user.', life: 3000 });
+    } finally {
+        unblockingUser.value = null;
     }
 };
 

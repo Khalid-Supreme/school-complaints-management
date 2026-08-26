@@ -171,6 +171,18 @@ const routes = [
         meta: { layout: AppLayout, requiresAuth: true, roles: ['security', 'admin', 'sub_admin'] }
     },
     {
+        path: '/security/blocked-ips',
+        name: 'SecurityBlockedIps',
+        component: () => import('../pages/security/BlockedIps.vue'),
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['security', 'admin', 'sub_admin'] }
+    },
+    {
+        path: '/security/blocked-users',
+        name: 'SecurityBlockedUsers',
+        component: () => import('../pages/security/BlockedUsers.vue'),
+        meta: { layout: AppLayout, requiresAuth: true, roles: ['security', 'admin', 'sub_admin'] }
+    },
+    {
         path: '/:pathMatch(.*)*',
         redirect: '/'
     },

@@ -32,7 +32,7 @@
             <Message v-if="error" severity="error" :closable="true" @close="error = ''">{{ error }}</Message>
 
             <div class="overflow-x-auto">
-                <DataTable :value="logs" :loading="loading" paginator lazy :rows="meta?.per_page || 20" :totalRecords="meta?.total || 0" @page="onPage" responsiveLayout="scroll" dataKey="id" class="p-datatable-sm" v-model:expandedRows="expandedRows">
+                <DataTable :value="logs" :loading="loading" paginator lazy :rows="meta?.per_page || 20" :totalRecords="meta?.total || 0" :first="((meta?.current_page || 1) - 1) * (meta?.per_page || 20)" @page="onPage" responsiveLayout="scroll" dataKey="id" class="p-datatable-sm" v-model:expandedRows="expandedRows">
                     <Column :expander="true" headerStyle="width: 3rem" />
                     <Column header="#" headerStyle="width: 3.5rem">
                         <template #body="slotProps">

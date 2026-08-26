@@ -81,6 +81,7 @@ import api from '../services/api';
 import authService from '../services/authService';
 import PasswordRequirements from './PasswordRequirements.vue';
 import { validatePassword } from '../utils/passwordPolicy';
+import { getSecurityMessage, getThrottleMessage } from '../utils/securityMessages';
 
 const props = defineProps({
   visible: {
@@ -239,10 +240,17 @@ const submitRegistration = async () => {
     visibleProxy.value = false;
   } catch (error) {
     const data = error.response?.data;
+    const retry = error.response?.headers?.['retry-after'] || data?.retry_after;
+    const code = data?.code ? String(data.code).toUpperCase() : null;
     if (data?.errors) {
       errors.value = data.errors;
     }
-    errorMessage.value = data?.message || 'Registration failed';
+    if (error.__isSecurityBlock) {
+      const mapped = (code ? getSecurityMessage(code, retry) : null) || getThrottleMessage(retry);
+      errorMessage.value = mapped ? mapped.detail : (data?.error || data?.message || 'Registration failed');
+    } else {
+      errorMessage.value = data?.message || data?.error || 'Registration failed';
+    }
   } finally {
     loading.value = false;
   }
