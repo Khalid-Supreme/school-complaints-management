@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Events\ChatMessageCreated;
 use App\Models\Complaint;
 use App\Models\ComplaintMessage;
 use App\Support\InputSanitizer;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ChatService
 {
@@ -22,11 +24,25 @@ class ChatService
      */
     public function sendMessage(int $complaintId, string $message): ComplaintMessage
     {
-        return ComplaintMessage::create([
-            'complaint_id' => $complaintId,
-            'user_id' => Auth::id(),
-            'message_encrypted' => $this->encryption->encrypt(InputSanitizer::clean($message)),
-        ]);
+        $record = DB::transaction(function () use ($complaintId, $message) {
+            return ComplaintMessage::create([
+                'complaint_id' => $complaintId,
+                'user_id' => Auth::id(),
+                'message_encrypted' => $this->encryption->encrypt(InputSanitizer::clean($message)),
+            ]);
+        });
+
+        // Dispatch only after the surrounding transaction has committed.
+        // If the insert is rolled back, no notification is sent.
+        $freshMessage = $record->fresh(['user.role']);
+        $complaint = Complaint::with(['category', 'complainant.role', 'currentAssignment.assignedTo.role'])->find($complaintId);
+        $sender = $freshMessage->user;
+
+        if ($complaint && $sender) {
+            ChatMessageCreated::dispatch($complaint, $freshMessage, $sender);
+        }
+
+        return $record;
     }
 
     /**

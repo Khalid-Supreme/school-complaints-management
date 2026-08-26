@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Events\ChatMessageCreated;
 use App\Events\ComplaintAssigned;
 use App\Events\ComplaintCreated;
 use App\Events\ComplaintStatusChanged;
+use App\Listeners\SendChatMessageNotification;
 use App\Listeners\SendComplaintAssignedNotification;
 use App\Listeners\SendComplaintStatusChangedNotification;
 use App\Listeners\SendNewComplaintAdminNotification;
@@ -88,5 +90,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(ComplaintCreated::class, SendNewComplaintAdminNotification::class);
         Event::listen(ComplaintAssigned::class, SendComplaintAssignedNotification::class);
         Event::listen(ComplaintStatusChanged::class, SendComplaintStatusChangedNotification::class);
+        Event::listen(ChatMessageCreated::class, SendChatMessageNotification::class);
     }
 }

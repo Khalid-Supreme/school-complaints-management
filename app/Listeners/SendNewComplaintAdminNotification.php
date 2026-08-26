@@ -38,7 +38,11 @@ class SendNewComplaintAdminNotification
         $status = $complaint->status;
         $frontendUrl = rtrim((string) config('app.frontend_url'), '/');
 
-        foreach ($admins as $admin) {
+        foreach ($admins as $index => $admin) {
+            if ($index > 0) {
+                usleep(3000000);
+            }
+
             $recipientEmail = $admin->email;
 
             if (! filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
