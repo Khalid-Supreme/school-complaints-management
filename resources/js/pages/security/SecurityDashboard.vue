@@ -243,11 +243,11 @@ const blockedIps = computed(() => data.value?.blocked_ips || []);
 const blockedUsers = computed(() => data.value?.blocked_users || []);
 
 const securityCards = computed(() => [
-    { label: 'SQLi Detections', value: data.value?.sqli_count ?? 0, icon: 'pi-database', color: '#ef4444', sub: 'SQL Injection attempts', danger: true },
-    { label: 'XSS Detections', value: data.value?.xss_count ?? 0, icon: 'pi-code', color: '#f97316', sub: 'Cross-Site Scripting attempts', danger: true },
+    { label: 'SQLi Detections', value: data.value?.sqli_count ?? data.value?.intrusion_detections?.sqli_count ?? 0, icon: 'pi-database', color: '#ef4444', sub: 'SQL Injection attempts', danger: true },
+    { label: 'XSS Detections', value: data.value?.xss_count ?? data.value?.intrusion_detections?.xss_count ?? 0, icon: 'pi-code', color: '#f97316', sub: 'Cross-Site Scripting attempts', danger: true },
     { label: 'IPs Blocked', value: blockedIps.value.length, icon: 'pi-ban', color: '#dc2626', sub: 'Currently blocked (24h)', danger: true },
     { label: 'Users Blocked', value: blockedUsers.value.length, icon: 'pi-user', color: '#991b1b', sub: 'Accounts blocked (24h)', danger: true },
-    { label: 'Total Events', value: data.value?.total_events ?? (data.value?.recent_events?.length ?? 0), icon: 'pi-exclamation-circle', color: '#8b5cf6', sub: 'All security detections', danger: false },
+    { label: 'Total Events', value: data.value?.total_events ?? data.value?.intrusion_detections?.total_events ?? (data.value?.recent_events?.length ?? 0), icon: 'pi-exclamation-circle', color: '#8b5cf6', sub: 'All security detections', danger: false },
 ]);
 
 const securityFeatures = [
