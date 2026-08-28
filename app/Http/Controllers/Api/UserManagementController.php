@@ -99,6 +99,10 @@ class UserManagementController extends Controller
                     $manageableRoles[] = 'sub_admin';
                 }
 
+                if ($request->user()->canManageRole('security')) {
+                    $manageableRoles[] = 'security';
+                }
+
                 $q->whereIn('slug', $manageableRoles);
             });
 

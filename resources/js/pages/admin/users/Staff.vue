@@ -232,6 +232,7 @@ const filterRoleOptions = computed(() => {
     const options = [...roleOptions];
     if (authStore.canPromoteToSubAdmin) {
         options.push({ label: 'Sub-Administrator', value: 'sub_admin' });
+        options.push({ label: 'Security', value: 'security' });
     }
     return options;
 });
@@ -240,6 +241,7 @@ const assignableRoles = computed(() => {
     const options = [...roleOptions];
     if (authStore.canPromoteToSubAdmin) {
         options.push({ label: 'Sub-Administrator', value: 'sub_admin' });
+        options.push({ label: 'Security', value: 'security' });
     }
     return options;
 });
