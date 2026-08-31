@@ -86,17 +86,9 @@
             <div class="flex justify-center pt-1">
                 <p class="text-sm text-slate-400 font-medium">
                     New user?
-                    <a class="text-sage-600 hover:text-sage-700 font-semibold cursor-pointer underline-offset-2 hover:underline" @click="showRegister = true">Create an account</a>
+                    <router-link to="/register" class="text-sage-600 hover:text-sage-700 font-semibold underline-offset-2 hover:underline">Create an account</router-link>
                 </p>
             </div>
-
-        <!-- Security Footer
-        <div class="flex items-center justify-center gap-2 pt-2">
-            <i class="pi pi-shield text-sage-400 text-xs"></i>
-            <span class="text-[0.7rem] text-slate-400 font-medium tracking-wide">AES-256 Bit SSL Tunnel Active</span>
-        </div> -->
-
-            <RegistrationModal v-model:visible="showRegister" @success="handleRegistrationSuccess" />
     </div>
 </template>
 
@@ -107,14 +99,12 @@ import { useAuthStore } from '../../stores/auth';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
-import RegistrationModal from '../../components/RegistrationModal.vue';
 import { useToast } from 'primevue/usetoast';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const toast = useToast();
-const showRegister = ref(false);
 const showPassword = ref(false);
 const usernameFocused = ref(false);
 const passwordFocused = ref(false);
@@ -170,10 +160,6 @@ const handleLogin = async () => {
         const redirect = route.query.redirect || getDashboardRoute(authStore.role);
         router.push(redirect);
     }
-};
-
-const handleRegistrationSuccess = ({ email, institution_id }) => {
-    router.push({ path: '/email-verification', query: { email, institution_id, registered: '1' } });
 };
 
 const getDashboardRoute = (roleSlug) => {

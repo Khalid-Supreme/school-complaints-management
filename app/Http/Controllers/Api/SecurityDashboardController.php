@@ -32,10 +32,12 @@ class SecurityDashboardController extends Controller
         $totalLogins = LoginAttempt::where('created_at', '>=', now()->subDay())->count();
         $failureRate = $totalLogins > 0 ? round(($failedLogins / $totalLogins) * 100, 2) : 0;
 
-        // 3. Security Detections from Cache
-        $sqliCount = Cache::get('security_event_count_sqli', 0);
-        $xssCount = Cache::get('security_event_count_xss', 0);
+        // 3. Security Detections from Cache — derive counts from the actual event log
+        //    to keep cards in sync with the Recent Events table (counters drift after cache clears).
         $recentEvents = Cache::get('security_events', []);
+        $sqliCount = collect($recentEvents)->where('type', 'sqli')->count();
+        $xssCount = collect($recentEvents)->where('type', 'xss')->count();
+        $totalEvents = count($recentEvents);
 
         // 4. Data Protection Status
         $encryptedComplaints = Complaint::whereNotNull('title_encrypted')->count();
@@ -59,7 +61,12 @@ class SecurityDashboardController extends Controller
                 'xss_count' => $xssCount,
                 'blocked_ips_count' => $blockedIpsCount,
                 'blocked_users_count' => $blockedUsersCount,
+                'total_events' => $totalEvents,
             ],
+            // Top-level aliases for legacy frontend (SecurityDashboard.vue expects top-level sqli_count/total_events)
+            'sqli_count' => $sqliCount,
+            'xss_count' => $xssCount,
+            'total_events' => $totalEvents,
             'recent_events' => array_reverse(array_slice($recentEvents, -20)), // show last 20 events, newest first
             'blocked_ips' => $blockedIpsList,
             'blocked_users' => $blockedUsersList,

@@ -131,7 +131,7 @@ class PermissionService
 
     /**
      * Get all roles that the current user can assign to others.
-     * Admin: staff, complaint_officer, sub_admin
+     * Admin: staff, complaint_officer, sub_admin, security
      * Sub-Admin: (none - cannot assign roles)
      */
     public function getAssignableRoles(User $user): array
@@ -141,6 +141,7 @@ class PermissionService
                 ['label' => 'Staff', 'value' => 'staff'],
                 ['label' => 'Complaint Officer', 'value' => 'complaint_officer'],
                 ['label' => 'Sub-Administrator', 'value' => 'sub_admin'],
+                ['label' => 'Security', 'value' => 'security'],
             ];
         }
 
@@ -157,7 +158,7 @@ class PermissionService
     public function getManageableRoles(User $user): array
     {
         if ($this->isSuperAdmin($user)) {
-            return ['student', 'staff', 'complaint_officer', 'sub_admin'];
+            return ['student', 'staff', 'complaint_officer', 'sub_admin', 'security'];
         }
 
         if ($this->isSubAdmin($user)) {
