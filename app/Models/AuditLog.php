@@ -27,6 +27,9 @@ use LogicException;
     'description',
     'metadata',
     'ip_address',
+    'peer_ip',
+    'request_id',
+    'x_forwarded_for',
     'user_agent',
 ])]
 class AuditLog extends Model

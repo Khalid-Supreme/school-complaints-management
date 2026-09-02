@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ComplaintAssignmentController;
 use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\DepartmentController;
+use App\Http\Controllers\Api\DiagnosticsController;
 use App\Http\Controllers\Api\SecurityDashboardController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserManagementController;
@@ -116,6 +117,10 @@ Route::middleware(['auth:sanctum', 'audit.context', 'ips', 'password.changed'])-
 
     // Audit log (super admin only)
     Route::get('/admin/audit/logs', [AuditLogController::class, 'index'])
+        ->middleware('role:admin');
+
+    // Diagnostics (super admin only) — request IP/proxy correlation
+    Route::get('/diagnostics/request-context', [DiagnosticsController::class, 'requestContext'])
         ->middleware('role:admin');
 
     Route::middleware('role:admin,sub_admin')->prefix('/settings')->group(function () {

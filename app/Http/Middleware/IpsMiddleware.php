@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Enums\AuditAction;
 use App\Services\AuditLogger;
+use App\Support\RequestContext;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -12,10 +13,12 @@ use Symfony\Component\HttpFoundation\Response;
 class IpsMiddleware
 {
     protected AuditLogger $auditLogger;
+    protected RequestContext $requestContext;
 
-    public function __construct(AuditLogger $auditLogger)
+    public function __construct(AuditLogger $auditLogger, RequestContext $requestContext)
     {
         $this->auditLogger = $auditLogger;
+        $this->requestContext = $requestContext;
     }
 
     /**
@@ -25,7 +28,9 @@ class IpsMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $ip = $request->ip();
+        // Centralized resolved client IP — same value AuditContext/AuditEventListener will store.
+        // Falls back to $request->ip() if RequestContext not yet populated (e.g. in tests).
+        $ip = $this->requestContext->clientIp() ?? $request->ip();
         $cacheKey = 'ips_blocked_'.$ip;
         $attemptKey = 'ips_attempts_'.$ip;
 
@@ -128,6 +133,9 @@ class IpsMiddleware
             $this->recordSecurityEvent($detectedType, $ip, $request, $suspiciousReason);
 
             // Persist an immutable intrusion-detection audit record.
+            // ip_used_for_security_decision is the exact IP the IPS used to decide/block.
+            // Full network context (peer_ip, xff, request_id, method, route) is auto-merged
+            // by AuditEventListener from RequestContext.
             $this->auditLogger->log(
                 $detectedType === 'sqli' ? AuditAction::IntrusionSqli : AuditAction::IntrusionXss,
                 $request->user(),
@@ -136,6 +144,7 @@ class IpsMiddleware
                 [
                     'detected_type' => $detectedType,
                     'matched_input' => mb_substr($suspiciousReason, 0, 255),
+                    'ip_used_for_security_decision' => $ip,
                 ]
             );
 
@@ -176,6 +185,8 @@ class IpsMiddleware
                             'reason' => $suspiciousReason,
                             'detected_type' => $detectedType,
                             'ip' => $ip,
+                            'blocked_ip' => $ip,
+                            'ip_used_for_security_decision' => $ip,
                         ]
                     );
 
@@ -220,6 +231,8 @@ class IpsMiddleware
                                 'reason' => $suspiciousReason,
                                 'detected_type' => $detectedType,
                                 'ip' => $ip,
+                                'blocked_ip' => $ip,
+                                'ip_used_for_security_decision' => $ip,
                             ]
                         );
                     }
@@ -254,6 +267,8 @@ class IpsMiddleware
                         [
                             'reason' => $suspiciousReason,
                             'detected_type' => $detectedType,
+                            'blocked_ip' => $ip,
+                            'ip_used_for_security_decision' => $ip,
                         ]
                     );
                 }
@@ -289,6 +304,8 @@ class IpsMiddleware
                         [
                             'attempts' => $attempts,
                             'threshold' => $threshold,
+                            'ip_used_for_security_decision' => $ip,
+                            'client_ip' => $ip,
                         ]
                     );
 
@@ -320,6 +337,8 @@ class IpsMiddleware
                         [
                             'attempts' => $attempts,
                             'threshold' => $threshold,
+                            'blocked_ip' => $ip,
+                            'ip_used_for_security_decision' => $ip,
                         ]
                     );
 
@@ -344,6 +363,8 @@ class IpsMiddleware
                         [
                             'attempts' => $attempts,
                             'threshold' => $threshold,
+                            'ip_used_for_security_decision' => $ip,
+                            'client_ip' => $ip,
                         ]
                     );
 
@@ -375,6 +396,8 @@ class IpsMiddleware
                         [
                             'attempts' => $attempts,
                             'threshold' => $threshold,
+                            'blocked_ip' => $ip,
+                            'ip_used_for_security_decision' => $ip,
                         ]
                     );
 
