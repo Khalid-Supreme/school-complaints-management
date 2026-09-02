@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureEmailVerified;
 use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\IpsMiddleware;
+use App\Http\Middleware\RequestContextMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -36,6 +37,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 | Request::HEADER_X_FORWARDED_PROTO,
         );
 
+        // Distributed request context (client_ip, peer_ip, xff, request_id) — must run first
+        $middleware->api(prepend: [
+            RequestContextMiddleware::class,
+        ]);
+
         // Register IPS Middleware globally for API requests
         $middleware->alias([
             'ips' => IpsMiddleware::class,
@@ -44,6 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'email.verified' => EnsureEmailVerified::class,
             'password.changed' => EnsurePasswordChanged::class,
             'audit.context' => AuditContext::class,
+            'request.context' => RequestContextMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

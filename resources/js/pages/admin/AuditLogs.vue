@@ -76,7 +76,7 @@
                         </template>
                     </Column>
                     <template #expansion="slotProps">
-                        <div class="p-4 sm:px-8">
+                        <div class="p-4 sm:px-8 space-y-3">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div class="rounded-lg bg-slate-50 border border-slate-100 px-4 py-3">
                                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Subject</p>
@@ -91,7 +91,62 @@
                                     <p class="text-sm text-charcoal font-mono">#{{ slotProps.data.id }}</p>
                                 </div>
                             </div>
-                            <div v-if="metadataEntries(slotProps.data.metadata).length > 0" class="rounded-lg bg-slate-50 border border-slate-100 px-4 py-3 mt-3">
+
+                            <!-- Network Context — forensic IP / proxy / request correlation -->
+                            <div class="rounded-lg bg-white border border-sage-200/60 px-4 py-3">
+                                <p class="text-xs font-semibold uppercase tracking-wider text-sage-700 mb-3 flex items-center gap-1.5">
+                                    <i class="pi pi-sitemap text-sage-600"></i> Network Context
+                                    <span class="ml-auto font-normal normal-case tracking-normal text-slate-400 text-[11px]">Trusted vs raw — see docs</span>
+                                </p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+                                    <div class="rounded-md bg-slate-50 border border-slate-100 px-3 py-2">
+                                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Client IP <span class="normal-case font-normal">(trusted)</span></p>
+                                        <p class="font-mono text-charcoal font-medium flex items-center gap-1.5">{{ slotProps.data.ip_address || slotProps.data.metadata?.client_ip || '—' }}
+                                            <Button v-if="slotProps.data.ip_address" icon="pi pi-copy" text rounded class="w-6 h-6 !text-slate-400" @click="copyIp(slotProps.data.ip_address)" v-tooltip.bottom="'Copy'" />
+                                        </p>
+                                        <p class="text-[11px] text-slate-400">Laravel $request->ip()</p>
+                                    </div>
+                                    <div class="rounded-md bg-slate-50 border border-slate-100 px-3 py-2">
+                                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Peer IP <span class="normal-case font-normal">(direct)</span></p>
+                                        <p class="font-mono text-charcoal font-medium flex items-center gap-1.5">{{ slotProps.data.peer_ip || slotProps.data.metadata?.peer_ip || '—' }}
+                                            <Button v-if="slotProps.data.peer_ip || slotProps.data.metadata?.peer_ip" icon="pi pi-copy" text rounded class="w-6 h-6 !text-slate-400" @click="copyIp(slotProps.data.peer_ip || slotProps.data.metadata?.peer_ip)" v-tooltip.bottom="'Copy'" />
+                                        </p>
+                                        <p class="text-[11px] text-slate-400">REMOTE_ADDR — Heroku router on Heroku</p>
+                                    </div>
+                                    <div class="rounded-md bg-slate-50 border border-slate-100 px-3 py-2">
+                                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">IP Used For Decision</p>
+                                        <p class="font-mono text-red-600 font-medium">{{ slotProps.data.metadata?.ip_used_for_security_decision || slotProps.data.metadata?.blocked_ip || '—' }}</p>
+                                        <p class="text-[11px] text-slate-400">IPS blocking key</p>
+                                    </div>
+                                    <div class="rounded-md bg-amber-50 border border-amber-100 px-3 py-2">
+                                        <p class="text-[11px] font-semibold uppercase tracking-wider text-amber-700">X-Forwarded-For <span class="normal-case font-normal">(raw)</span></p>
+                                        <p class="font-mono text-charcoal text-xs break-all">{{ slotProps.data.x_forwarded_for || slotProps.data.metadata?.x_forwarded_for || '—' }}</p>
+                                        <p class="text-[11px] text-amber-700/70">Untrusted unless proxy trusted</p>
+                                    </div>
+                                    <div class="rounded-md bg-slate-50 border border-slate-100 px-3 py-2">
+                                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">X-Real-IP / Forwarded</p>
+                                        <p class="font-mono text-charcoal text-xs break-all">{{ slotProps.data.metadata?.x_real_ip || slotProps.data.metadata?.forwarded || '—' }}</p>
+                                    </div>
+                                    <div class="rounded-md bg-emerald-50 border border-emerald-100 px-3 py-2">
+                                        <p class="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">Request ID</p>
+                                        <p class="font-mono text-charcoal font-medium flex items-center gap-1.5">{{ slotProps.data.request_id || slotProps.data.metadata?.request_id || '—' }}
+                                            <Button v-if="slotProps.data.request_id || slotProps.data.metadata?.request_id" icon="pi pi-copy" text rounded class="w-6 h-6 !text-slate-400" @click="copyIp(slotProps.data.request_id || slotProps.data.metadata?.request_id)" v-tooltip.bottom="'Copy Request ID'" />
+                                        </p>
+                                        <p class="text-[11px] text-emerald-700/70">Heroku X-Request-ID for correlation</p>
+                                    </div>
+                                    <div class="rounded-md bg-slate-50 border border-slate-100 px-3 py-2">
+                                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Method / Route</p>
+                                        <p class="font-mono text-charcoal text-xs">{{ slotProps.data.metadata?.method || '—' }} {{ slotProps.data.metadata?.route || '' }}</p>
+                                        <p class="text-[11px] text-slate-400 truncate">{{ slotProps.data.metadata?.path || slotProps.data.metadata?.url || '' }}</p>
+                                    </div>
+                                    <div class="rounded-md bg-slate-50 border border-slate-100 px-3 py-2">
+                                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Host</p>
+                                        <p class="font-mono text-charcoal text-xs break-all">{{ slotProps.data.metadata?.host || '—' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="metadataEntries(slotProps.data.metadata).length > 0" class="rounded-lg bg-slate-50 border border-slate-100 px-4 py-3">
                                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Metadata</p>
                                 <div class="flex flex-wrap gap-2">
                                     <span v-for="entry in metadataEntries(slotProps.data.metadata)" :key="entry.key" class="inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-md px-2.5 py-1">

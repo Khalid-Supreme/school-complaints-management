@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Observers\ComplaintCategoryObserver;
 use App\Observers\DepartmentObserver;
 use App\Support\AuditContext;
+use App\Support\RequestContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -33,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
         // Single shared instance so the AuditContext middleware and the
         // AuditEventListener observe the same request-scoped values.
         $this->app->singleton(AuditContext::class);
+        $this->app->singleton(RequestContext::class);
     }
 
     /**
