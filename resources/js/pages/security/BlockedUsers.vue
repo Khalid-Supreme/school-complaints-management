@@ -40,9 +40,13 @@
                         </div>
                     </template>
                 </Column>
-                <Column field="ip" header="IP at block" style="min-width: 140px">
+                <Column field="ip" header="IP at block" style="min-width: 180px">
                     <template #body="slotProps">
-                        <span class="font-mono text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md">{{ slotProps.data.ip || '—' }}</span>
+                        <div class="flex flex-col gap-1">
+                            <span class="font-mono text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md w-fit">{{ slotProps.data.ip || '—' }}</span>
+                            <span v-if="slotProps.data.x_forwarded_for" class="font-mono text-[11px] text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded truncate max-w-[170px]" v-tooltip.bottom="slotProps.data.x_forwarded_for">XFF: {{ slotProps.data.x_forwarded_for }}</span>
+                            <span v-else class="text-[11px] text-slate-300">XFF: —</span>
+                        </div>
                     </template>
                 </Column>
                 <Column field="reason" header="Reason" style="min-width: 240px">

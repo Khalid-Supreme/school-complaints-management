@@ -31,11 +31,15 @@
                         <span class="text-xs text-slate-500">{{ ((meta?.current_page || 1) - 1) * (meta?.per_page || 15) + slotProps.index + 1 }}</span>
                     </template>
                 </Column>
-                <Column field="ip" header="IP Address" style="min-width: 160px">
+                <Column field="ip" header="IP Address" style="min-width: 180px">
                     <template #body="slotProps">
-                        <div class="flex items-center gap-1.5">
-                            <span class="font-mono text-xs font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded-md">{{ slotProps.data.ip }}</span>
-                            <Button icon="pi pi-copy" text rounded class="w-7 h-7 !text-slate-400 hover:!text-sage-600 hover:!bg-sage-50" v-tooltip.bottom="'Copy IP'" @click="copyIp(slotProps.data.ip)" />
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-mono text-xs font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded-md">{{ slotProps.data.ip }}</span>
+                                <Button icon="pi pi-copy" text rounded class="w-7 h-7 !text-slate-400 hover:!text-sage-600 hover:!bg-sage-50" v-tooltip.bottom="'Copy IP'" @click="copyIp(slotProps.data.ip)" />
+                            </div>
+                            <span v-if="slotProps.data.x_forwarded_for" class="font-mono text-[11px] text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded truncate max-w-[170px]" v-tooltip.bottom="slotProps.data.x_forwarded_for">XFF: {{ slotProps.data.x_forwarded_for }}</span>
+                            <span v-else class="text-[11px] text-slate-300">XFF: —</span>
                         </div>
                     </template>
                 </Column>
