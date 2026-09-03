@@ -170,6 +170,9 @@ class IpsMiddleware
                             'email' => $user->email,
                             'institution_id' => $user->institution_id ?? null,
                             'ip' => $ip,
+                            'x_forwarded_for' => $this->requestContext->xForwardedFor(),
+                            'peer_ip' => $this->requestContext->peerIp(),
+                            'request_id' => $this->requestContext->requestId(),
                             'reason' => $suspiciousReason,
                             'blocked_at' => now()->toIso8601String(),
                         ];
@@ -214,6 +217,9 @@ class IpsMiddleware
                         if (! $existsIp) {
                             $blockedIps[] = [
                                 'ip' => $ip,
+                                'x_forwarded_for' => $this->requestContext->xForwardedFor(),
+                                'peer_ip' => $this->requestContext->peerIp(),
+                                'request_id' => $this->requestContext->requestId(),
                                 'reason' => $suspiciousReason.' (soft 1h, '.$blockedUsersForIp.' users from IP)',
                                 'blocked_at' => now()->toIso8601String(),
                                 'user_id' => $user->id,
@@ -251,6 +257,9 @@ class IpsMiddleware
                     if (! $exists) {
                         $blockedIps[] = [
                             'ip' => $ip,
+                            'x_forwarded_for' => $this->requestContext->xForwardedFor(),
+                            'peer_ip' => $this->requestContext->peerIp(),
+                            'request_id' => $this->requestContext->requestId(),
                             'reason' => $suspiciousReason,
                             'blocked_at' => now()->toIso8601String(),
                             'user_id' => $request->user()?->id,
@@ -323,6 +332,9 @@ class IpsMiddleware
                             'email' => $user->email,
                             'institution_id' => $user->institution_id ?? null,
                             'ip' => $ip,
+                            'x_forwarded_for' => $this->requestContext->xForwardedFor(),
+                            'peer_ip' => $this->requestContext->peerIp(),
+                            'request_id' => $this->requestContext->requestId(),
                             'reason' => 'Rate limit exceeded ('.$attempts.' requests/hr)',
                             'blocked_at' => now()->toIso8601String(),
                         ];
@@ -380,6 +392,9 @@ class IpsMiddleware
                     if (! $exists) {
                         $blockedIps[] = [
                             'ip' => $ip,
+                            'x_forwarded_for' => $this->requestContext->xForwardedFor(),
+                            'peer_ip' => $this->requestContext->peerIp(),
+                            'request_id' => $this->requestContext->requestId(),
                             'reason' => 'Rate limit exceeded ('.$attempts.' requests/hr)',
                             'blocked_at' => now()->toIso8601String(),
                             'user_id' => $request->user()?->id,
@@ -424,6 +439,10 @@ class IpsMiddleware
         $events[] = [
             'type' => $type, // 'sqli' or 'xss'
             'ip' => $ip,
+            'x_forwarded_for' => $this->requestContext->xForwardedFor(),
+            'peer_ip' => $this->requestContext->peerIp(),
+            'request_id' => $this->requestContext->requestId(),
+            'client_ip' => $this->requestContext->clientIp(),
             'user_id' => $request->user()?->id,
             'user_email' => $request->user()?->email,
             'reason' => $reason,

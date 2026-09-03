@@ -67,11 +67,15 @@
                             <p v-if="slotProps.data.subject" class="text-xs text-slate-400 mt-1">{{ subjectLabel(slotProps.data.subject) }}</p>
                         </template>
                     </Column>
-                    <Column field="ip_address" header="IP Address" style="min-width: 150px">
+                    <Column field="ip_address" header="IP Address" style="min-width: 170px">
                         <template #body="slotProps">
-                            <div class="flex items-center gap-1.5">
-                                <span class="font-mono text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md">{{ slotProps.data.ip_address || '—' }}</span>
-                                <Button v-if="slotProps.data.ip_address" icon="pi pi-copy" text rounded class="w-7 h-7 !text-slate-400 hover:!text-sage-600 hover:!bg-sage-50" v-tooltip.bottom="'Copy IP'" @click="copyIp(slotProps.data.ip_address)" />
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-mono text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md">{{ slotProps.data.ip_address || '—' }}</span>
+                                    <Button v-if="slotProps.data.ip_address" icon="pi pi-copy" text rounded class="w-7 h-7 !text-slate-400 hover:!text-sage-600 hover:!bg-sage-50" v-tooltip.bottom="'Copy IP'" @click="copyIp(slotProps.data.ip_address)" />
+                                </div>
+                                <span v-if="slotProps.data.x_forwarded_for || slotProps.data.metadata?.x_forwarded_for" class="font-mono text-[11px] text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded truncate max-w-[170px]" v-tooltip.bottom="slotProps.data.x_forwarded_for || slotProps.data.metadata?.x_forwarded_for">XFF: {{ slotProps.data.x_forwarded_for || slotProps.data.metadata?.x_forwarded_for }}</span>
+                                <span v-else class="text-[11px] text-slate-300">XFF: —</span>
                             </div>
                         </template>
                     </Column>

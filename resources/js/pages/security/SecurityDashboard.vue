@@ -70,11 +70,13 @@
                                 </div>
                             </template>
                         </Column>
-                        <Column field="ip" header="IP Address" style="width: 130px">
+                        <Column field="ip" header="IP Address" style="width: 170px">
                             <template #body="slotProps">
-                                <span
-                                    class="font-mono text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md">{{
-                                        slotProps.data.ip }}</span>
+                                <div class="flex flex-col gap-1">
+                                    <span class="font-mono text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md w-fit">{{ slotProps.data.ip }}</span>
+                                    <span v-if="slotProps.data.x_forwarded_for" class="font-mono text-[11px] text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded truncate max-w-[160px]" v-tooltip.bottom="slotProps.data.x_forwarded_for">XFF: {{ slotProps.data.x_forwarded_for }}</span>
+                                    <span v-else class="text-[11px] text-slate-300">XFF: —</span>
+                                </div>
                             </template>
                         </Column>
                         <Column field="user_id" header="User" style="width: 140px">
@@ -136,6 +138,7 @@
                                 <i class="pi pi-ban text-red-500 text-sm"></i>
                                 <div class="flex-1 min-w-0">
                                     <p class="font-mono text-sm font-medium text-red-700">{{ item.ip }}</p>
+                                    <p class="font-mono text-[11px] text-amber-700 bg-amber-50 border border-amber-100 px-1 py-0.5 rounded truncate">XFF: {{ item.x_forwarded_for || '—' }}</p>
                                     <p class="text-xs text-slate-500 truncate">{{ item.reason || 'Suspicious activity' }}</p>
                                     <p class="text-[11px] text-slate-400 truncate">
                                         <span v-if="item.user_id">#{{ item.user_id }}<span v-if="item.user_email"> ({{ item.user_email }})</span> • </span>{{ item.blocked_at ? new Date(item.blocked_at).toLocaleString() : '' }}
@@ -175,6 +178,7 @@
                                 <div class="flex-1 min-w-0">
                                     <p class="font-mono text-sm font-medium text-red-700">#{{ item.user_id }} <span v-if="item.email" class="font-normal text-xs">({{ item.email }})</span></p>
                                     <p class="text-xs text-slate-500 truncate">{{ item.reason || 'Suspicious activity' }}</p>
+                                    <p class="font-mono text-[11px] text-amber-700 bg-amber-50 border border-amber-100 px-1 py-0.5 rounded truncate">XFF: {{ item.x_forwarded_for || '—' }}</p>
                                     <p class="text-[11px] text-slate-400 truncate">
                                         <span v-if="item.institution_id">{{ item.institution_id }} • </span>{{ item.ip || '' }} • {{ item.blocked_at ? new Date(item.blocked_at).toLocaleString() : '' }}
                                     </p>
