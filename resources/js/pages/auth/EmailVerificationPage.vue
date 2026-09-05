@@ -41,7 +41,7 @@
     </div>
 
     <div class="flex flex-col gap-3">
-      <Button label="Resend verification email" :loading="loading"
+      <Button label="Resend verification email" :loading="loading" @click="resendEmail"
         class="!py-2 sm:!py-3 !bg-sage-600 hover:!bg-sage-700 !border-none !rounded-lg !text-white !font-semibold !text-[0.85rem] sm:!text-[0.9rem] !transition-all !duration-200 hover:-translate-y-[1px]"
         :style="{ boxShadow: '0 2px 12px rgba(106, 156, 94, 0.2)' }" />
       <Button label="Back to login" severity="secondary" outlined @click="router.push('/login')" />

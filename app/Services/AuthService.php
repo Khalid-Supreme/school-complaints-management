@@ -32,9 +32,7 @@ class AuthService
     public function login(array $credentials, Request $request): array
     {
         $username = $credentials['username'];
-        $user = User::where('email', $username)
-            ->orWhere('institution_id', $username)
-            ->first();
+        $user = User::where('institution_id', $username)->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             $this->recordLoginAttempt($username, $request, false, 'Invalid credentials');
@@ -61,7 +59,7 @@ class AuthService
             $this->auditLogger->log(AuditAction::LoginFailed, $user, null, 'Login attempt on unverified account');
 
             throw ValidationException::withMessages([
-                'username' => __('Please verify your email address :email before logging in.', [
+                'username' => __('Please verify your email address :email before logging in. Check inbox for the verification email.', [
                     'email' => self::maskEmail($user->email),
                 ]),
             ]);
@@ -129,7 +127,7 @@ class AuthService
      */
     protected function recordLoginAttempt(string $username, Request $request, bool $successful, ?string $reason = null): void
     {
-        $user = User::where('email', $username)->orWhere('institution_id', $username)->first();
+        $user = User::where('institution_id', $username)->first();
         LoginAttempt::create([
             'user_id' => $user?->id,
             // Align the unknown-username value with the login_attempts.email column (150).

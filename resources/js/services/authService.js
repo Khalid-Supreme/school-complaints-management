@@ -28,9 +28,9 @@ export default {
         });
     },
 
-    async resendVerification(email) {
+    async resendVerification(identifier) {
         await initializeCsrf();
-        return api.post('/api/register/resend', { email });
+        return api.post('/api/register/resend', { identifier });
     },
 
     async forgotPassword(email) {

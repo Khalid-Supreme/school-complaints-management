@@ -15,14 +15,17 @@ class ResendVerificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ValidationRules::email(),
+            'identifier' => ['sometimes', 'required_without:email', 'string', 'max:150'],
+            'email' => ['sometimes', 'required_without:identifier', 'string', 'email', 'max:255'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'email.required' => 'Please enter your email address.',
+            'identifier.required_without' => 'Please provide your Institution ID or email address.',
+            'identifier.max' => 'The provided value is too long.',
+            'email.required_without' => 'Please provide your Institution ID or email address.',
             'email.email' => 'Please enter a valid email address.',
             'email.max' => 'The email address cannot exceed 255 characters.',
         ];

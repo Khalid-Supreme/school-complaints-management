@@ -129,7 +129,6 @@ const metricCards = computed(() => [
 
 const goToSubmit = () => router.push('/student/submit');
 const viewComplaint = (id) => {
-    console.log(id);
     router.push(`/student/complaints/${id}`);
 };
 

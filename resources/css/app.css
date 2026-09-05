@@ -425,6 +425,30 @@
             padding: 0.75rem 1rem;
             border-radius: var(--radius-input);
         }
+
+        .p-message.login-error-message {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .p-message.login-error-message .p-message-wrapper {
+            align-items: flex-start;
+            min-width: 0;
+            flex-wrap: wrap;
+        }
+
+        .p-message.login-error-message .p-message-text {
+            min-width: 0;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .p-message.login-error-message .p-message-detail {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
         
         .p-tag {
             border-radius: 6px;
