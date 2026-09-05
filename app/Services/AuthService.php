@@ -34,7 +34,10 @@ class AuthService
         $username = $credentials['username'];
         $user = User::where('institution_id', $username)->first();
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+        // Password is transmitted in plaintext over HTTPS; pre-hash with SHA-256
+        // to match the existing storage format bcrypt(sha256(password)) and
+        // preserve all existing password hashes without migration.
+        if (! $user || ! Hash::check(hash('sha256', $credentials['password']), $user->password)) {
             $this->recordLoginAttempt($username, $request, false, 'Invalid credentials');
             $this->auditLogger->log(AuditAction::LoginFailed, null, null, 'Failed login attempt', [
                 'username' => Str::limit($username, 150, ''),
