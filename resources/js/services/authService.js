@@ -1,12 +1,11 @@
 import api, { initializeCsrf } from './api';
-import { hashPassword } from '../utils/crypto';
 
 export default {
     async login(credentials) {
         await initializeCsrf();
         return api.post('/api/login', {
             username: credentials.username,
-            password: await hashPassword(credentials.password),
+            password: credentials.password,
         });
     },
 
