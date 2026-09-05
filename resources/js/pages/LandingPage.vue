@@ -1,12 +1,23 @@
 <template>
-  <SplashScreen :config="splashConfig" @complete="handleComplete" />
+  <SplashScreen v-if="!isIPhone" :config="splashConfig" @complete="handleComplete" />
 </template>
 
 <script setup>
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import SplashScreen from '../components/SplashScreen.vue';
 
 const router = useRouter();
+const isIPhone = ref(false);
+
+onMounted(() => {
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIOS) {
+    isIPhone.value = true;
+    router.replace('/login');
+  }
+});
 
 const splashConfig = {
   logo: '/images/alhikmah_logo.png',
