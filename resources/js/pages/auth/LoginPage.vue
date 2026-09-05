@@ -17,15 +17,20 @@
         </Message>
 
         <!-- Error Message -->
-        <Message v-if="authStore.error" severity="error" :closable="false"
-            class="!bg-red-50/50 !border-red-100/50 !text-red-600 !rounded-xl !text-sm">
-            {{ authStore.error }}
-            <template #icon>
-                <Button v-if="isEmailNotVerifiedError" icon="pi pi-refresh" v-tooltip="'Resend Verification Email'" text
-                    severity="secondary" size="small" :loading="authStore.loading" @click="handleResendVerification"
-                    class="mt-2" />
-            </template>
+        <div>
+
+            <Message v-if="authStore.error" severity="error" :closable="false"
+            class="login-error-message !w-full !max-w-full !bg-red-50/50 !border-red-100/50 !text-red-600 !rounded-xl !text-sm !whitespace-normal !break-words !leading-snug">
+            <span class="block whitespace-normal break-words">
+                {{ authStore.error }}
+            </span>
+            <!-- <template #icon>
+            </template> -->
         </Message>
+        <Button v-if="isEmailNotVerifiedError" icon="pi pi-refresh" v-tooltip="'Resend Verification Email'" text
+        severity="secondary" size="small" :loading="authStore.loading" @click="handleResendVerification"
+        class="mt-2" />
+    </div>
         
 <!-- Form -->
         <form @submit.prevent="handleLogin" class="space-y-5">

@@ -34,9 +34,9 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'username.required' => 'Please enter your email address or institution ID.',
-            'username.encoding' => 'The username contains characters that are not valid UTF-8.',
-            'username.max' => 'The username cannot be longer than 150 characters.',
+            'username.required' => 'Please enter your institution ID.',
+            'username.encoding' => 'The institution ID contains characters that are not valid UTF-8.',
+            'username.max' => 'The institution ID cannot be longer than 150 characters.',
         ];
     }
 }

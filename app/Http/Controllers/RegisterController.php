@@ -11,8 +11,10 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Services\AuditLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use Throwable;
 
 class RegisterController extends Controller
 {
@@ -56,7 +58,8 @@ class RegisterController extends Controller
 
     public function resend(ResendVerificationRequest $request)
     {
-        $user = User::where('email', $request->email)->first();
+        $identifier = $request->input('identifier') ?? $request->input('email');
+        $user = User::where('email', $identifier)->orWhere('institution_id', $identifier)->first();
 
         // Uniform response regardless of whether the account exists, so the
         // endpoint cannot be used to enumerate registered email addresses.
@@ -104,11 +107,12 @@ class RegisterController extends Controller
         $this->auditLogger->log(AuditAction::UserRegistered, $user, $user, 'User registered via public form', [
             'role' => $roleSlug,
         ]);
-
-        $this->sendVerificationMail($user);
+        $mailSent = $this->sendVerificationMail($user);
 
         return response()->json([
-            'message' => 'Registration successful. Check your email to verify your account.',
+            'message' => $mailSent
+                ? 'Registration successful. Check your email to verify your account.'
+                : 'Registration successful, but the verification email could not be sent. Please use Resend to request a new link.',
             'institution_id' => $institutionId,
             'email' => $user->email,
         ], 201);
@@ -119,7 +123,7 @@ class RegisterController extends Controller
         return $this->userRepository->generateInstitutionId($prefix);
     }
 
-    protected function sendVerificationMail(User $user): void
+    protected function sendVerificationMail(User $user): bool
     {
         $verificationUrl = URL::temporarySignedRoute(
             'verification.verify',
@@ -127,11 +131,23 @@ class RegisterController extends Controller
             ['user' => $user->id, 'hash' => sha1($user->email)]
         );
 
-        Mail::send('emails.verification', [
-            'user' => $user,
-            'verificationUrl' => $verificationUrl,
-        ], function ($message) use ($user) {
-            $message->to($user->email, $user->full_name)->subject('Verify your email address');
-        });
+        try {
+            Mail::send('emails.verification', [
+                'user' => $user,
+                'verificationUrl' => $verificationUrl,
+            ], function ($message) use ($user) {
+                $message->to($user->email, $user->full_name)->subject('Verify your email address');
+            });
+            return true;
+        } catch (Throwable $e) {
+            Log::warning('Verification email failed to send — registration still succeeded.', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'institution_id' => $user->institution_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 }
