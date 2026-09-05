@@ -191,7 +191,7 @@ const prefersReducedMotion = ref(false);
 
 // --- Scale-to-fit: shrink the whole card so it always fits the viewport, no scrolling ---
 const EDGE_MARGIN = 24;   // px of breathing room kept around the card on every side
-const MIN_SCALE = 0.85;   // never shrink smaller than this, even on very short screens
+const MIN_SCALE = 0.55;   // never shrink smaller than this, even on very short screens
 const fitScale = ref(1);
 
 const computeFitScale = () => {
@@ -203,7 +203,6 @@ const computeFitScale = () => {
     const naturalWidth = cardEl.value.offsetWidth;
     const naturalHeight = cardEl.value.offsetHeight;
     if (!naturalWidth || !naturalHeight) {
-        fitScale.value = 1;
         return;
     }
 
@@ -296,8 +295,6 @@ const skipIntro = () => {
 onMounted(async () => {
     prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     isVisible.value = true;
-    // Backup for iOS where nextTick can be delayed by address-bar animation
-    setTimeout(() => { isVisible.value = true; }, 50);
     await nextTick();
 
     // Measure once layout is ready, then keep re-measuring if the viewport
